@@ -55,7 +55,7 @@ class Customer(MethodView):
         if customer:
             abort(409, message="Customer already exists")
 
-        customer = CustomerModel(customer_name= data["customer_name"], account_id=data["category_id"])
+        customer = CustomerModel(customer_name= data["customer_name"], account_id=data["account_id"])
 
         db.session.add(customer)
         db.session.commit()

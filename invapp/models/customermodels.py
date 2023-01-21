@@ -7,7 +7,7 @@ class CustomerModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(80), nullable=False, index=True, unique=True)
-    customer_number = db.Column(db.Integer,db.Sequence('seq_cus_number', start=2001, increment=1), index=True)
+    customer_number = db.Column(db.Integer, db.Sequence('seq_sup_number', start=2001, increment=1), index=True)
     customer_contact = db.Column(db.String(80))
     is_active = db.Column(db.Boolean, default=True)
     is_archived = db.Column(db.Boolean, default=False)
