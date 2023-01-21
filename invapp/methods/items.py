@@ -3,7 +3,7 @@ from ..models.itemmodels import CategoryModel,ItemModel,ItemAccountModel, LotMod
 from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..schemas import  ItemAccountSchema, AccountSchema, LotSchema, CategorySchema, ItemSchema
+from ..schemas.itemschema import ItemAccountSchema, LotSchema, CategorySchema, ItemSchema
 
 blp = Blueprint("Items", __name__, description="Actions on items")
 
@@ -12,7 +12,7 @@ blp = Blueprint("Items", __name__, description="Actions on items")
 class Itemaccount(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(ItemAccountSchema)
-    @blp.response(201, AccountSchema)
+    @blp.response(201, ItemAccountSchema)
     def post(self, data):
         account = ItemAccountModel.query.filter_by(account_name=data["account_name"]).first()
         if account:
@@ -25,10 +25,28 @@ class Itemaccount(MethodView):
         db.session.commit()
         return account
     @jwt_required(fresh=False)
-    @blp.response(201, AccountSchema(many=True))
+    @blp.response(200, ItemAccountSchema(many=True))
     def get(self):
         accounts = ItemAccountModel.query.all()
         return accounts
+
+@blp.route("/item/account/<int:id>")
+class ItemaccountView(MethodView):
+    @jwt_required(fresh=True)
+    @blp.response(202, ItemAccountSchema)
+    def delete(self, id):
+        account = ItemAccountModel.query.get_or_404(id)
+        db.session.delete(account)
+        db.session.delete()
+
+        return account
+
+    @jwt_required(fresh=True)
+    @blp.response(202, ItemAccountSchema)
+    def get(self, id):
+        account = ItemAccountModel.query.get_or_404(id)
+
+        return account
 
 @blp.route("/item/lot")
 class Itemlot(MethodView):
@@ -86,7 +104,7 @@ class Item(MethodView):
         if item:
             abort(409, message="Item already exists")
 
-        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=data["category_id"])
+        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=data["category_id"], lot=data["lot"])
 
         db.session.add(item)
         db.session.commit()
@@ -97,4 +115,22 @@ class Item(MethodView):
     @blp.response(200, ItemSchema(many=True))
     def get(self):
         items = ItemModel.query.all()
+
         return items
+
+@blp.route("/item/<int:id>")
+class ItemView(MethodView):
+    @jwt_required(fresh=True)
+    @blp.response(202, ItemSchema)
+    def delete(self, id):
+        item = ItemModel.query.get_or_404(id)
+        db.session.delete(item)
+        db.session.commit()
+        return item
+
+    @jwt_required(fresh=True)
+    @blp.response(202, ItemSchema)
+    def get(self, id):
+        item = ItemModel.query.get_or_404(id)
+
+        return item

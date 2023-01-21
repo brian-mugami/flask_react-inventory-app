@@ -1,6 +1,6 @@
 import os.path
 from datetime import timedelta
-from .methods import userblueprint, itemsblueprint
+from .methods import userblueprint, itemsblueprint, supplierblueprint, customerblueprint
 
 from flask import Flask, jsonify
 from flask_smorest import Api
@@ -65,6 +65,15 @@ def create_app():
             401
         )
 
+    @jwt.needs_fresh_token_loader
+    def needs_fresh_token_loader(jwt_header,jwt_payload):
+        return (
+            jsonify(
+                {"description": "token is not fresh",
+                "error":"fresh_token_required"}
+            )
+        )
+
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
         return (
@@ -88,6 +97,8 @@ def create_app():
 
     api.register_blueprint(userblueprint)
     api.register_blueprint(itemsblueprint)
+    api.register_blueprint(supplierblueprint)
+    api.register_blueprint(customerblueprint)
     return app
 
 #def create_database(db):

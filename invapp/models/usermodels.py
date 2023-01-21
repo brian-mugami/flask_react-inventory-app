@@ -15,8 +15,18 @@ class UserModel (db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     date_registered = db.Column(db.DateTime, default=datetime.utcnow())
     date_archived = db.Column(db.DateTime)
+    date_unarchived = db.Column(db.DateTime)
 
     def make_inactive(self):
         self.is_active = False
         self.is_archived = True
         self.date_archived = datetime.utcnow()
+
+    def make_admin(self):
+        self.is_admin = True
+
+    def activate(self):
+        self.is_active = True
+        self.is_archived = False
+        self.date_archived = None
+        self.date_unarchived = datetime.utcnow()

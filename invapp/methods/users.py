@@ -6,7 +6,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from ..models.usermodels import UserModel
 from ..db import db
-from ..schemas import UserSchema,LoginSchema
+from ..schemas.userschema import UserSchema,LoginSchema
 from werkzeug.security import check_password_hash,generate_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required,get_jwt, get_jwt_identity
 from ..blocklist import TokenBlocklist
@@ -43,7 +43,6 @@ class User(MethodView):
         db.session.commit()
 
         return user
-
     @blp.arguments(UserSchema)
     @blp.response(200, UserSchema)
     def put(self,user_data, id):
@@ -69,10 +68,17 @@ class UserLogin(MethodView):
         if user and check_password_hash(user.password, user_data["password"]):
             access_token = create_access_token(identity=user.id, fresh=True)
             refresh_token = create_refresh_token(identity=user.id)
-            return jsonify({"refresh token": refresh_token, "access_token":access_token})
+            return jsonify({"refresh_token": refresh_token, "access_token":access_token})
 
         abort(401, message="Invalid credentials")
 
+@blp.route("/refresh")
+class TokenRefresh(MethodView):
+    @jwt_required(refresh=True)
+    def post(self):
+        current_user = get_jwt_identity()
+        new_token = create_access_token(identity=current_user, fresh=False)
+        return {"access_token": new_token}
 @blp.route("/logout")
 class UserLogout(MethodView):
     @jwt_required()
