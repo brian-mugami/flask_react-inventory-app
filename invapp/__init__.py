@@ -1,48 +1,32 @@
 import os.path
-from datetime import timedelta
-from .methods import userblueprint, itemsblueprint, supplierblueprint, customerblueprint
-
+from .libs.image_helper import IMAGE_SET
+from .resources import userblueprint, itemsblueprint, supplierblueprint, customerblueprint, imageblueprint
 from flask import Flask, jsonify
+from flask_uploads import configure_uploads,patch_request_class
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 from .db import db
 from flask_migrate import Migrate
-import secrets
 from dotenv import load_dotenv
 from .blocklist import TokenBlocklist
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 migrate = Migrate()
-ACCESS_EXPIRES = timedelta(hours=1)
 
 def create_app():
-    load_dotenv()
+    #change application settings to config for prod
     app = Flask(__name__)
-    secret = secrets.token_urlsafe(23)
-    app.secret_key = secret
-    app.config["PROPAGATE_EXCEPTIONS"] = True
-    app.config["API_TITLE"] = "Inventory REST API"
-    app.config["API_VERSION"] = "v1"
-    app.config["OPENAPI_VERSION"] = "3.0.3"
-    app.config["OPENAPI_URL_PREFIX"] = "/"
-    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"  # for documentation purposes..http://localhost:7005{port no}/swagger-ui
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    app.config["OPENAPI_REDOC_PATH"] = "/redoc"
-    app.config["OPENAPI_REDOC_URL"] = "https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"
-    app.config["OPENAPI_RAPIDOC_PATH"] = "/rapidoc"
-    app.config["OPENAPI_RAPIDOC_URL"] = "https://unpkg.com/rapidoc/dist/rapidoc-min.js"
+    load_dotenv(".env", verbose=True)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:mugami@localhost:5432/Inventory"
-    app.config['TRACK MODIFICATIONS'] = False
+    app.config.from_object("invapp.default_config")
+    app.config.from_envvar("APPLICATION_SETTINGS")
+    patch_request_class(app, 10 * 1024 * 1024) #10mb max size upload
+    configure_uploads(app, IMAGE_SET)
+
     db.init_app(app)
-
     api = Api(app)
     migrate.init_app(app, db)
-
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
-    app.config["JWT_SECRET_KEY"] = secrets.token_urlsafe(16)
     jwt = JWTManager(app)
-
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
         jti = jwt_payload["jti"]
@@ -99,6 +83,7 @@ def create_app():
     api.register_blueprint(itemsblueprint)
     api.register_blueprint(supplierblueprint)
     api.register_blueprint(customerblueprint)
+    api.register_blueprint(imageblueprint)
     return app
 
 #def create_database(db):

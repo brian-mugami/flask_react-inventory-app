@@ -1,6 +1,6 @@
 from ..db import db
 from ..models.itemmodels import CategoryModel,ItemModel,ItemAccountModel, LotModel
-from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from ..schemas.itemschema import ItemAccountSchema, LotSchema, CategorySchema, ItemSchema
@@ -71,8 +71,25 @@ class Itemlot(MethodView):
         lots = LotModel.query.all()
         return lots
 
+@blp.route("/item/lot/<int:id>")
+class ItemLotView(MethodView):
+    @jwt_required
+    @blp.response(202, LotSchema)
+    def delete(self, id):
+        lot = LotModel.query.get_or_404(id)
+        db.session.delete(lot)
+        db.session.commit()
+        return lot
+
+    @jwt_required
+    @blp.response(202, LotSchema)
+    def get(self, id):
+        lot = LotModel.query.get_or_404(id)
+
+        return lot
+
 @blp.route("/item/category")
-class ItemCat(MethodView):
+class ItemCategory(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(CategorySchema)
     @blp.response(201, CategorySchema)
@@ -94,6 +111,21 @@ class ItemCat(MethodView):
         categories = CategoryModel.query.all()
         return categories
 
+@blp.route("/item/category/<int:id>")
+class CategoryView(MethodView):
+    @jwt_required
+    @blp.response(202, CategorySchema)
+    def delete(self, id):
+        category = LotModel.query.get_or_404(id)
+        db.session.delete(category)
+        db.session.commit()
+        return category
+
+    @jwt_required
+    @blp.response(202, CategorySchema)
+    def get(self, id):
+        category = CategoryModel.query.get_or_404(id)
+        return category
 @blp.route("/item")
 class Item(MethodView):
     @jwt_required(fresh=True)
