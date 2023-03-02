@@ -1,3 +1,5 @@
+from sqlalchemy import Sequence
+
 from ..db import db
 from datetime import datetime
 
@@ -7,7 +9,7 @@ class SupplierModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     supplier_name = db.Column(db.String(80), nullable=False, index=True, unique=True)
-    supplier_number = db.Column(db.Integer,db.Sequence(__tablename__ + "_id_seq", start=30000, increment=1), index=True, unique=True)
+    supplier_number = db.Column(db.Integer, db.Sequence("suppliers_id_seq", start=30000, increment=5))
     supplier_site = db.Column(db.String(80), default="Main")
     supplier_contact = db.Column(db.String(80), unique=True)
     is_active = db.Column(db.Boolean, default=True)

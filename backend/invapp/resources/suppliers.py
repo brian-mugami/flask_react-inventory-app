@@ -32,7 +32,7 @@ class SupplierAccount(MethodView):
         return accounts
 
 @blp.route("/supplier/account/<int:id>")
-class SupplierEditView(MethodView):
+class SupplierAccountView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(204, SupplierAccountSchema)
     def delete(self, id):
@@ -68,8 +68,14 @@ class Supplier(MethodView):
         supplier = SupplierModel.query.filter_by(supplier_name=data["supplier_name"]).first()
         if supplier:
             abort(409, message="Supplier already exists")
+        account = SupplierAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        if account is None:
+            abort(404, message="Account does not exist")
 
-        supplier = SupplierModel(supplier_name= data["supplier_name"], account_id=data["account_id"])
+        account_id = account.id
+
+        supplier = SupplierModel(supplier_name=data["supplier_name"], account_id=account_id,
+                                 supplier_contact=data["supplier_contact"],supplier_site=data["supplier_site"], is_active=data["is_active"])
 
         db.session.add(supplier)
         db.session.commit()
@@ -84,14 +90,15 @@ class Supplier(MethodView):
         return suppliers
 
 @blp.route("/supplier/<int:id>")
-class ItemView(MethodView):
+class SupplierView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, SupplierSchema)
     def delete(self, id):
         supplier = SupplierModel.query.get_or_404(id)
         db.session.delete(supplier)
         db.session.commit()
-        return supplier
+        return jsonify({"message": "supplier deleted"}), 204
+
     @jwt_required(fresh=True)
     @blp.response(202, SupplierSchema)
     def get(self, id):

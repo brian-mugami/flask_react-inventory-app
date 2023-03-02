@@ -7,13 +7,13 @@ class CustomerModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(80), nullable=False, index=True, unique=True)
-    customer_number = db.Column(db.Integer, db.Sequence(__tablename__ + "_id_seq", start= 2000,increment=1), index=True, unique=True)
+    customer_number = db.Column(db.Integer, db.Sequence("customers_id_seq", start= 2000,increment=1))
     customer_contact = db.Column(db.String(80), unique=True)
     is_active = db.Column(db.Boolean, default=True)
     is_archived = db.Column(db.Boolean, default=False)
     date_registered = db.Column(db.DateTime, default=datetime.utcnow())
     date_archived = db.Column(db.DateTime)
-    account_id = db.Column(db.Integer, db.ForeignKey("customer_account.id"), nullable=False, unique=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("customer_account.id", ondelete='SET DEFAULT'), server_default='2',nullable=False, unique=True)
     date_unarchived = db.Column(db.DateTime)
 
     account = db.relationship("CustomerAccountModel", back_populates="customer")

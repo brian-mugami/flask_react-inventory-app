@@ -9,8 +9,8 @@ class UserSchema(Schema):
     password2 = fields.String(required=True, load_only=True)
     is_active = fields.Boolean(required=False)
     is_archived = fields.Boolean(required=False)
-    date_registered = fields.DateTime(required=False)
-    date_archived = fields.DateTime(required=False)
+    date_registered = fields.Date(required=False)
+    date_archived = fields.Date(required=False)
 
 class LoginSchema(Schema):
     email = fields.String(required=True)
@@ -25,5 +25,5 @@ class UserUpdateSchema(Schema):
     password2 = fields.String()
     is_active = fields.Boolean()
     is_archived = fields.Boolean()
-    date_registered = fields.DateTime()
-    date_archived = fields.DateTime()
+    date_registered = fields.Date()
+    date_archived = fields.Date()

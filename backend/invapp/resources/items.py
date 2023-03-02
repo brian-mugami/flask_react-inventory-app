@@ -123,7 +123,7 @@ class ItemCategory(MethodView):
             abort(409, message="Category already exists")
         account = ItemAccountModel.query.filter_by(account_name=data["account_name"]).first()
         if account is None:
-            abort(404, message="Category does not exist")
+            abort(404, message="Category Account does not exist")
 
         account_id = account.id
         category = CategoryModel(name= data["name"],account_id=account_id)
@@ -180,11 +180,14 @@ class Item(MethodView):
         item = ItemModel.query.filter_by(item_name=data["item_name"]).first()
         if item:
             abort(409, message="Item already exists")
-
-        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=data["category_id"])
-
+        category = CategoryModel.query.filter_by(name=data["category_name"]).first()
+        if category is None:
+            abort(404, message="Category does not exist")
+        category_id = category.id
+        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=category_id, item_weight=data["item_weight"], item_volume=data["item_volume"], is_active=data["is_active"])
         db.session.add(item)
         db.session.commit()
+
 
         return item
 
@@ -203,7 +206,7 @@ class ItemView(MethodView):
         item = ItemModel.query.get_or_404(id)
         db.session.delete(item)
         db.session.commit()
-        return item
+        return jsonify({"msg": "deleted successfully"})
 
     @jwt_required(fresh=True)
     @blp.response(202, ItemSchema)
@@ -211,3 +214,23 @@ class ItemView(MethodView):
         item = ItemModel.query.get_or_404(id)
 
         return item
+
+    @jwt_required(fresh=True)
+    @blp.arguments(ItemSchema)
+    @blp.response(202, ItemSchema)
+    def patch(self, data, id):
+        item = ItemModel.query.get_or_404(id)
+        if item:
+            item.price = data["price"]
+            item.item_weight = data["item_weight"]
+            item.item_volume = data["item_volume"]
+            item.item_name = data["item_name"]
+            item.is_active = data["is_active"]
+            category = CategoryModel.query.filter_by(name=data["category_name"]).first()
+            if category is None:
+                abort(404, message="Category does not exist")
+
+            category_id = category.id
+            item.category_id = category_id
+
+            db.session.commit()

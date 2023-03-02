@@ -6,9 +6,9 @@ class SupplierAccountSchema(Schema):
     account_description = fields.String()
     account_number = fields.Integer()
     is_active = fields.Boolean(required=True, dump_only=True)
-    date_created = fields.DateTime()
-    date_archived = fields.DateTime()
-    date_unarchived = fields.DateTime()
+    date_created = fields.Date()
+    date_archived = fields.Date()
+    date_unarchived = fields.Date()
     is_archived = fields.Boolean(required=True, dump_only=True)
 
 class SupplierSchema(Schema):
@@ -19,9 +19,10 @@ class SupplierSchema(Schema):
     supplier_contact = fields.String()
     is_active = fields.Boolean()
     is_archived = fields.Boolean()
-    date_registered = fields.DateTime()
-    date_archived = fields.DateTime()
-    account_id = fields.Integer(required=True)
+    date_registered = fields.Date()
+    date_archived = fields.Date()
+    account_id = fields.Integer(required=True, dump_only=True)
+    account_name = fields.String(required=True)
     account = fields.Nested(SupplierAccountSchema(), dump_only=True)
 
 class SupplierAccountUpdateSchema(Schema):

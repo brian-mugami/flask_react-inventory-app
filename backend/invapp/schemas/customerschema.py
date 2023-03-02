@@ -14,14 +14,15 @@ class CustomerAccountSchema(Schema):
 class CustomerSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
     customer_name = fields.String(required=True)
-    customer_number = fields.Integer()
+    customer_number = fields.Integer(required=True, dump_only=True)
     customer_contact = fields.String()
     is_active = fields.Boolean()
     is_archived = fields.Boolean()
-    date_registered = fields.DateTime()
-    date_archived = fields.DateTime()
-    account_id = fields.Integer(required=True)
-    date_unarchived = fields.DateTime()
+    date_registered = fields.Date()
+    date_archived = fields.Date()
+    account_id = fields.Integer(required=True, dump_only=True)
+    date_unarchived = fields.Date()
+    account_name = fields.String(required=True)
 
     account = fields.Nested(CustomerAccountSchema(), dump_only=True)
 

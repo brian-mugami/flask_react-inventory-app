@@ -39,7 +39,7 @@ class CustomerEditView(MethodView):
         account = CustomerAccountModel.query.get_or_404(id)
         db.session.delete(account)
         db.session.commit()
-        return account
+        return jsonify({"msg": "deleted successfully"})
 
     @jwt_required(fresh=True)
     @blp.response(202, CustomerAccountSchema)
@@ -66,8 +66,13 @@ class Customer(MethodView):
         customer = CustomerModel.query.filter_by(customer_name=data["customer_name"]).first()
         if customer:
             abort(409, message="Customer already exists")
+        customer_account = CustomerAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        if customer_account is None:
+            abort(404, message="Category does not exist")
 
-        customer = CustomerModel(customer_name= data["customer_name"], account_id=data["account_id"])
+        account_id = customer_account.id
+
+        customer = CustomerModel(customer_name=data["customer_name"], account_id=account_id, customer_contact=data["customer_contact"], is_active=data["is_active"])
 
         db.session.add(customer)
         db.session.commit()
@@ -82,17 +87,38 @@ class Customer(MethodView):
         return customers
 
 @blp.route("/customer/<int:id>")
-class ItemView(MethodView):
+class CustomerView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, CustomerSchema)
     def delete(self, id):
-        supplier = CustomerModel.query.get_or_404(id)
-        db.session.delete(supplier)
+        customer = CustomerModel.query.get_or_404(id)
+        db.session.delete(customer)
         db.session.commit()
-        return supplier
+        return jsonify({"msg": "deleted successfully"})
+
     @jwt_required(fresh=True)
     @blp.response(202, CustomerSchema)
     def get(self, id):
-        supplier = CustomerModel.query.get_or_404(id)
+        customer = CustomerModel.query.get_or_404(id)
 
-        return supplier
+        return customer
+
+    @jwt_required(fresh=True)
+    @blp.arguments(CustomerSchema)
+    @blp.response(201, CustomerSchema)
+    def patch(self, data, id):
+        customer = CustomerModel.query.get_or_404(id)
+        if customer:
+            customer.customer_name = data["customer_name"]
+            customer.customer_contact = data["customer_contact"]
+            customer.is_active = data["is_active"]
+
+            customer_account = CustomerAccountModel.query.filter_by(account_name=data["account_name"]).first()
+            if customer_account is None:
+                abort(404, message="Category does not exist")
+
+            customer.account_id = customer_account.id
+
+            db.session.commit()
+
+
