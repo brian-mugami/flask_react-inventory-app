@@ -113,4 +113,4 @@ class SupplierCount(MethodView):
     def get(self):
         suppliers = db.session.execute(SupplierModel.query.filter_by(is_active=True).statement.with_only_columns([func.count()]).order_by(None)).scalar()
         #suppliers = db.session.execute('select count(id) as c from suppliers where is_active= true').scalar()
-        return jsonify({"suppliers": suppliers})
+        return jsonify({"suppliers": suppliers}), 202
