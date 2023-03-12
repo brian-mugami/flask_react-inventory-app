@@ -1,11 +1,12 @@
 from flask import jsonify
+from sqlalchemy import func
 
 from ..db import db
 from ..models.suppliermodels import SupplierModel,SupplierAccountModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required,get_jwt_identity
 from flask_smorest import Blueprint,abort
-from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema
+from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema, SupplierCountSchema
 
 blp = Blueprint("Suppliers", __name__, description="Operations on suppliers")
 
@@ -105,3 +106,11 @@ class SupplierView(MethodView):
         supplier = SupplierModel.query.get_or_404(id)
 
         return supplier
+
+@blp.route("/supplier/count")
+class SupplierCount(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        suppliers = db.session.execute(SupplierModel.query.filter_by(is_active=True).statement.with_only_columns([func.count()]).order_by(None)).scalar()
+        #suppliers = db.session.execute('select count(id) as c from suppliers where is_active= true').scalar()
+        return jsonify({"suppliers": suppliers})

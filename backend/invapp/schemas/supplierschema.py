@@ -29,3 +29,6 @@ class SupplierAccountUpdateSchema(Schema):
     account_name = fields.String(required=True)
     account_description = fields.String()
     account_number = fields.Integer(required=True)
+
+class SupplierCountSchema(Schema):
+    active_suppliers = fields.Integer(required=True, dump_only=True)
