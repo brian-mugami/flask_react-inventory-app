@@ -1,6 +1,6 @@
 import os.path
 from .libs.image_helper import IMAGE_SET
-from .resources import userblueprint, itemsblueprint, supplierblueprint, customerblueprint, imageblueprint
+from .resources import userblueprint, itemsblueprint, supplierblueprint, customerblueprint, imageblueprint, confirmationblueprint
 from flask import Flask, jsonify
 from flask_uploads import configure_uploads,patch_request_class
 from flask_smorest import Api
@@ -87,9 +87,6 @@ def create_app():
     api.register_blueprint(supplierblueprint)
     api.register_blueprint(customerblueprint)
     api.register_blueprint(imageblueprint)
+    api.register_blueprint(confirmationblueprint)
     return app
 
-#def create_database(db):
- #   if not os.path.join("sqlite:///"+os.path.join(basedir, os.getenv("DATABASE"))):
-  #      db.create_all()
-   #     return "database created successfully"

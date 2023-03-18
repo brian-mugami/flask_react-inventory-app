@@ -27,6 +27,7 @@ class PlainCategoryAccountSchema(Schema):
     date_archived = fields.DateTime()
     date_unarchived = fields.DateTime()
     is_archived = fields.Boolean(required=True, dump_only=True)
+
 class PlainLotSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
     batch = fields.String(required=True)
