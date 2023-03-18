@@ -24,3 +24,4 @@ OPENAPI_RAPIDOC_URL="https://unpkg.com/rapidoc/dist/rapidoc-min.js"
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 UPLOADED_IMAGES_DEST= os.path.join("static", "images")
 UPLOAD_FOLDER="static"
+
