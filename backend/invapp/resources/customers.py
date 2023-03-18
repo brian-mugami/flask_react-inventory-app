@@ -1,4 +1,5 @@
 from flask import jsonify
+from sqlalchemy import func
 
 from ..db import db
 from ..models.customermodels import CustomerModel,CustomerAccountModel
@@ -121,4 +122,10 @@ class CustomerView(MethodView):
 
             db.session.commit()
 
-
+@blp.route("/customer/count")
+class CustomerCount(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        customers = db.session.execute(CustomerModel.query.filter_by(is_active=True).statement.with_only_columns([func.count()]).order_by(None)).scalar()
+        #customers = db.session.execute('select count(id) as c from customers where is_active= true').scalar()
+        return jsonify({"customers": customers}), 202

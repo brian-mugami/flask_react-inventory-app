@@ -107,6 +107,25 @@ class SupplierView(MethodView):
 
         return supplier
 
+    @jwt_required(fresh=True)
+    @blp.arguments(SupplierSchema)
+    @blp.response(201, SupplierSchema)
+    def patch(self, data, id):
+        supplier = SupplierModel.query.get_or_404(id)
+        if supplier:
+            supplier.supplier_name = data["supplier_name"]
+            supplier.supplier_contact = data["supplier_contact"]
+            supplier.supplier_site = data["supplier_site"]
+            supplier.is_active = data["is_active"]
+
+            supplier_account = SupplierAccountModel.query.filter_by(account_name=data["account_name"]).first()
+            if supplier_account is None:
+                abort(404, message="Account does not exist")
+
+            supplier.account_id = supplier_account.id
+
+            db.session.commit()
+
 @blp.route("/supplier/count")
 class SupplierCount(MethodView):
     @jwt_required(fresh=True)
