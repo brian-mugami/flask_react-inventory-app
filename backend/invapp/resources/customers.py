@@ -2,7 +2,8 @@ from flask import jsonify
 from sqlalchemy import func
 
 from ..db import db
-from ..models.customermodels import CustomerModel,CustomerAccountModel
+from ..models import AccountModel
+from ..models.customermodels import CustomerModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required,get_jwt_identity
 from flask_smorest import Blueprint,abort
@@ -16,12 +17,15 @@ class CustomerAccount(MethodView):
     @blp.arguments(CustomerAccountSchema)
     @blp.response(200, CustomerAccountSchema)
     def post(self, data):
-        account = CustomerAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        account = AccountModel.query.filter_by(
+            account_name=data["account_name"],
+            account_category="Customer Account"
+        ).first()
         if account:
             abort(409, message="Account already exists")
 
-        account = CustomerAccountModel(account_name= data["account_name"],account_number=data["account_number"],
-                                   account_description= data["account_description"])
+        account = AccountModel(account_name= data["account_name"],account_number=data["account_number"],
+                                   account_description= data["account_description"], account_category="Customer Account")
 
         db.session.add(account)
         db.session.commit()
@@ -29,7 +33,8 @@ class CustomerAccount(MethodView):
     @jwt_required(fresh=False)
     @blp.response(201, CustomerAccountSchema(many=True))
     def get(self):
-        accounts = CustomerAccountModel.query.all()
+        accounts = AccountModel.query.filter_by(account_category="Customer Account").all()
+
         return accounts
 
 @blp.route("/customer/account/<int:id>")
@@ -37,7 +42,9 @@ class CustomerEditView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(204, CustomerAccountSchema)
     def delete(self, id):
-        account = CustomerAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Customer Account":
+            abort(400, message="This is not an customer account")
         db.session.delete(account)
         db.session.commit()
         return jsonify({"msg": "deleted successfully"})
@@ -45,13 +52,17 @@ class CustomerEditView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, CustomerAccountSchema)
     def get(self, id):
-        account = CustomerAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Customer Account":
+            abort(400, message="This is not an customer account")
         return account
 
     @jwt_required(fresh=True)
     @blp.arguments(CustomerAccountUpdateSchema)
     def patch(self, data, id):
-        account = CustomerAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Customer Account":
+            abort(400, message="This is not an customer account")
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
@@ -67,9 +78,9 @@ class Customer(MethodView):
         customer = CustomerModel.query.filter_by(customer_name=data["customer_name"]).first()
         if customer:
             abort(409, message="Customer already exists")
-        customer_account = CustomerAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        customer_account = AccountModel.query.filter_by(account_name=data["account_name"], account_category="Customer Account").first()
         if customer_account is None:
-            abort(404, message="Category does not exist")
+            abort(404, message="Account does not exist")
 
         account_id = customer_account.id
 
@@ -114,9 +125,9 @@ class CustomerView(MethodView):
             customer.customer_contact = data["customer_contact"]
             customer.is_active = data["is_active"]
 
-            customer_account = CustomerAccountModel.query.filter_by(account_name=data["account_name"]).first()
+            customer_account = AccountModel.query.filter_by(account_name=data["account_name"], account_category="Customer Account").first()
             if customer_account is None:
-                abort(404, message="Category does not exist")
+                abort(404, message="Account does not exist")
 
             customer.account_id = customer_account.id
 

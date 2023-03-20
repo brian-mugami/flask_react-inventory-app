@@ -1,5 +1,3 @@
-from sqlalchemy import Sequence
-
 from ..db import db
 from datetime import datetime
 
@@ -17,9 +15,10 @@ class SupplierModel(db.Model):
     date_registered = db.Column(db.DateTime, default=datetime.utcnow())
     date_archived = db.Column(db.DateTime)
     date_unarchived = db.Column(db.DateTime)
-    account_id = db.Column(db.Integer, db.ForeignKey("supplier_account.id"), nullable=False, unique=True)
 
-    account = db.relationship("SupplierAccountModel" ,back_populates="supplier")
+    #payment_type = db.Column(db.Integer, db.ForeignKey("payment_types.id"), nullable=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET DEFAULT'), server_default='1',nullable=False, unique=True)
+    account = db.relationship("AccountModel",back_populates="supplier")
 
     def deactivate_supplier(self):
         self.is_active = False
@@ -36,31 +35,5 @@ class SupplierModel(db.Model):
 
         db.session.commit(self)
 
-class SupplierAccountModel(db.Model):
-    __tablename__ = "supplier_account"
 
-    id = db.Column(db.Integer, primary_key=True)
-    account_name = db.Column(db.String(80), nullable=False, unique=True)
-    account_description = db.Column(db.String(256))
-    account_number = db.Column(db.Integer, nullable=False, unique=True)
-    is_active = db.Column(db.Boolean, default=True)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow())
-    date_archived = db.Column(db.DateTime)
-    date_unarchived = db.Column(db.DateTime)
-    is_archived = db.Column(db.Boolean, default=False)
 
-    supplier = db.relationship("SupplierModel", back_populates="account")
-
-    def deactivate_account(self):
-        self.is_active = False
-        self.is_archived = True
-        self.date_archived = datetime.utcnow()
-
-        db.session.commit(self)
-    def activate_account(self):
-        self.is_active = True
-        self.is_archived = False
-        self.date_archived = None
-        self.date_unarchived = datetime.utcnow()
-
-        db.session.commit(self)

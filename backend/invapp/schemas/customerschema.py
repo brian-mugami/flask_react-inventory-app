@@ -4,6 +4,7 @@ class CustomerAccountSchema(Schema):
     id = fields.String(required=True, dump_only=True)
     account_name = fields.String(required=True)
     account_description = fields.String()
+    account_category = fields.String(dump_default="Customer Account")
     account_number = fields.Integer(required=True)
     is_active = fields.Boolean(required=True, dump_only=True)
     date_created = fields.DateTime()

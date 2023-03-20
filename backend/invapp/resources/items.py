@@ -1,7 +1,8 @@
 from flask import jsonify
 
 from ..db import db
-from ..models.itemmodels import CategoryModel,ItemModel,ItemAccountModel, LotModel
+from ..models.accountsmodel import AccountModel
+from ..models.itemmodels import CategoryModel, ItemModel, LotModel
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
@@ -16,12 +17,15 @@ class Categoryaccount(MethodView):
     @blp.arguments(PlainCategoryAccountSchema)
     @blp.response(201, PlainCategoryAccountSchema)
     def post(self, data):
-        account = ItemAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        account = AccountModel.query.filter_by(
+            account_name=data["account_name"],
+            account_category="Item Account"
+        ).first()
         if account:
             abort(409, message="Account already exists")
 
-        account = ItemAccountModel(account_name= data["account_name"],account_number=data["account_number"],
-                                   account_description= data["account_description"])
+        account = AccountModel(account_name= data["account_name"],account_number=data["account_number"],
+                                   account_description= data["account_description"], account_category="Item Account")
 
         db.session.add(account)
         db.session.commit()
@@ -29,7 +33,7 @@ class Categoryaccount(MethodView):
     @jwt_required(fresh=False)
     @blp.response(200, PlainCategoryAccountSchema(many=True))
     def get(self):
-        accounts = ItemAccountModel.query.all()
+        accounts = AccountModel.query.filter_by(account_category="Item Account").all()
         return accounts
 
 @blp.route("/category/account/<int:id>")
@@ -37,7 +41,9 @@ class CategoryaccountView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, PlainCategoryAccountSchema)
     def delete(self, id):
-        account = ItemAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Item Account":
+            abort(400, message="This is not an item account")
         db.session.delete(account)
         db.session.commit()
 
@@ -46,7 +52,10 @@ class CategoryaccountView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(CategoryAccountUpdateSchema)
     def patch(self, data, id):
-        account = ItemAccountModel.query.get_or_404(id)
+
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Item Account":
+            abort(400, message="This is not an item account")
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
@@ -56,7 +65,9 @@ class CategoryaccountView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, PlainCategoryAccountSchema)
     def get(self, id):
-        account = ItemAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Item Account":
+            abort(400, message="This is not an item account")
 
         return account
 
@@ -121,7 +132,10 @@ class ItemCategory(MethodView):
         category = CategoryModel.query.filter_by(name=data["name"]).first()
         if category:
             abort(409, message="Category already exists")
-        account = ItemAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        account = AccountModel.query.filter_by(
+            account_name=data["account_name"],
+            account_category="Item Account"
+        ).first()
         if account is None:
             abort(404, message="Category Account does not exist")
 
@@ -163,9 +177,13 @@ class CategoryView(MethodView):
 
         category = CategoryModel.query.get_or_404(id)
         category.name = data["name"]
-        account = ItemAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        account = AccountModel.query.filter_by(
+            account_name=data["account_name"],
+            account_category="Item Account"
+        ).first()
+
         if account is None:
-            abort(404, message="Category does not exist")
+            abort(404, message="Account does not exist")
         account_id = account.id
         category.account_id = account_id
 
