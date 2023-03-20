@@ -2,7 +2,8 @@ from flask import jsonify
 from sqlalchemy import func
 
 from ..db import db
-from ..models.suppliermodels import SupplierModel,SupplierAccountModel
+from ..models import AccountModel
+from ..models.suppliermodels import SupplierModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required,get_jwt_identity
 from flask_smorest import Blueprint,abort
@@ -16,12 +17,15 @@ class SupplierAccount(MethodView):
     @blp.arguments(SupplierAccountSchema)
     @blp.response(201, SupplierAccountSchema)
     def post(self, data):
-        account = SupplierAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        account = AccountModel.query.filter_by(
+            account_name=data["account_name"],
+            account_category= "Supplier Account"
+        ).first()
         if account:
             abort(409, message="Account already exists")
 
-        account = SupplierAccountModel(account_name= data["account_name"],account_number=data["account_number"],
-                                   account_description= data["account_description"])
+        account = AccountModel(account_name=data["account_name"], account_number=data["account_number"],
+                               account_description=data["account_description"], account_category="Supplier Account")
 
         db.session.add(account)
         db.session.commit()
@@ -29,7 +33,7 @@ class SupplierAccount(MethodView):
     @jwt_required(fresh=False)
     @blp.response(201, SupplierAccountSchema(many=True))
     def get(self):
-        accounts = SupplierAccountModel.query.all()
+        accounts = AccountModel.query.filter_by(account_category="Supplier Account").all()
         return accounts
 
 @blp.route("/supplier/account/<int:id>")
@@ -37,7 +41,9 @@ class SupplierAccountView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(204, SupplierAccountSchema)
     def delete(self, id):
-        account = SupplierAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Supplier Account":
+            abort(400, message="This is not an supplier account")
         db.session.delete(account)
         db.session.commit()
 
@@ -46,14 +52,18 @@ class SupplierAccountView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, SupplierAccountSchema)
     def get(self, id):
-        account = SupplierAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Supplier Account":
+            abort(400, message="This is not an item account")
         return account
 
     @jwt_required(fresh=True)
     @blp.arguments(SupplierAccountUpdateSchema)
 
     def patch(self, data, id):
-        account = SupplierAccountModel.query.get_or_404(id)
+        account = AccountModel.query.get_or_404(id)
+        if account.account_category != "Supplier Account":
+            abort(400, message="This is not an item account")
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
@@ -69,7 +79,10 @@ class Supplier(MethodView):
         supplier = SupplierModel.query.filter_by(supplier_name=data["supplier_name"]).first()
         if supplier:
             abort(409, message="Supplier already exists")
-        account = SupplierAccountModel.query.filter_by(account_name=data["account_name"]).first()
+        account = AccountModel.query.filter_by(
+            account_name=data["account_name"],
+            account_category="Supplier Account"
+        ).first()
         if account is None:
             abort(404, message="Account does not exist")
 
@@ -118,7 +131,10 @@ class SupplierView(MethodView):
             supplier.supplier_site = data["supplier_site"]
             supplier.is_active = data["is_active"]
 
-            supplier_account = SupplierAccountModel.query.filter_by(account_name=data["account_name"]).first()
+            supplier_account = AccountModel.query.filter_by(
+                account_name=data["account_name"],
+                account_category="Supplier Account"
+            ).first()
             if supplier_account is None:
                 abort(404, message="Account does not exist")
 

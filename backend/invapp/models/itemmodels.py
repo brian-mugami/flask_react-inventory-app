@@ -16,7 +16,7 @@ class ItemModel(db.Model):
     is_archived = db.Column(db.Boolean, default=False)
     date_unarchived = db.Column(db.DateTime)
     price = db.Column(db.Float(precision=2), unique=False, nullable=False, default=1.00)
-    category_id = db.Column(db.Integer, db.ForeignKey("categories.id", ondelete='SET DEFAULT'),server_default='8', nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id", ondelete='SET DEFAULT'),server_default='1', nullable=False)
 
     category = db.relationship("CategoryModel", back_populates="items")
     lot = db.relationship("LotModel", back_populates="items", secondary="item_lots")
@@ -34,20 +34,6 @@ class ItemModel(db.Model):
         self.date_archived = None
         self.date_unarchived = datetime.utcnow()
         db.session.commit(self)
-
-class ItemAccountModel(db.Model):
-    __tablename__ = "item_account"
-    id = db.Column(db.Integer, primary_key=True)
-    account_name = db.Column(db.String(80), nullable=False, unique=True)
-    account_description = db.Column(db.String(256))
-    account_number = db.Column(db.Integer, nullable=False, unique=True)
-    is_active = db.Column(db.Boolean, default=True)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow())
-    date_archived = db.Column(db.DateTime)
-    is_archived = db.Column(db.Boolean, default=False)
-    date_unarchived = db.Column(db.DateTime)
-
-    category = db.relationship("CategoryModel", back_populates="account", passive_deletes=True)
 
     def deactivate_account(self):
         self.is_active = False
@@ -101,10 +87,10 @@ class CategoryModel(db.Model):
     date_archived = db.Column(db.DateTime)
     is_archived = db.Column(db.Boolean, default=False)
     date_unarchived = db.Column(db.DateTime)
-    account_id = db.Column(db.Integer, db.ForeignKey("item_account.id"), nullable=False, unique=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False, unique=True)
 
     items = db.relationship("ItemModel", back_populates="category", lazy="dynamic")
-    account = db.relationship("ItemAccountModel", back_populates="category")
+    account = db.relationship("AccountModel", back_populates="category")
 
     def deactivate_category(self):
         self.is_active = False
