@@ -3,11 +3,11 @@ from sqlalchemy import func
 
 from ..db import db
 from ..models import AccountModel
-from ..models.suppliermodels import SupplierModel
+from invapp.models.masters.suppliermodels import SupplierModel
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required,get_jwt_identity
+from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint,abort
-from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema, SupplierCountSchema
+from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema
 
 blp = Blueprint("Suppliers", __name__, description="Operations on suppliers")
 
@@ -54,16 +54,16 @@ class SupplierAccountView(MethodView):
     def get(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Supplier Account":
-            abort(400, message="This is not an item account")
+            abort(400, message="This is not a supplier account")
         return account
 
     @jwt_required(fresh=True)
-    @blp.arguments(SupplierAccountUpdateSchema)
 
+    @blp.arguments(SupplierAccountUpdateSchema)
     def patch(self, data, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Supplier Account":
-            abort(400, message="This is not an item account")
+            abort(400, message="This is not a supplier account")
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
@@ -89,7 +89,7 @@ class Supplier(MethodView):
         account_id = account.id
 
         supplier = SupplierModel(supplier_name=data["supplier_name"], account_id=account_id,
-                                 supplier_contact=data["supplier_contact"],supplier_site=data["supplier_site"], is_active=data["is_active"])
+                                 supplier_contact=data["supplier_contact"],supplier_site=data["supplier_site"], is_active=data["is_active"], payment_type=data["payment_type"])
 
         db.session.add(supplier)
         db.session.commit()

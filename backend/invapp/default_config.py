@@ -2,9 +2,11 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
+base_dir = os.path.abspath(os.path.dirname(__file__))
+URI ="sqlite:///" + os.path.join(base_dir, "database.db")
 load_dotenv(".env", verbose=True)
 DEBUG = True
-SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE")
+SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE", URI)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 PROPAGATE_EXCEPTIONS = True
 SECRET_KEY = os.environ.get("APP_SECRET_KEY")
@@ -21,7 +23,8 @@ OPENAPI_REDOC_PATH="/redoc"
 OPENAPI_REDOC_URL="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"
 OPENAPI_RAPIDOC_PATH="/rapidoc"
 OPENAPI_RAPIDOC_URL="https://unpkg.com/rapidoc/dist/rapidoc-min.js"
-JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 UPLOADED_IMAGES_DEST= os.path.join("static", "images")
 UPLOAD_FOLDER="static"
+JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 

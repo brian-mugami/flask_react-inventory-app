@@ -1,0 +1,1 @@
+from .purchasing import blp as purchasingblueprint

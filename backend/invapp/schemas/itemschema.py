@@ -1,21 +1,24 @@
 from marshmallow import Schema, fields
 from datetime import datetime, timedelta
 
-
-class PlainItemSchema(Schema):
+class BaseItemSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
-    item_image = fields.String()
     item_name = fields.String(required=True)
     item_number = fields.Integer(required=True, dump_only=True)
+    price = fields.Float(required=True)
+    category_id = fields.Integer(required=True, dump_only=True)
+    category_name = fields.String(required=True)
+
+
+class PlainItemSchema(BaseItemSchema):
+    item_image = fields.String()
     item_weight = fields.Float()
     item_volume = fields.Float()
     is_active = fields.Boolean()
     date_created = fields.Date()
     date_archived = fields.Date()
     is_archived = fields.Boolean()
-    price = fields.Float(required=True)
-    category_id = fields.Integer(required=True, dump_only=True)
-    category_name = fields.String(required=True)
+
 
 class PlainCategoryAccountSchema(Schema):
     id = fields.String(required=True, dump_only=True)

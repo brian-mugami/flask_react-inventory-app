@@ -1,9 +1,9 @@
 from flask import jsonify
 
 from ..db import db
-from ..models.accountsmodel import AccountModel
-from ..models.itemmodels import CategoryModel, ItemModel, LotModel
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from invapp.models.masters.accountsmodel import AccountModel
+from invapp.models.masters.itemmodels import CategoryModel, ItemModel, LotModel
+from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema, PlainCategoryAccountSchema, CategoryAccountUpdateSchema, PlainCategorySchema

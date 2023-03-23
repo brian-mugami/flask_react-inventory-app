@@ -3,9 +3,9 @@ from sqlalchemy import func
 
 from ..db import db
 from ..models import AccountModel
-from ..models.customermodels import CustomerModel
+from invapp.models.masters.customermodels import CustomerModel
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required,get_jwt_identity
+from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint,abort
 from ..schemas.customerschema import CustomerAccountSchema,CustomerSchema,CustomerAccountUpdateSchema
 
@@ -44,7 +44,7 @@ class CustomerEditView(MethodView):
     def delete(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Customer Account":
-            abort(400, message="This is not an customer account")
+            abort(400, message="This is not a customer account")
         db.session.delete(account)
         db.session.commit()
         return jsonify({"msg": "deleted successfully"})
@@ -54,7 +54,7 @@ class CustomerEditView(MethodView):
     def get(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Customer Account":
-            abort(400, message="This is not an customer account")
+            abort(400, message="This is not a customer account")
         return account
 
     @jwt_required(fresh=True)
@@ -62,7 +62,7 @@ class CustomerEditView(MethodView):
     def patch(self, data, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Customer Account":
-            abort(400, message="This is not an customer account")
+            abort(400, message="This is not a customer account")
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]

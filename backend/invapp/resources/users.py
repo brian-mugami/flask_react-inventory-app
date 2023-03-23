@@ -5,7 +5,7 @@ from datetime import timezone
 from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..models.usermodels import UserModel, ConfirmationModel
+from invapp.models.masters.usermodels import UserModel, ConfirmationModel
 from ..db import db
 from ..schemas.userschema import UserSchema,LoginSchema, UserUpdateSchema, PaswordChangeSchema
 from werkzeug.security import check_password_hash,generate_password_hash
