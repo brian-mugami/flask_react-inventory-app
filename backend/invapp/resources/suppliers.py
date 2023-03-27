@@ -7,7 +7,7 @@ from invapp.models.masters.suppliermodels import SupplierModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint,abort
-from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema
+from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema, SupplierDetailedSchema
 
 blp = Blueprint("Suppliers", __name__, description="Operations on suppliers")
 
@@ -89,7 +89,7 @@ class Supplier(MethodView):
         account_id = account.id
 
         supplier = SupplierModel(supplier_name=data["supplier_name"], account_id=account_id,
-                                 supplier_contact=data["supplier_contact"],supplier_site=data["supplier_site"], is_active=data["is_active"], payment_type=data["payment_type"])
+                                 supplier_phone_no=data["supplier_phone_no"], supplier_email=data["supplier_email"],supplier_site=data["supplier_site"], is_active=data["is_active"], payment_type=data["payment_type"])
 
         db.session.add(supplier)
         db.session.commit()
@@ -127,7 +127,8 @@ class SupplierView(MethodView):
         supplier = SupplierModel.query.get_or_404(id)
         if supplier:
             supplier.supplier_name = data["supplier_name"]
-            supplier.supplier_contact = data["supplier_contact"]
+            supplier.supplier_phone_no = data["supplier_phone_no"]
+            supplier.supplier_email = data["supplier_email"]
             supplier.supplier_site = data["supplier_site"]
             supplier.is_active = data["is_active"]
 

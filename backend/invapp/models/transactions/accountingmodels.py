@@ -33,6 +33,9 @@ class PurchaseAccountingModel(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    def update_db(self):
+        db.session.commit()
+
 class SupplierPayAccountingModel(db.Model):
     __tablename__ = "supplier payment accounting"
 
@@ -45,5 +48,22 @@ class SupplierPayAccountingModel(db.Model):
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
 
     payment_id = db.Column(db.Integer, db.ForeignKey("payments.id", ondelete="CASCADE"), nullable=False)
+    balance_id = db.Column(db.Integer, db.ForeignKey("supplier balances.id",ondelete="CASCADE"), nullable=False)
 
-    payments = db.relationship("PaymentModel", back_populates="accounting" )
+    payments = db.relationship("PaymentModel", back_populates="accounting")
+    balance = db.relationship("SupplierBalanceModel", back_populates="accounting")
+
+    __table_args__ = (
+        db.UniqueConstraint('payment_id', 'balance_id'),
+    )
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def update_db(self):
+        db.session.commit()

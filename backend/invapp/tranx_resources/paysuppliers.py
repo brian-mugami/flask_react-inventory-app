@@ -1,5 +1,4 @@
 import datetime
-import traceback
 
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
@@ -7,7 +6,7 @@ from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema
 from ..models.transactions.payment_models import PaymentModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from flask_jwt_extended import jwt_required
-from ..signals import add_supplier_balance
+from ..signals import add_supplier_balance, make_payement
 
 blp = Blueprint("payments", __name__, description="Supplier payments")
 
@@ -83,7 +82,7 @@ class PaymentMainView(MethodView):
                 status = "not_paid"
 
             payment.payment_status = status
-        payment.save_to_db()
+        payment.update_db()
 
         return payment
 
@@ -93,8 +92,14 @@ class PaymentApproveView(MethodView):
     @blp.response(202, PlainPaymentSchema)
     def post(self, id):
         payment = PaymentModel.query.get_or_404(id)
+        supplier_account_id = payment.purchase.supplier.account_id
+        supplier_id = payment.purchase.supplier_id
+        invoice_amount = payment.purchase.amount
+        purchase_id = payment.purchase_id
+        currency = payment.purchase.currency
         if payment.approved:
             abort(400, message="This payment is already approved!!")
         payment.approve_payment()
-        add_supplier_balance(supplier_id=payment.purchase.supplier_id, amount=payment.purchase.amount, paid=payment.amount, purchase_id=payment.purchase_id)
+        balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount, purchase_id=purchase_id, currency=currency)
+        make_payement(supplier_account_id=supplier_account_id,credit_account=payment.pay_account_id,amount=payment.amount,payment_id=payment.id,balance_id=balance)
         return payment

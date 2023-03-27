@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: caf2e5753163
-Revises: 1fd39037d7ec
-Create Date: 2023-03-27 13:18:19.131955
+Revision ID: 22bd50422b64
+Revises: 79af7424c330
+Create Date: 2023-03-27 17:50:36.819471
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'caf2e5753163'
-down_revision = '1fd39037d7ec'
+revision = '22bd50422b64'
+down_revision = '79af7424c330'
 branch_labels = None
 depends_on = None
 
@@ -23,9 +23,6 @@ def upgrade():
                existing_type=sa.REAL(),
                type_=sa.Float(precision=2),
                existing_nullable=False)
-
-    with op.batch_alter_table('payments', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('currency', sa.String(length=10), nullable=False))
 
     with op.batch_alter_table('purchases', schema=None) as batch_op:
         batch_op.alter_column('buying_price',
@@ -43,9 +40,6 @@ def downgrade():
                existing_type=sa.Float(precision=4),
                type_=sa.REAL(),
                existing_nullable=False)
-
-    with op.batch_alter_table('payments', schema=None) as batch_op:
-        batch_op.drop_column('currency')
 
     with op.batch_alter_table('items', schema=None) as batch_op:
         batch_op.alter_column('price',

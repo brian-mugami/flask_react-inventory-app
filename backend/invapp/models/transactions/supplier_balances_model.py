@@ -15,6 +15,7 @@ class SupplierBalanceModel(db.Model):
 
     supplier = db.relationship("SupplierModel", back_populates="balances")
     purchase = db.relationship("PurchaseModel", back_populates="supplier_balance")
+    accounting = db.relationship("SupplierPayAccountingModel", back_populates="balance")
 
     __table_args__ = (
         db.UniqueConstraint('supplier_id', 'currency', "purchase_id"),
@@ -30,4 +31,7 @@ class SupplierBalanceModel(db.Model):
 
     def delete_from_db(self):
         db.session.delete(self)
+        db.session.commit()
+
+    def update_db(self):
         db.session.commit()

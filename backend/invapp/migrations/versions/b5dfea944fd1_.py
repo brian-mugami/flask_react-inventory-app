@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 539b0dde26d6
+Revision ID: b5dfea944fd1
 Revises: 
-Create Date: 2023-03-27 12:46:27.104580
+Create Date: 2023-03-27 16:24:43.942094
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '539b0dde26d6'
+revision = 'b5dfea944fd1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -120,7 +120,8 @@ def upgrade():
     sa.Column('supplier_name', sa.String(length=80), nullable=False),
     sa.Column('supplier_number', sa.Integer(), nullable=True),
     sa.Column('supplier_site', sa.String(length=80), nullable=True),
-    sa.Column('supplier_contact', sa.String(length=80), nullable=True),
+    sa.Column('supplier_phone_no', sa.String(length=20), nullable=True),
+    sa.Column('supplier_email', sa.String(length=80), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('is_archived', sa.Boolean(), nullable=True),
     sa.Column('date_registered', sa.DateTime(), nullable=True),
@@ -131,7 +132,8 @@ def upgrade():
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('account_id'),
-    sa.UniqueConstraint('supplier_contact')
+    sa.UniqueConstraint('supplier_email'),
+    sa.UniqueConstraint('supplier_phone_no')
     )
     with op.batch_alter_table('suppliers', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_suppliers_supplier_name'), ['supplier_name'], unique=True)
@@ -205,6 +207,7 @@ def upgrade():
     sa.Column('transaction_number', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('payment_description', sa.String(length=256), nullable=True),
     sa.Column('amount', sa.Integer(), nullable=False),
+    sa.Column('currency', sa.String(length=10), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=True),
     sa.Column('update_date', sa.DateTime(), nullable=True),
     sa.Column('approved', sa.Boolean(), nullable=True),
@@ -219,7 +222,7 @@ def upgrade():
     op.create_table('supplier balances',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('currency', sa.String(length=10), nullable=True),
-    sa.Column('amount', sa.Float(), nullable=False),
+    sa.Column('invoice_amount', sa.Float(), nullable=False),
     sa.Column('paid', sa.Float(), nullable=True),
     sa.Column('balance', sa.Float(), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=True),
@@ -228,8 +231,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['purchase_id'], ['purchases.id'], ),
     sa.ForeignKeyConstraint(['supplier_id'], ['suppliers.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('purchase_id'),
-    sa.UniqueConstraint('supplier_id'),
     sa.UniqueConstraint('supplier_id', 'currency', 'purchase_id')
     )
     op.create_table('purchase accounting',
