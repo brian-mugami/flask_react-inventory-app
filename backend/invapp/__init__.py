@@ -1,6 +1,9 @@
 import os.path
 from .libs.image_helper import IMAGE_SET
-from .resources import userblueprint, itemsblueprint, supplierblueprint, customerblueprint, imageblueprint, confirmationblueprint
+from .resources import (userblueprint, itemsblueprint, supplierblueprint,
+                        customerblueprint, imageblueprint, confirmationblueprint , purchaseaccountsblueprint,
+                        paymentaccountsblueprint)
+from .tranx_resources import purchasingblueprint
 from flask import Flask, jsonify
 from flask_uploads import configure_uploads,patch_request_class
 from flask_smorest import Api
@@ -11,7 +14,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from .blocklist import TokenBlocklist
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+
 migrate = Migrate()
 cors = CORS()
 
@@ -78,6 +81,7 @@ def create_app():
                 }
             ), 401
         )
+
     @app.before_first_request
     def create_tables():
         db.create_all()
@@ -88,5 +92,9 @@ def create_app():
     api.register_blueprint(customerblueprint)
     api.register_blueprint(imageblueprint)
     api.register_blueprint(confirmationblueprint)
+    api.register_blueprint(purchasingblueprint)
+    api.register_blueprint(paymentaccountsblueprint)
+    api.register_blueprint(purchaseaccountsblueprint)
+
     return app
 

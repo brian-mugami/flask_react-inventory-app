@@ -3,10 +3,9 @@ from time import time
 
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-
 from ..libs.send_emails import MailgunException
 from ..schemas.confirmationschema import ConfirmationSchema
-from ..models.usermodels import ConfirmationModel, UserModel
+from invapp.models.masters.usermodels import ConfirmationModel, UserModel
 from flask import render_template, make_response
 
 blp = Blueprint("Confirmation", __name__, description="Confirmation on users")
@@ -40,7 +39,7 @@ class ConfirmationByUser(MethodView):
             }
         )
 
-    def post(self, user_id:int):
+    def post(self, user_id: int):
         user = UserModel.find_user_by_id(user_id)
         try:
             confirmation = user.most_recent_confirmation
@@ -51,8 +50,8 @@ class ConfirmationByUser(MethodView):
             new_confirmation = ConfirmationModel(user_id)
             new_confirmation.save_to_db()
             user.send_confirmation_email()
-
             return {"message":"Resend succesfull"}, 200
+
         except MailgunException as e:
             abort(500, message=f"{str(e)}")
         except:
