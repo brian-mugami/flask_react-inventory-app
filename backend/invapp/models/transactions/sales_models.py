@@ -15,5 +15,4 @@ class SalesModel(db.Model):
     date_sold = db.Column(db.DateTime, default=datetime.utcnow())
 
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
-    #payment_type_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)

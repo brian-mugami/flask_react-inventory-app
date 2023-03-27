@@ -25,7 +25,7 @@ class SupplierModel(db.Model):
 
     account = db.relationship("AccountModel",back_populates="supplier")
     purchases = db.relationship("PurchaseModel", back_populates="supplier")
-
+    balances = db.relationship("SupplierBalanceModel", back_populates="supplier")
 
     def deactivate_supplier(self):
         self.is_active = False

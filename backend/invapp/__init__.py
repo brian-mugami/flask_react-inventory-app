@@ -3,7 +3,7 @@ from .libs.image_helper import IMAGE_SET
 from .resources import (userblueprint, itemsblueprint, supplierblueprint,
                         customerblueprint, imageblueprint, confirmationblueprint , purchaseaccountsblueprint,
                         paymentaccountsblueprint)
-from .tranx_resources import purchasingblueprint
+from .tranx_resources import purchasingblueprint, paymentblueprint
 from flask import Flask, jsonify
 from flask_uploads import configure_uploads,patch_request_class
 from flask_smorest import Api
@@ -95,6 +95,7 @@ def create_app():
     api.register_blueprint(purchasingblueprint)
     api.register_blueprint(paymentaccountsblueprint)
     api.register_blueprint(purchaseaccountsblueprint)
+    api.register_blueprint(paymentblueprint)
 
     return app
 

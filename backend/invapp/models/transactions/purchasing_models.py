@@ -1,6 +1,5 @@
 import uuid
 
-from sqlalchemy import Enum
 from sqlalchemy.dialects.postgresql import UUID
 from invapp.db import db
 from datetime import datetime
@@ -31,6 +30,8 @@ class PurchaseModel(db.Model):
     supplier = db.relationship("SupplierModel", back_populates="purchases")
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="purchases", lazy="dynamic")
     accounting = db.relationship("PurchaseAccountingModel", back_populates="purchases", lazy="dynamic")
+    payments = db.relationship("PaymentModel", back_populates="purchase", lazy="dynamic")
+    supplier_balance = db.relationship("SupplierBalanceModel", back_populates="purchase", lazy="dynamic")
 
     __table_args__ = (
         db.UniqueConstraint('item_id', 'supplier_id', 'invoice_number', name="purchase_unique_constraint"),
@@ -43,6 +44,10 @@ class PurchaseModel(db.Model):
     @classmethod
     def find_by_invoice_number(cls, num):
         return cls.query.filter_by(invoice_number=num).first()
+
+    @property
+    def amount(self):
+        return self.quantity * self.buying_price
 
     def save_to_db(self):
         db.session.add(self)

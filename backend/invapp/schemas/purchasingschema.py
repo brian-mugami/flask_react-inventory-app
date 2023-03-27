@@ -1,15 +1,7 @@
-import datetime
-import enum
-
 from marshmallow import Schema, fields
-
 from .itemschema import BaseItemSchema
 from .supplierschema import PlainSupplierSchema
 
-
-class PurchaseType(enum.Enum):
- cash = "cash"
- credit = "credit"
 
 class PlainPurchasingSchema(Schema):
 
@@ -24,6 +16,7 @@ class PlainPurchasingSchema(Schema):
  supplier_id = fields.Int(required=True)
  item_id = fields.Int(required=True)
  purchase_type = fields.String(required=True)
+
 
 class PurchasingSchema(PlainPurchasingSchema):
  supplier = fields.Nested(PlainSupplierSchema(), dump_only=True)

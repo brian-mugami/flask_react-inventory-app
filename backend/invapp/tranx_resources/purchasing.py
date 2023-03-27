@@ -4,10 +4,10 @@ from sqlalchemy.exc import SQLAlchemyError,SAWarning
 from ..models import AccountModel
 from ..models.transactions.inventory_balances import InventoryBalancesModel
 from ..models.transactions.accountingmodels import PurchaseAccountingModel
-from ..schemas.transactionschema import PurchasingSchema, PurchaseUpdateSchema
+from ..schemas.purchasingschema import PurchasingSchema, PurchaseUpdateSchema
 from flask_smorest import Blueprint,abort
 from invapp.models.transactions.purchasing_models import PurchaseModel
-from ..signals import increase_stock_addition, purchase_accouting_transaction
+from ..signals import increase_stock_addition, purchase_accouting_transaction, add_supplier_balance
 from flask_jwt_extended import jwt_required,get_current_user, get_jwt_identity
 
 blp = Blueprint("Purchasing",__name__,description="Purchasing controls")
@@ -31,9 +31,11 @@ class PurchasingView(MethodView):
                 supplier_account = new_trx.supplier.account_id
                 item_cost = new_trx.buying_price
                 quantity = new_trx.quantity
+                amount = quantity * item_cost
                 try:
                     result = increase_stock_addition(data["item_id"], purchase_id=new_trx.id,cost=data["buying_price"], quantity=data["quantity"], date=data["date_of_supply"])
                     accounting = purchase_accouting_transaction(purchase_id=new_trx.id,purchase_account_id=purchase_account.id,supplier_account_id=supplier_account,cost=item_cost, quantity=quantity, inv_id=result)
+                    balance = add_supplier_balance(supplier_id=data["supplier_id"],purchase_id=new_trx.id, amount=amount, currency=data["currency"])
                 except SQLAlchemyError as e:
                     abort(500, message=f"Failed to add to store, please try again: {str(e)}")
                 return new_trx
@@ -48,9 +50,11 @@ class PurchasingView(MethodView):
                 supplier_account = new_trx.supplier.account_id
                 item_cost = new_trx.buying_price
                 quantity = new_trx.quantity
+                amount = quantity*item_cost
                 try:
                     result = increase_stock_addition(data["item_id"],purchase_id=new_trx.id, cost=data["buying_price"], quantity=data["quantity"], date=data["date_of_supply"])
                     accounting = purchase_accouting_transaction(purchase_account_id=purchase_account.id,purchase_id=new_trx.id,supplier_account_id=supplier_account,cost=item_cost, quantity=quantity, inv_id=result.id)
+                    balance = add_supplier_balance(supplier_id=data["supplier_id"],purchase_id=new_trx.id, amount=amount, currency=data["currency"])
                 except:
                     abort(500, message="Failed to add to store, please try again")
                 return new_trx
@@ -59,7 +63,7 @@ class PurchasingView(MethodView):
                 abort(500, message=f"Did not save to the db")
 
     @jwt_required(fresh=True)
-    @blp.response(200,PurchasingSchema)
+    @blp.response(200,PurchasingSchema(many=True))
     def get(self):
         purchases = PurchaseModel.query.all()
         return purchases
@@ -101,12 +105,15 @@ class PurchaseManipulateView(MethodView):
                 supplier_account = transaction.supplier.account_id
                 item_cost = transaction.buying_price
                 quantity = transaction.quantity
+                amount = quantity * item_cost
                 try:
                     accounting_trx = PurchaseAccountingModel.query.filter_by(purchase_id=transaction.id).first()
                     balances_trx = InventoryBalancesModel.query.filter_by(purchase_id=transaction.id).first()
                     if accounting_trx and balances_trx:
                         result = increase_stock_addition(transaction.item_id, purchase_id=transaction.id,cost=transaction.buying_price, quantity=transaction.quantity, date=data["date_of_supply"])
                         accounting = purchase_accouting_transaction(purchase_id=transaction.id,purchase_account_id=purchase_account.id,supplier_account_id=supplier_account,cost=item_cost, quantity=quantity, inv_id=result.id)
+                        balance = add_supplier_balance(supplier_id=data["supplier_id"], amount=amount,
+                                                       currency=data["currency"], purchase_id=transaction.id)
                 except SQLAlchemyError as e:
                     abort(500, message=f"Failed to update to store, please try again: {str(e)}")
                 return transaction
@@ -120,9 +127,12 @@ class PurchaseManipulateView(MethodView):
                 supplier_account = transaction.supplier.account_id
                 item_cost = transaction.buying_price
                 quantity = transaction.quantity
+                amount = item_cost * quantity
                 try:
                     result = increase_stock_addition(data["item_id"],purchase_id=transaction.id, cost=data["buying_price"], quantity=data["quantity"], date=data["date_of_supply"])
                     accounting = purchase_accouting_transaction(purchase_account_id=purchase_account.id,purchase_id=transaction.id,supplier_account_id=supplier_account,cost=item_cost, quantity=quantity, inv_id=result.id)
+                    balance = add_supplier_balance(supplier_id=data["supplier_id"], amount=amount,
+                                                   currency=data["currency"], purchase_id=transaction.id)
                 except:
                     abort(500, message="Failed to update to store, please try again")
                 return transaction
