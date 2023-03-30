@@ -24,3 +24,13 @@ class PlainSalesSchema(Schema):
 class SalesSchema(PlainSalesSchema):
     item = fields.Nested(BaseItemSchema(), dump_only=True)
     customer = fields.Nested(BaseCustomerSchema(), dump_only=True)
+
+class SalesUpdateSchema(Schema):
+    description = fields.String()
+    quantity = fields.Int()
+    selling_price = fields.Float()
+    currency = fields.String()
+    update_date = fields.Date()
+    sale_type = fields.String()
+    item_id = fields.Int()
+    customer_id = fields.Int()

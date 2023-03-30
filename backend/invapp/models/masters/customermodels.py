@@ -25,6 +25,7 @@ class CustomerModel(db.Model):
 
     account = db.relationship("AccountModel", back_populates="customer")
     sales = db.relationship("SalesModel", back_populates="customer")
+    balances = db.relationship("CustomerBalanceModel", back_populates="customer")
 
     def deactivate_customer(self):
         self.is_active = False

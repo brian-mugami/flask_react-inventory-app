@@ -24,6 +24,8 @@ class SalesModel(db.Model):
     item = db.relationship("ItemModel", back_populates="sales")
     customer = db.relationship("CustomerModel", back_populates="sales")
     accounting = db.relationship("SalesAccountingModel", back_populates="sales")
+    customer_balance = db.relationship("CustomerBalanceModel", back_populates="sales")
+    received = db.relationship("CustomerPaymentModel", back_populates="sales")
 
     __table_args__ = (
         db.UniqueConstraint('item_id', 'customer_id', 'receipt_number', name="sales_unique_constraint"),
