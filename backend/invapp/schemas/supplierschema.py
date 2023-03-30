@@ -33,9 +33,9 @@ class SupplierSchema(PlainSupplierSchema):
     account = fields.Nested(SupplierAccountSchema(), dump_only=True)
 
 
-class SupplierDetailedSchema(PlainSupplierSchema):
-    from .purchasingschema import PlainPurchasingSchema
-    purchases = fields.List(fields.Nested(PlainPurchasingSchema(), dump_only=True))
+#class SupplierDetailedSchema(PlainSupplierSchema):
+ #   from .purchasingschema import PlainPurchasingSchema
+  #  purchases = fields.List(fields.Nested(PlainPurchasingSchema(), dump_only=True))
 
 class SupplierAccountUpdateSchema(Schema):
     account_name = fields.String(required=True)

@@ -3,18 +3,12 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from invapp.db import db
 from datetime import datetime
-import enum
-
-class PurchaseType(enum.Enum):
-    cash = "cash"
-    credit = "credit"
-
 
 class PurchaseModel(db.Model):
     __tablename__ = "purchases"
 
     id = db.Column(db.Integer, primary_key=True)
-    transaction_number = db.Column(UUID(as_uuid=True), unique=True, nullable=False,  default=uuid.uuid4)
+    transaction_number = db.Column(UUID(as_uuid=True),index=True, unique=True, nullable=False,  default=uuid.uuid4)
     invoice_number = db.Column(db.String(256), nullable=False, index=True)
     description = db.Column(db.String(256), nullable=True)
     quantity = db.Column(db.Integer, nullable=False)

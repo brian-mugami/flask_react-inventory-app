@@ -6,7 +6,8 @@ from invapp.models.masters.itemmodels import CategoryModel, ItemModel, LotModel
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema, PlainCategoryAccountSchema, CategoryAccountUpdateSchema, PlainCategorySchema
+from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema,  PlainCategorySchema
+from ..schemas.accountsschema import AccountSchema,AccountUpdateSchema
 
 blp = Blueprint("Items", __name__, description="Actions on items")
 
@@ -14,8 +15,8 @@ blp = Blueprint("Items", __name__, description="Actions on items")
 @blp.route("/category/account")
 class Categoryaccount(MethodView):
     @jwt_required(fresh=True)
-    @blp.arguments(PlainCategoryAccountSchema)
-    @blp.response(201, PlainCategoryAccountSchema)
+    @blp.arguments(AccountSchema)
+    @blp.response(201, AccountSchema)
     def post(self, data):
         account = AccountModel.query.filter_by(
             account_name=data["account_name"],
@@ -25,13 +26,13 @@ class Categoryaccount(MethodView):
             abort(409, message="Account already exists")
 
         account = AccountModel(account_name= data["account_name"],account_number=data["account_number"],
-                                   account_description= data["account_description"], account_category="Item Account")
+                                   account_description= data["account_description"], account_category="Item Account", account_type= data["account_type"])
 
         db.session.add(account)
         db.session.commit()
         return account
     @jwt_required(fresh=False)
-    @blp.response(200, PlainCategoryAccountSchema(many=True))
+    @blp.response(200, AccountSchema(many=True))
     def get(self):
         accounts = AccountModel.query.filter_by(account_category="Item Account").all()
         return accounts
@@ -39,7 +40,7 @@ class Categoryaccount(MethodView):
 @blp.route("/category/account/<int:id>")
 class CategoryaccountView(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(202, PlainCategoryAccountSchema)
+    @blp.response(202, AccountSchema)
     def delete(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Item Account":
@@ -50,7 +51,7 @@ class CategoryaccountView(MethodView):
         return account
 
     @jwt_required(fresh=True)
-    @blp.arguments(CategoryAccountUpdateSchema)
+    @blp.arguments(AccountUpdateSchema)
     def patch(self, data, id):
 
         account = AccountModel.query.get_or_404(id)
@@ -59,11 +60,12 @@ class CategoryaccountView(MethodView):
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
+        account.account_type = data["account_type"]
         db.session.commit()
         return jsonify({"message": "account updated"}), 202
 
     @jwt_required(fresh=True)
-    @blp.response(202, PlainCategoryAccountSchema)
+    @blp.response(202, AccountSchema)
     def get(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Item Account":

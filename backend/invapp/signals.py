@@ -3,14 +3,16 @@ import datetime
 from blinker import signal
 
 from invapp.models.transactions.inventory_balances import InventoryBalancesModel
-from invapp.models.transactions.accountingmodels import PurchaseAccountingModel, SupplierPayAccountingModel
+from invapp.models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
 from invapp.models.transactions.supplier_balances_model import SupplierBalanceModel
 from flask import jsonify
+from invapp.models.transactions.sales_accounting_models import SalesAccountingModel
 
 send_data = signal('send-data')
 purchase_account = signal('purchase_account')
 pay_supplier = signal("pay-supplier")
 supplier_balance = signal("supplier_balance")
+sales_account = signal("sales_account")
 
 class SignalException(Exception):
     def __init__(self, message: str):
@@ -93,7 +95,25 @@ def add_supplier_balance(supplier_id: int,purchase_id: int,invoice_amount: float
             raise SignalException("supplier balance update failed")
 
 
-
+@sales_account.connect
+def sales_accounting_transaction(sales_account_id: int, sale_id: int,customer_account_id: int, cost: float, quantity: int, inv_id: int):
+    amount = cost * quantity
+    existing_accounting = SalesAccountingModel.query.filter_by(sale_id=sale_id).first()
+    if existing_accounting:
+        existing_accounting.credit_account_id = customer_account_id
+        existing_accounting.debit_account_id = sales_account_id
+        existing_accounting.credit_amount = -amount
+        existing_accounting.debit_amount = amount
+        existing_accounting.update_date = datetime.datetime.utcnow()
+        existing_accounting.update_db()
+        return jsonify({"message": "updated"})
+    sales_account = SalesAccountingModel(credit_account_id=customer_account_id,debit_account_id=sales_account_id,
+                                          debit_amount=amount, credit_amount=-amount, sale_id=sale_id)
+    try:
+        sales_account.save_to_db()
+        return jsonify({"added": "success"})
+    except:
+        raise SignalException("Failed to add to accounts")
 
 
 

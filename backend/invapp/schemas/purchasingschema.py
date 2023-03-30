@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields
-from .itemschema import BaseItemSchema
-from .supplierschema import PlainSupplierSchema
 
+from .supplierschema import PlainSupplierSchema
+from .itemschema import PlainItemSchema
 
 class PlainPurchasingSchema(Schema):
 
@@ -20,7 +20,7 @@ class PlainPurchasingSchema(Schema):
 
 class PurchasingSchema(PlainPurchasingSchema):
  supplier = fields.Nested(PlainSupplierSchema(), dump_only=True)
- items = fields.Nested(BaseItemSchema(), dump_only=True)
+ items = fields.Nested(PlainItemSchema(), dump_only=True)
 
 class PurchaseUpdateSchema(Schema):
  invoice_number = fields.String()

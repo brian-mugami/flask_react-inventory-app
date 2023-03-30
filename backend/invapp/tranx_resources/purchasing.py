@@ -3,7 +3,7 @@ from flask.views import MethodView
 from sqlalchemy.exc import SQLAlchemyError,SAWarning
 from ..models import AccountModel
 from ..models.transactions.inventory_balances import InventoryBalancesModel
-from ..models.transactions.accountingmodels import PurchaseAccountingModel
+from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
 from ..schemas.purchasingschema import PurchasingSchema, PurchaseUpdateSchema
 from flask_smorest import Blueprint,abort
 from invapp.models.transactions.purchasing_models import PurchaseModel
@@ -27,7 +27,7 @@ class PurchasingView(MethodView):
             """cash purchase"""
             try:
                 new_trx.save_to_db()
-                purchase_account = AccountModel.query.filter_by(account_name="cash account").first()
+                purchase_account = AccountModel.query.filter_by(account_type="cash", account_category="Purchase Account").first()
                 supplier_account = new_trx.supplier.account_id
                 item_cost = new_trx.buying_price
                 quantity = new_trx.quantity
@@ -46,7 +46,7 @@ class PurchasingView(MethodView):
         else:
             try:
                 new_trx.save_to_db()
-                purchase_account = AccountModel.query.filter_by(account_name="credit account").first()
+                purchase_account = AccountModel.query.filter_by(account_type="credit", account_category="Purchase Account").first()
                 supplier_account = new_trx.supplier.account_id
                 item_cost = new_trx.buying_price
                 quantity = new_trx.quantity
@@ -102,7 +102,7 @@ class PurchaseManipulateView(MethodView):
             """cash purchase"""
             try:
                 transaction.update_db()
-                purchase_account = AccountModel.query.filter_by(account_name="cash account").first()
+                purchase_account = AccountModel.query.filter_by(account_type="cash", account_category="Purchase Account").first()
                 supplier_account = transaction.supplier.account_id
                 item_cost = transaction.buying_price
                 quantity = transaction.quantity
@@ -124,7 +124,7 @@ class PurchaseManipulateView(MethodView):
         else:
             try:
                 transaction.update_db()
-                purchase_account = AccountModel.query.filter_by(account_name="credit account").first()
+                purchase_account = AccountModel.query.filter_by(account_type="credit", account_category="Purchase Account").first()
                 supplier_account = transaction.supplier.account_id
                 item_cost = transaction.buying_price
                 quantity = transaction.quantity

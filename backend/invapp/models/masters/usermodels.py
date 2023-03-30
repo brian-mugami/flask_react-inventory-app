@@ -60,7 +60,7 @@ class UserModel (db.Model):
         text = f"Click here to confirm your registration: {link}"
         html = f"<html> Please click the link to confirm your registration: <a href={link}> Link </a> </html>"
 
-        Mailgun.send_email([self.email], subject, text, html)
+        Mailgun.send_email(self.email, subject, text, html)
 
     def save_to_db(self):
         db.session.add(self)

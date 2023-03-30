@@ -7,6 +7,7 @@ class AccountModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     account_name = db.Column(db.String(80), nullable=False, unique=True)
     account_description = db.Column(db.String(256))
+    account_type = db.Column(db.Enum("cash", "credit","none" ,name="account_types"), default="none")
     account_number = db.Column(db.Integer, nullable=False, unique=True)
     account_category = db.Column(db.String(100), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -18,6 +19,7 @@ class AccountModel(db.Model):
     category = db.relationship("CategoryModel", back_populates="account", passive_deletes=True, lazy="dynamic")
     supplier = db.relationship("SupplierModel", back_populates="account", lazy="dynamic", passive_deletes=True)
     customer = db.relationship("CustomerModel", back_populates="account", passive_deletes=True, lazy="dynamic")
+
 
     def deactivate_account(self):
         self.is_active = False
@@ -39,4 +41,7 @@ class AccountModel(db.Model):
 
     def delete_from_db(self):
         db.session.delete(self)
+        db.session.commit()
+
+    def update_db(self):
         db.session.commit()

@@ -1,7 +1,5 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
-
-from .. import db
 from invapp.models.masters.accountsmodel import AccountModel
 from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
 from flask_jwt_extended import jwt_required
@@ -23,7 +21,7 @@ class PurchaseAccount(MethodView):
             abort(409, message="Account already exists")
 
         account = AccountModel(account_name=data["account_name"], account_number=data["account_number"],
-                               account_description=data["account_description"], account_category="Purchase Account")
+                               account_description=data["account_description"], account_category="Purchase Account", account_type= data["account_type"])
 
         account.save_to_db()
         return account
@@ -63,6 +61,7 @@ class PurchaseAccountView(MethodView):
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
-        account.save_to_db()
+        account.account_type = data["account_type"]
+        account.update_db()
 
         return {"message": "account updated"}, 202

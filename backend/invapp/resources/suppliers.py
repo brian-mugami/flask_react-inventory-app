@@ -7,15 +7,16 @@ from invapp.models.masters.suppliermodels import SupplierModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint,abort
-from ..schemas.supplierschema import SupplierAccountSchema, SupplierSchema, SupplierAccountUpdateSchema, SupplierDetailedSchema
+from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
+from ..schemas.supplierschema import SupplierSchema
 
 blp = Blueprint("Suppliers", __name__, description="Operations on suppliers")
 
 @blp.route("/supplier/account")
 class SupplierAccount(MethodView):
     @jwt_required(fresh=True)
-    @blp.arguments(SupplierAccountSchema)
-    @blp.response(201, SupplierAccountSchema)
+    @blp.arguments(AccountSchema)
+    @blp.response(201, AccountSchema)
     def post(self, data):
         account = AccountModel.query.filter_by(
             account_name=data["account_name"],
@@ -25,13 +26,13 @@ class SupplierAccount(MethodView):
             abort(409, message="Account already exists")
 
         account = AccountModel(account_name=data["account_name"], account_number=data["account_number"],
-                               account_description=data["account_description"], account_category="Supplier Account")
+                               account_description=data["account_description"], account_category="Supplier Account", account_type= data["account_type"])
 
         db.session.add(account)
         db.session.commit()
         return account
     @jwt_required(fresh=False)
-    @blp.response(201, SupplierAccountSchema(many=True))
+    @blp.response(201, AccountSchema(many=True))
     def get(self):
         accounts = AccountModel.query.filter_by(account_category="Supplier Account").all()
         return accounts
@@ -39,7 +40,7 @@ class SupplierAccount(MethodView):
 @blp.route("/supplier/account/<int:id>")
 class SupplierAccountView(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(204, SupplierAccountSchema)
+    @blp.response(204, AccountSchema)
     def delete(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Supplier Account":
@@ -50,7 +51,7 @@ class SupplierAccountView(MethodView):
         return account
 
     @jwt_required(fresh=True)
-    @blp.response(202, SupplierAccountSchema)
+    @blp.response(202, AccountSchema)
     def get(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Supplier Account":
@@ -59,7 +60,7 @@ class SupplierAccountView(MethodView):
 
     @jwt_required(fresh=True)
 
-    @blp.arguments(SupplierAccountUpdateSchema)
+    @blp.arguments(AccountUpdateSchema)
     def patch(self, data, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Supplier Account":
@@ -67,6 +68,7 @@ class SupplierAccountView(MethodView):
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
+        account.account_type = data["account_type"]
         db.session.commit()
         return jsonify({"message": "account updated"}), 202
 

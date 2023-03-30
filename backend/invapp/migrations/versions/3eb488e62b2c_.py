@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: b5dfea944fd1
+Revision ID: 3eb488e62b2c
 Revises: 
-Create Date: 2023-03-27 16:24:43.942094
+Create Date: 2023-03-28 19:15:22.804070
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'b5dfea944fd1'
+revision = '3eb488e62b2c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,6 +22,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('account_name', sa.String(length=80), nullable=False),
     sa.Column('account_description', sa.String(length=256), nullable=True),
+    sa.Column('account_type', sa.Enum('cash', 'credit', 'none', name='account_types'), nullable=True),
     sa.Column('account_number', sa.Integer(), nullable=False),
     sa.Column('account_category', sa.String(length=100), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
@@ -99,7 +100,8 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('customer_name', sa.String(length=80), nullable=False),
     sa.Column('customer_number', sa.Integer(), nullable=True),
-    sa.Column('customer_contact', sa.String(length=80), nullable=True),
+    sa.Column('customer_phone_no', sa.String(length=80), nullable=True),
+    sa.Column('customer_email', sa.String(length=80), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('is_archived', sa.Boolean(), nullable=True),
     sa.Column('date_registered', sa.DateTime(), nullable=True),
@@ -110,7 +112,8 @@ def upgrade():
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('account_id'),
-    sa.UniqueConstraint('customer_contact')
+    sa.UniqueConstraint('customer_email'),
+    sa.UniqueConstraint('customer_phone_no')
     )
     with op.batch_alter_table('customers', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_customers_customer_name'), ['customer_name'], unique=True)
@@ -118,7 +121,7 @@ def upgrade():
     op.create_table('suppliers',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('supplier_name', sa.String(length=80), nullable=False),
-    sa.Column('supplier_number', sa.Integer(), nullable=True),
+    sa.Column('supplier_number', sa.Integer(), nullable=False),
     sa.Column('supplier_site', sa.String(length=80), nullable=True),
     sa.Column('supplier_phone_no', sa.String(length=20), nullable=True),
     sa.Column('supplier_email', sa.String(length=80), nullable=True),
@@ -183,11 +186,33 @@ def upgrade():
     sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
     sa.ForeignKeyConstraint(['supplier_id'], ['suppliers.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('item_id', 'supplier_id', 'invoice_number', name='purchase_unique_constraint'),
-    sa.UniqueConstraint('transaction_number')
+    sa.UniqueConstraint('item_id', 'supplier_id', 'invoice_number', name='purchase_unique_constraint')
     )
     with op.batch_alter_table('purchases', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_purchases_invoice_number'), ['invoice_number'], unique=False)
+        batch_op.create_index(batch_op.f('ix_purchases_transaction_number'), ['transaction_number'], unique=True)
+
+    op.create_table('sales',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('transaction_number', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('receipt_number', sa.Integer(), nullable=False),
+    sa.Column('description', sa.String(length=256), nullable=True),
+    sa.Column('quantity', sa.Integer(), nullable=False),
+    sa.Column('selling_price', sa.Float(precision=4), nullable=False),
+    sa.Column('currency', sa.String(length=10), nullable=False),
+    sa.Column('update_date', sa.DateTime(), nullable=True),
+    sa.Column('date_sold', sa.DateTime(), nullable=True),
+    sa.Column('sale_type', sa.Enum('cash', 'credit', name='sales_types'), nullable=False),
+    sa.Column('item_id', sa.Integer(), nullable=False),
+    sa.Column('customer_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['customer_id'], ['customers.id'], ),
+    sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('item_id', 'customer_id', 'receipt_number', name='sales_unique_constraint')
+    )
+    with op.batch_alter_table('sales', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_sales_receipt_number'), ['receipt_number'], unique=True)
+        batch_op.create_index(batch_op.f('ix_sales_transaction_number'), ['transaction_number'], unique=True)
 
     op.create_table('inventory balances',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -197,8 +222,10 @@ def upgrade():
     sa.Column('update_date', sa.DateTime(), nullable=True),
     sa.Column('item_id', sa.Integer(), nullable=False),
     sa.Column('purchase_id', sa.Integer(), nullable=True),
+    sa.Column('sales_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
-    sa.ForeignKeyConstraint(['purchase_id'], ['purchases.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['purchase_id'], ['purchases.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['sales_id'], ['sales.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('item_id', 'purchase_id')
     )
@@ -259,10 +286,13 @@ def upgrade():
     sa.Column('credit_account_id', sa.Integer(), nullable=True),
     sa.Column('debit_account_id', sa.Integer(), nullable=True),
     sa.Column('payment_id', sa.Integer(), nullable=False),
+    sa.Column('balance_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['balance_id'], ['supplier balances.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['credit_account_id'], ['accounts.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['debit_account_id'], ['accounts.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['payment_id'], ['payments.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('payment_id', 'balance_id')
     )
     # ### end Alembic commands ###
 
@@ -274,7 +304,13 @@ def downgrade():
     op.drop_table('supplier balances')
     op.drop_table('payments')
     op.drop_table('inventory balances')
+    with op.batch_alter_table('sales', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_sales_transaction_number'))
+        batch_op.drop_index(batch_op.f('ix_sales_receipt_number'))
+
+    op.drop_table('sales')
     with op.batch_alter_table('purchases', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_purchases_transaction_number'))
         batch_op.drop_index(batch_op.f('ix_purchases_invoice_number'))
 
     op.drop_table('purchases')

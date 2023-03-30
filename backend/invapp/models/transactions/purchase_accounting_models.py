@@ -15,6 +15,7 @@ class PurchaseAccountingModel(db.Model):
 
     credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
+
     purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete='CASCADE'))
     inventory_id = db.Column(db.Integer, db.ForeignKey("inventory balances.id", ondelete='CASCADE'))
 

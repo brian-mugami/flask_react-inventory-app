@@ -2,6 +2,7 @@ import enum
 
 from invapp.db import db
 from datetime import datetime
+from sqlalchemy.sql import func
 
 class PaymentType(enum.Enum):
     cash = "cash"
@@ -12,7 +13,7 @@ class SupplierModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     supplier_name = db.Column(db.String(80), nullable=False, index=True, unique=True)
-    supplier_number = db.Column(db.Integer, db.Sequence("suppliers_id_seq", start=30000, increment=5))
+    supplier_number = db.Column(db.Integer, db.Sequence("suppliers_id_seq", start=30000, increment=5), nullable=False)
     supplier_site = db.Column(db.String(80), default="Main")
     supplier_phone_no = db.Column(db.String(20), unique=True)
     supplier_email = db.Column(db.String(80), unique=True)

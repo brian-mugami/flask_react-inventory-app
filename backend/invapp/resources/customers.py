@@ -7,15 +7,16 @@ from invapp.models.masters.customermodels import CustomerModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint,abort
-from ..schemas.customerschema import CustomerAccountSchema,CustomerSchema,CustomerAccountUpdateSchema
+from ..schemas.customerschema import CustomerSchema,CustomerUpdateSchema
+from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
 
 blp = Blueprint("Customers", __name__, description="Operations on customers")
 
 @blp.route("/customer/account")
 class CustomerAccount(MethodView):
     @jwt_required(fresh=True)
-    @blp.arguments(CustomerAccountSchema)
-    @blp.response(200, CustomerAccountSchema)
+    @blp.arguments(AccountSchema)
+    @blp.response(200, AccountSchema)
     def post(self, data):
         account = AccountModel.query.filter_by(
             account_name=data["account_name"],
@@ -25,13 +26,13 @@ class CustomerAccount(MethodView):
             abort(409, message="Account already exists")
 
         account = AccountModel(account_name= data["account_name"],account_number=data["account_number"],
-                                   account_description= data["account_description"], account_category="Customer Account")
+                                   account_type= data["account_type"],account_description= data["account_description"], account_category="Customer Account", )
 
         db.session.add(account)
         db.session.commit()
         return account
     @jwt_required(fresh=False)
-    @blp.response(201, CustomerAccountSchema(many=True))
+    @blp.response(201, AccountSchema(many=True))
     def get(self):
         accounts = AccountModel.query.filter_by(account_category="Customer Account").all()
 
@@ -40,7 +41,7 @@ class CustomerAccount(MethodView):
 @blp.route("/customer/account/<int:id>")
 class CustomerEditView(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(204, CustomerAccountSchema)
+    @blp.response(204, AccountSchema)
     def delete(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Customer Account":
@@ -50,7 +51,7 @@ class CustomerEditView(MethodView):
         return jsonify({"msg": "deleted successfully"})
 
     @jwt_required(fresh=True)
-    @blp.response(202, CustomerAccountSchema)
+    @blp.response(202, AccountSchema)
     def get(self, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Customer Account":
@@ -58,7 +59,7 @@ class CustomerEditView(MethodView):
         return account
 
     @jwt_required(fresh=True)
-    @blp.arguments(CustomerAccountUpdateSchema)
+    @blp.arguments(AccountUpdateSchema)
     def patch(self, data, id):
         account = AccountModel.query.get_or_404(id)
         if account.account_category != "Customer Account":
@@ -66,6 +67,7 @@ class CustomerEditView(MethodView):
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
+        account.account_type = data["account_type"]
         db.session.commit()
         return jsonify({"message": "account updated"}), 202
 
@@ -84,7 +86,7 @@ class Customer(MethodView):
 
         account_id = customer_account.id
 
-        customer = CustomerModel(customer_name=data["customer_name"], account_id=account_id, customer_contact=data["customer_contact"], is_active=data["is_active"])
+        customer = CustomerModel(customer_name=data["customer_name"], account_id=account_id, customer_phone_no=data["customer_phone_no"],customer_email=data["customer_email"], is_active=data["is_active"], payment_type=data["payment_type"])
 
         db.session.add(customer)
         db.session.commit()
@@ -116,14 +118,16 @@ class CustomerView(MethodView):
         return customer
 
     @jwt_required(fresh=True)
-    @blp.arguments(CustomerSchema)
+    @blp.arguments(CustomerUpdateSchema)
     @blp.response(201, CustomerSchema)
     def patch(self, data, id):
         customer = CustomerModel.query.get_or_404(id)
         if customer:
             customer.customer_name = data["customer_name"]
-            customer.customer_contact = data["customer_contact"]
+            customer.customer_phone_no = data["customer_phone_no"]
+            customer.customer_email = data["customer_email"]
             customer.is_active = data["is_active"]
+            customer.payment_type = data["payment_type"]
 
             customer_account = AccountModel.query.filter_by(account_name=data["account_name"], account_category="Customer Account").first()
             if customer_account is None:
