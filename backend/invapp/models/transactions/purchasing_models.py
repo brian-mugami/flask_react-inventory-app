@@ -15,6 +15,7 @@ class PurchaseModel(db.Model):
     buying_price = db.Column(db.Float(precision=4), nullable=False)
     currency = db.Column(db.String(10), nullable=False)
     date_of_supply = db.Column(db.DateTime, default=datetime.utcnow())
+    destination_type = db.Column(db.Enum("expense", "stores", name="destination_types"), default="stores", nullable=False)
     purchase_type = db.Column(db.Enum("cash", "credit", name="payment_types"), default="cash", nullable=False)
     update_date = db.Column(db.DateTime)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
