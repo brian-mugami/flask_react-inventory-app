@@ -24,6 +24,7 @@ class PurchaseModel(db.Model):
     items = db.relationship("ItemModel", back_populates="purchases")
     supplier = db.relationship("SupplierModel", back_populates="purchases")
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="purchases", lazy="dynamic")
+    expense_item = db.relationship("ExpensesModel", back_populates="expenses", lazy="dynamic")
     accounting = db.relationship("PurchaseAccountingModel", back_populates="purchases", lazy="dynamic")
     payments = db.relationship("PaymentModel", back_populates="purchase", lazy="dynamic")
     supplier_balance = db.relationship("SupplierBalanceModel", back_populates="purchase", lazy="dynamic")

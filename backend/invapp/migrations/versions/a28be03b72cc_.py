@@ -29,10 +29,6 @@ def upgrade():
                existing_type=sa.REAL(),
                type_=sa.Float(precision=4),
                existing_nullable=False)
-        batch_op.alter_column('destination_type',
-               existing_type=postgresql.ENUM('expense', 'stores', name='destination_type'),
-               type_=sa.Enum('expense', 'stores', name='destination_types'),
-               nullable=False)
 
     with op.batch_alter_table('sales', schema=None) as batch_op:
         batch_op.alter_column('selling_price',

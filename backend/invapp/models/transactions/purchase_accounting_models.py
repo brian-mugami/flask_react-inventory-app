@@ -17,13 +17,15 @@ class PurchaseAccountingModel(db.Model):
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
 
     purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete='CASCADE'))
-    inventory_id = db.Column(db.Integer, db.ForeignKey("inventory balances.id", ondelete='CASCADE'))
+    inventory_id = db.Column(db.Integer, db.ForeignKey("inventory balances.id", ondelete='CASCADE'), nullable=True)
+    expense_id = db.Column(db.Integer, db.ForeignKey("expenses.id", ondelete='CASCADE'), nullable=True)
 
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="accounting")
     purchases = db.relationship("PurchaseModel", back_populates="accounting")
+    expense_item = db.relationship("ExpensesModel", back_populates="accounting")
 
     __table_args__ = (
-        db.UniqueConstraint('purchase_id', 'inventory_id'),
+        db.UniqueConstraint('purchase_id', 'inventory_id', 'expense_id'),
     )
 
     def save_to_db(self):

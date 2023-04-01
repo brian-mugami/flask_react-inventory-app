@@ -23,6 +23,7 @@ class ItemModel(db.Model):
     purchases = db.relationship("PurchaseModel", back_populates="items", lazy="dynamic")
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="item", lazy="dynamic")
     sales = db.relationship("SalesModel", back_populates="item", lazy="dynamic")
+    expense_item = db.relationship("ExpensesModel", back_populates="item", lazy="dynamic")
 
     def deactivate_item(self):
         self.is_active = False

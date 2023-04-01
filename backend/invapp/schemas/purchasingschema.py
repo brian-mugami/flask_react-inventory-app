@@ -16,7 +16,8 @@ class PlainPurchasingSchema(Schema):
  supplier_id = fields.Int(required=True)
  item_id = fields.Int(required=True)
  purchase_type = fields.String(required=True)
-
+ destination_type = fields.String(required=True)
+ expense_type = fields.String()
 
 class PurchasingSchema(PlainPurchasingSchema):
  supplier = fields.Nested(PlainSupplierSchema(), dump_only=True)
@@ -33,3 +34,5 @@ class PurchaseUpdateSchema(Schema):
  item_id = fields.Int()
  purchase_type = fields.String()
  update_date = fields.Date()
+ destination_type = fields.String()
+ expense_type = fields.String()

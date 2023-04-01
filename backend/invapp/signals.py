@@ -6,6 +6,7 @@ from invapp.models.transactions.inventory_balances import InventoryBalancesModel
 from invapp.models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
 from invapp.models.transactions.supplier_balances_model import SupplierBalanceModel
 from invapp.models.transactions.customer_balances_model import CustomerBalanceModel
+from invapp.models.transactions.expenses_model import ExpensesModel
 from flask import jsonify
 from invapp.models.transactions.sales_accounting_models import SalesAccountingModel, CustomerPayAccountingModel
 
@@ -16,10 +17,28 @@ supplier_balance = signal("supplier_balance")
 sales_account = signal("sales_account")
 customer_balance = signal("customer_balance")
 customer_payment = signal("customer_payment")
+expense_addition = signal("signal_addition")
+
 
 class SignalException(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+@expense_addition.connect
+def expense_addition(item_id: int,purchase_id:int, cost: float, quantity: int, date: str=None, supplier_id: int=None):
+    item = ExpensesModel.query.filter_by(purchase_id=purchase_id, item_id=item_id).first()
+    if item:
+        item.cost = cost
+        item.quantity = quantity
+        item.update_date = datetime.datetime.utcnow()
+        item.update_db()
+        return item.id
+    onhand_item = ExpensesModel(item_id=item_id, purchase_id=purchase_id,cost=cost, quantity=quantity, date=date)
+    try:
+        onhand_item.save_to_db()
+        return onhand_item.id
+    except:
+        raise SignalException("Failed to add to expense")
 
 @send_data.connect
 def increase_stock_addition(item_id: int,purchase_id:int, cost: float, quantity: int, date: str=None, supplier_id: int=None):
@@ -39,9 +58,9 @@ def increase_stock_addition(item_id: int,purchase_id:int, cost: float, quantity:
 
 
 @purchase_account.connect
-def purchase_accouting_transaction(purchase_account_id: int, purchase_id: int,supplier_account_id: int, cost: float, quantity: int, inv_id: int):
+def purchase_accouting_transaction(purchase_account_id: int, purchase_id: int,supplier_account_id: int, cost: float, quantity: int, inv_id: int=None, expense_id: int =None):
     amount = cost * quantity
-    existing_accounting = PurchaseAccountingModel.query.filter_by(purchase_id=purchase_id, inventory_id=inv_id).first()
+    existing_accounting = PurchaseAccountingModel.query.filter_by(purchase_id=purchase_id, inventory_id=inv_id, expense_id=expense_id).first()
     if existing_accounting:
         existing_accounting.credit_account_id = supplier_account_id
         existing_accounting.debit_account_id = purchase_account_id
@@ -51,7 +70,7 @@ def purchase_accouting_transaction(purchase_account_id: int, purchase_id: int,su
         existing_accounting.update_db()
         return jsonify({"message": "updated"})
     purchase_account = PurchaseAccountingModel(credit_account_id=supplier_account_id,debit_account_id=purchase_account_id,
-                                          debit_amount=amount, credit_amount=-amount, purchase_id=purchase_id, inventory_id=inv_id)
+                                          debit_amount=amount, credit_amount=-amount, purchase_id=purchase_id, inventory_id=inv_id, expense_id=expense_id)
     try:
         purchase_account.save_to_db()
         return jsonify({"added": "success"})
@@ -93,6 +112,7 @@ def receive_payment(customer_account_id: int, bank_account: int, amount: float, 
             new_payment.save_to_db()
         except:
             raise SignalException("Payment failed")
+
 
 
 

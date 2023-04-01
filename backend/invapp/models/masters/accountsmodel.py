@@ -16,6 +16,7 @@ class AccountModel(db.Model):
     date_unarchived = db.Column(db.DateTime)
     is_archived = db.Column(db.Boolean, default=False)
 
+
     category = db.relationship("CategoryModel", back_populates="account", passive_deletes=True, lazy="dynamic")
     supplier = db.relationship("SupplierModel", back_populates="account", lazy="dynamic", passive_deletes=True)
     customer = db.relationship("CustomerModel", back_populates="account", passive_deletes=True, lazy="dynamic")
