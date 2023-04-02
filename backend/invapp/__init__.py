@@ -1,10 +1,8 @@
-from .libs.image_helper import IMAGE_SET
 from .resources import (userblueprint, itemsblueprint, supplierblueprint,
-                        customerblueprint, imageblueprint, confirmationblueprint , purchaseaccountsblueprint,
+                        customerblueprint, confirmationblueprint , purchaseaccountsblueprint,
                         paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint)
 from .tranx_resources import purchasingblueprint, paymentblueprint, salesblueprint, customerpaymentblueprint
 from flask import Flask, jsonify
-from flask_uploads import configure_uploads,patch_request_class
 from flask_smorest import Api
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -24,9 +22,6 @@ def create_app():
 
     app.config.from_object("invapp.default_config")
     app.config.from_envvar("APPLICATION_SETTINGS")
-    patch_request_class(app, 10 * 1024 * 1024) #10mb max size upload
-    configure_uploads(app, IMAGE_SET)
-
     db.init_app(app)
     api = Api(app)
     cors.init_app(app, resources={r"*": {"origins": "*"}})
@@ -89,7 +84,6 @@ def create_app():
     api.register_blueprint(itemsblueprint)
     api.register_blueprint(supplierblueprint)
     api.register_blueprint(customerblueprint)
-    api.register_blueprint(imageblueprint)
     api.register_blueprint(confirmationblueprint)
     api.register_blueprint(purchasingblueprint)
     api.register_blueprint(paymentaccountsblueprint)

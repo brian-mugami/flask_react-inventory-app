@@ -8,3 +8,21 @@ services:
       - 5000:5005
     volumes:
       - .:/app
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432-5432
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+

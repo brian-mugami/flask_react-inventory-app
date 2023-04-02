@@ -24,7 +24,7 @@ OPENAPI_REDOC_URL="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standal
 OPENAPI_RAPIDOC_PATH="/rapidoc"
 OPENAPI_RAPIDOC_URL="https://unpkg.com/rapidoc/dist/rapidoc-min.js"
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
-UPLOADED_IMAGES_DEST= os.path.join("static", "images")
-UPLOAD_FOLDER="static"
+#UPLOADED_IMAGES_DEST= os.path.join("static", "images")
+#UPLOAD_FOLDER="static"
 JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
