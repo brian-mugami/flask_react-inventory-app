@@ -24,7 +24,7 @@ def create_app():
     load_dotenv(".env", verbose=True)
 
     app.config.from_object("invapp.default_config")
-    app.config.from_envvar("APPLICATION_SETTINGS")
+    app.config.from_pyfile("default_config.py")
     patch_request_class(app, 10 * 1024 * 1024) #10mb max size upload
     configure_uploads(app, IMAGE_SET)
 
