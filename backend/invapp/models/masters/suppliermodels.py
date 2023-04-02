@@ -2,11 +2,6 @@ import enum
 
 from invapp.db import db
 from datetime import datetime
-from sqlalchemy.sql import func
-
-class PaymentType(enum.Enum):
-    cash = "cash"
-    credit = "credit"
 
 class SupplierModel(db.Model):
     __tablename__ = "suppliers"
@@ -26,7 +21,7 @@ class SupplierModel(db.Model):
     account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"),nullable=False, unique=True)
 
     account = db.relationship("AccountModel",back_populates="supplier")
-    purchases = db.relationship("PurchaseModel", back_populates="supplier")
+    invoice = db.relationship("InvoiceModel", back_populates="supplier")
     balances = db.relationship("SupplierBalanceModel", back_populates="supplier")
 
     def deactivate_supplier(self):

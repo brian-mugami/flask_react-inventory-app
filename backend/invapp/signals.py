@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 
 from blinker import signal
 
@@ -25,52 +26,53 @@ class SignalException(Exception):
         super().__init__(message)
 
 @expense_addition.connect
-def expense_addition(item_id: int,purchase_id:int, cost: float, quantity: int, date: str=None, supplier_id: int=None):
-    item = ExpensesModel.query.filter_by(purchase_id=purchase_id, item_id=item_id).first()
-    if item:
-        item.cost = cost
-        item.quantity = quantity
-        item.update_date = datetime.datetime.utcnow()
-        item.update_db()
-        return item.id
-    onhand_item = ExpensesModel(item_id=item_id, purchase_id=purchase_id,cost=cost, quantity=quantity, date=date)
-    try:
-        onhand_item.save_to_db()
-        return onhand_item.id
-    except:
-        raise SignalException("Failed to add to expense")
+def expense_addition(items: List,purchase_id:int,date: str=None):
+    for item in items:
+        item = ExpensesModel.query.filter_by(purchase_id=purchase_id, item_id=item["id"]).first()
+        if item:
+            item.unit_cost = item["buying_price"]
+            item.quantity = item["quantity"]
+            item.update_date = datetime.datetime.utcnow()
+            item.update_db()
+            return item.id
+        onhand_item = ExpensesModel(item_id=item["id"], purchase_id=purchase_id,unit_cost=item["buying_price"], quantity=item["quantity"], date=date)
+        try:
+            onhand_item.save_to_db()
+            return onhand_item.id
+        except:
+            raise SignalException("Failed to add to expense")
 
 @send_data.connect
-def increase_stock_addition(item_id: int,purchase_id:int, cost: float, quantity: int, date: str=None, supplier_id: int=None):
-    item = InventoryBalancesModel.query.filter_by(purchase_id=purchase_id, item_id=item_id).first()
-    if item:
-        item.cost = cost
-        item.quantity = quantity
-        item.update_date = datetime.datetime.utcnow()
-        item.update_db()
-        return item.id
-    onhand_item = InventoryBalancesModel(item_id=item_id, purchase_id=purchase_id,cost=cost, quantity=quantity, date=date)
-    try:
-        onhand_item.save_to_db()
-        return onhand_item.id
-    except:
-        raise SignalException("Failed to add to stores")
+def increase_stock_addition(items: List,purchase_id:int, date: str=None):
+    for item in items:
+        item = InventoryBalancesModel.query.filter_by(purchase_id=purchase_id, item_id=item["id"]).first()
+        if item:
+            item.unit_cost = item["buying_price"]
+            item.quantity = item["quantity"]
+            item.update_date = datetime.datetime.utcnow()
+            item.update_db()
+            return item.id
+        onhand_item = InventoryBalancesModel(item_id=item["id"], purchase_id=purchase_id,unit_cost=item["buying_price"], quantity=item["quantity"], date=date)
+        try:
+            onhand_item.save_to_db()
+            return onhand_item.id
+        except:
+            raise SignalException("Failed to add to stores")
 
 
 @purchase_account.connect
-def purchase_accouting_transaction(purchase_account_id: int, purchase_id: int,supplier_account_id: int, cost: float, quantity: int, inv_id: int=None, expense_id: int =None):
-    amount = cost * quantity
+def purchase_accouting_transaction(purchase_account_id: int, purchase_id: int,supplier_account_id: int,invoice_amount: float, inv_id: int=None, expense_id: int =None):
     existing_accounting = PurchaseAccountingModel.query.filter_by(purchase_id=purchase_id, inventory_id=inv_id, expense_id=expense_id).first()
     if existing_accounting:
         existing_accounting.credit_account_id = supplier_account_id
         existing_accounting.debit_account_id = purchase_account_id
-        existing_accounting.credit_amount = -amount
-        existing_accounting.debit_amount = amount
+        existing_accounting.credit_amount = -invoice_amount
+        existing_accounting.debit_amount = invoice_amount
         existing_accounting.update_date = datetime.datetime.utcnow()
         existing_accounting.update_db()
         return jsonify({"message": "updated"})
     purchase_account = PurchaseAccountingModel(credit_account_id=supplier_account_id,debit_account_id=purchase_account_id,
-                                          debit_amount=amount, credit_amount=-amount, purchase_id=purchase_id, inventory_id=inv_id, expense_id=expense_id)
+                                          debit_amount=invoice_amount, credit_amount=-invoice_amount, purchase_id=purchase_id, inventory_id=inv_id, expense_id=expense_id)
     try:
         purchase_account.save_to_db()
         return jsonify({"added": "success"})

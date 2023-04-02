@@ -6,7 +6,7 @@ class InventoryBalancesModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
-    cost = db.Column(db.Float, nullable=False, default=0.00)
+    unit_cost = db.Column(db.Float, nullable=False, default=0.00)
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
