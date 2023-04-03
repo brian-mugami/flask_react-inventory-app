@@ -11,14 +11,14 @@ class SupplierBalanceModel(db.Model):
     date = db.Column(db.DateTime)
 
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
-    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id"), nullable=False)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"), nullable=False)
 
     supplier = db.relationship("SupplierModel", back_populates="balances")
-    purchase = db.relationship("PurchaseModel", back_populates="supplier_balance")
+    invoice = db.relationship("InvoiceModel", back_populates="supplier_balance")
     accounting = db.relationship("SupplierPayAccountingModel", back_populates="balance")
 
     __table_args__ = (
-        db.UniqueConstraint('supplier_id', 'currency', "purchase_id"),
+        db.UniqueConstraint('supplier_id', 'currency', "invoice_id"),
     )
 
     @classmethod

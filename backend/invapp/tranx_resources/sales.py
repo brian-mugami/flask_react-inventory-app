@@ -62,10 +62,10 @@ class SalesView(MethodView):
                                                  customer_account_id=customer_account, selling_price=selling_price,
                                                  quantity=quantity)
                     add_customer_balance(customer_id=customer_id,sale_id=sale_added.id,receipt_amount=sale_added.amount)
+                    return sale_added
                 except:
                     traceback.print_exc()
                     return {"message": "Could not create accounting"}
-                return sale_added
             else:
                 sale_added.save_to_db()
                 cash_account = AccountModel.query.filter_by(account_type="credit",
@@ -79,10 +79,10 @@ class SalesView(MethodView):
                                                  customer_account_id=customer_account, selling_price=selling_price,
                                                  quantity=quantity)
                     add_customer_balance(customer_id=customer_id,sale_id=sale_added.id,receipt_amount=sale_added.amount)
+                    return sale_added
                 except:
                     traceback.print_exc()
                     return {"message": "Could not create accounting"}
-                return sale_added
         else:
             abort(400, message="Sale has not be made, not enough quantity!!")
 
@@ -95,7 +95,7 @@ class SalesView(MethodView):
 @blp.route("/sales/<int:id>")
 class SalesMethodView(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(201, SalesSchema(many=True))
+    @blp.response(200, SalesSchema(many=True))
     def get(self, id):
         sale = SalesModel.query.get_or_404(id)
         return sale

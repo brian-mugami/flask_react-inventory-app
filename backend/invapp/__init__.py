@@ -21,7 +21,7 @@ def create_app():
     load_dotenv(".env", verbose=True)
 
     app.config.from_object("invapp.default_config")
-    app.config.from_pyfile("config.py")
+    app.config.from_envvar("APPLICATION_SETTINGS")
     db.init_app(app)
     api = Api(app)
     cors.init_app(app, resources={r"*": {"origins": "*"}})

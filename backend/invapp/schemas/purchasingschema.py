@@ -2,40 +2,34 @@ import datetime
 
 from marshmallow import Schema, fields
 
-from .supplierschema import PlainSupplierSchema
+from .supplierschema import PlainSupplierSchema, SupplierSchema
 from .itemschema import PlainItemSchema
 from ..models import ItemModel
 
+class Invoice(Schema):
+ id = fields.Int(required=True)
+ supplier = fields.Nested(SupplierSchema(), dump_only=True)
+ invoice_number = fields.String()
+ amount = fields.Float(dump_only=True,required=True)
+ matched_to_lines = fields.String(required=True, dump_only=True)
 
 class ItemSchema(Schema):
- id = fields.Int(required=True)
+ item_id = fields.Int(required=True)
  buying_price = fields.Float(required=True)
  quantity = fields.Int(required=True)
+ description = fields.String()
 
 class PlainPurchasingSchema(Schema):
 
  id = fields.Int(dump_only=True, required=True)
- description = fields.String()
  item_cost = fields.Float(dump_only=True, required=True)
- currency = fields.String(required=True)
- destination_type = fields.String(required=True)
- expense_type = fields.String()
- items = fields.Nested(ItemSchema(), many=True, required=True)
+ items_list = fields.List(fields.Nested(ItemSchema()))
+ invoice_id = fields.Int(required=True)
 
 
 class PurchasingSchema(PlainPurchasingSchema):
- pass
+ items = fields.Nested(PlainItemSchema(), dump_only=True)
+ invoice = fields.Nested(Invoice(), dump_only=True)
 
 class PurchaseUpdateSchema(Schema):
- invoice_number = fields.String()
- description = fields.String()
- quantity = fields.Integer()
- buying_price = fields.Float()
- currency = fields.String()
- date = fields.Date()
- supplier_id = fields.Int()
- item_ids = fields.List(fields.Integer())
- purchase_type = fields.String()
- update_date = fields.Date()
- destination_type = fields.String()
- expense_type = fields.String()
+ pass

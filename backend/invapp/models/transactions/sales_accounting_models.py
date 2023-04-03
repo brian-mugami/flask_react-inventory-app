@@ -48,9 +48,6 @@ class CustomerPayAccountingModel(db.Model):
     payments = db.relationship("CustomerPaymentModel", back_populates="accounting")
     balance = db.relationship("CustomerBalanceModel", back_populates="accounting")
 
-    __table_args__ = (
-        db.UniqueConstraint('payment_id', 'balance_id'),
-    )
 
     def save_to_db(self):
         db.session.add(self)

@@ -89,7 +89,7 @@ class PaymentMainView(MethodView):
 @blp.route("/customer/payment/approve/<int:id>")
 class PaymentApproveView(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(202,PlainCustomerPaymentSchema )
+    @blp.response(202,PlainCustomerPaymentSchema)
     def post(self, id):
         payment = CustomerPaymentModel.query.get_or_404(id)
         customer_account_id = payment.sales.customer.account_id
@@ -101,5 +101,5 @@ class PaymentApproveView(MethodView):
             abort(400, message="This payment is already approved!!")
         payment.approve_payment()
         balance=add_customer_balance(customer_id=customer_id, receipt_amount=receipt_amount, paid=payment.amount, sale_id=sale_id, currency=currency)
-        receive_payment(customer_account_id=customer_account_id,bank_account=payment.receive_account_id,amount=receipt_amount,payment_id=payment.id, balance_id=balance)
+        receive_payment(customer_account_id=customer_account_id,bank_account=payment.receive_account_id,amount=payment.amount,payment_id=payment.id, balance_id=balance)
         return payment

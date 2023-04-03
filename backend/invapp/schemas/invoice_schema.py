@@ -19,10 +19,15 @@ class InvoiceSchema(Schema):
     description = fields.String(validate=validate.Length(max=256))
     currency = fields.String(required=True, validate=validate.Length(max=10))
     amount = fields.Float(required=True)
-    date = fields.DateTime()
+    accounted = fields.Boolean(dump_only=True)
+    date = fields.DateTime(dump_only=True)
+    matched_to_lines = fields.String(validate=validate.OneOf(["matched", "unmatched", "partially_matched"]), dump_only=True)
     destination_type = fields.String(validate=validate.OneOf(["expense", "stores"]))
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
     update_date = fields.DateTime()
     supplier_id = fields.Integer(required=True)
     supplier = fields.Nested(SupplierSchema(), dump_only=True)
-    purchase_items = fields.List(fields.Nested(Purchase_items(), many=True), dump_only=True)
+    purchase_items = fields.Nested(Purchase_items(), many=True)
+
+class InvoiceApproveSchema(Schema):
+    expense_type = fields.Str()

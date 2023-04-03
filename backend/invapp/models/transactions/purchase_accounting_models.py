@@ -16,17 +16,9 @@ class PurchaseAccountingModel(db.Model):
     credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
 
-    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete='CASCADE'))
-    inventory_id = db.Column(db.Integer, db.ForeignKey("inventory balances.id", ondelete='CASCADE'), nullable=True)
-    expense_id = db.Column(db.Integer, db.ForeignKey("expenses.id", ondelete='CASCADE'), nullable=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete='CASCADE'))
 
-    inventory_item = db.relationship("InventoryBalancesModel", back_populates="accounting")
-    purchases = db.relationship("PurchaseModel", back_populates="accounting")
-    expense_item = db.relationship("ExpensesModel", back_populates="accounting")
-
-    __table_args__ = (
-        db.UniqueConstraint('purchase_id', 'inventory_id', 'expense_id'),
-    )
+    invoice = db.relationship("InvoiceModel", back_populates="accounting")
 
     def save_to_db(self):
         db.session.add(self)
@@ -55,10 +47,6 @@ class SupplierPayAccountingModel(db.Model):
 
     payments = db.relationship("PaymentModel", back_populates="accounting")
     balance = db.relationship("SupplierBalanceModel", back_populates="accounting")
-
-    __table_args__ = (
-        db.UniqueConstraint('payment_id', 'balance_id'),
-    )
 
     def save_to_db(self):
         db.session.add(self)

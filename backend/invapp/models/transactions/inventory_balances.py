@@ -10,16 +10,16 @@ class InventoryBalancesModel(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
-    purchase_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete='SET NULL'), nullable=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete='SET NULL'), nullable=True)
     sales_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete='SET NULL'), nullable=True)
 
     item = db.relationship("ItemModel", back_populates="inventory_item")
-    purchases = db.relationship("PurchaseModel", back_populates="inventory_item")
-    accounting = db.relationship("PurchaseAccountingModel", back_populates="inventory_item")
+    invoice = db.relationship("InvoiceModel", back_populates="inventory_item")
+
     sales = db.relationship("SalesModel", back_populates="inventory_item")
 
     __table_args__ = (
-        db.UniqueConstraint('item_id', 'purchase_id'),
+        db.UniqueConstraint('item_id', 'invoice_id'),
     )
 
     def save_to_db(self):

@@ -15,14 +15,10 @@ class PurchaseModel(db.Model):
     items = db.relationship("ItemModel", back_populates="purchases")
     invoice = db.relationship("InvoiceModel", back_populates="purchase_items")
 
-    inventory_item = db.relationship("InventoryBalancesModel", back_populates="purchases", lazy="dynamic")
-    expense_item = db.relationship("ExpensesModel", back_populates="expenses", lazy="dynamic")
-    accounting = db.relationship("PurchaseAccountingModel", back_populates="purchases", lazy="dynamic")
-    payments = db.relationship("PaymentModel", back_populates="purchase", lazy="dynamic")
-    supplier_balance = db.relationship("SupplierBalanceModel", back_populates="purchase", lazy="dynamic")
+
 
     __table_args__ = (
-        db.UniqueConstraint('item_id', 'invoice_id', name="purchase_unique_constraint"),
+        db.UniqueConstraint('item_id', 'invoice_id', name="purchase_constraint"),
     )
 
     @classmethod
