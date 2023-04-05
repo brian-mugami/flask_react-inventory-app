@@ -1,8 +1,8 @@
-
 from flask.views import MethodView
 
+from ..models import ItemModel
 from ..schemas.invoice_schema import InvoiceSchema
-from ..schemas.purchasingschema import PurchasingSchema, PurchaseUpdateSchema,PlainPurchasingSchema
+from ..schemas.purchasingschema import PurchasingSchema, PlainPurchasingSchema, PurchaseUpdateSchema
 from flask_smorest import Blueprint,abort
 from invapp.models.transactions.purchasing_models import PurchaseModel
 from invapp.models.transactions.invoice_model import InvoiceModel
@@ -19,18 +19,22 @@ class PurchasingView(MethodView):
     def post(self, data):
         invoice = InvoiceModel.query.get(data["invoice_id"])
         if not invoice:
-            abort(400, message="Invoice does not exists")
+            abort(404, message="Invoice does not exists")
 
         cost = 0
         for item in data["items_list"]:
             existing_inv = PurchaseModel.query.filter_by(invoice_id=data["invoice_id"], item_id=item["item_id"]).first()
             if existing_inv:
                 abort(400, message="Item is already in invoice")
+            item = ItemModel.query.get(item["item_id"])
+            if not item:
+                abort(404, message="Item does not exist")
             item_cost = item["quantity"] * item["buying_price"]
             cost += item_cost
-            line = PurchaseModel(item_id=item["item_id"],description=item["description"],item_cost=item_cost ,item_quantity=item["quantity"], buying_price=item["buying_price"], invoice_id=invoice.id)
+            line = PurchaseModel(item_id=item["item_id"],description=item["description"],item_cost=item_cost , lines_cost=cost,item_quantity=item["quantity"], buying_price=item["buying_price"], invoice_id=invoice.id)
             line.save_to_db()
             line.invoice = invoice
+            line.items = item
 
             if invoice.destination_type == "stores":
                 increase_stock_addition(item_id=item["item_id"], invoice_id=invoice.id,
@@ -39,7 +43,7 @@ class PurchasingView(MethodView):
             if invoice.destination_type == "expense":
                 expense_addition(item_id=item["item_id"], invoice_id=invoice.id, date=invoice.date, quantity=item["quantity"], unit_cost=item["buying_price"])
 
-        if invoice.amount > cost or invoice.amount < cost:
+        if invoice.amount != cost:
             invoice.matched_to_lines = "unmatched"
             invoice.update_db()
         else:
@@ -60,6 +64,8 @@ class PurchaseManipulateView(MethodView):
     @jwt_required(fresh=True)
     def delete(self, id):
         transaction = PurchaseModel.query.get_or_404(id)
+        if transaction.invoice.accounted == "fully_accounted":
+            abort(400, message="Invoice is already accounted")
         transaction.delete_from_db()
         return {"message": "deleted"}, 204
 
@@ -71,19 +77,20 @@ class PurchaseManipulateView(MethodView):
 
     @jwt_required(fresh=True)
     @blp.arguments(PurchaseUpdateSchema)
-    @blp.response(200, PurchasingSchema)
+    @blp.response(200, InvoiceSchema)
     def patch(self,data, id):
         transaction = PurchaseModel.query.get_or_404(id)
-
-        invoice = InvoiceModel.query.get_or_404(data["invoice_id"])
-
+        invoice = transaction.invoice
+        if transaction.invoice.accounted == "fully_accounted":
+            abort(400, message="Invoice is already accounted")
         transaction.update_from_dict(data)
-        transaction.invoice = invoice
-        transaction.item_cost += data["item_cost"]
+        transaction.lines_cost -= transaction.item_cost
         transaction.update_db()
+        transaction.item_cost = data["quantity"] * data["buying_price"]
+        transaction.lines_cost += transaction.item_cost
+        transaction.update_db()##check logic in frontend
 
-
-        if invoice.amount > transaction.item_cost or invoice.amount < transaction.item_cost:
+        if invoice.amount != transaction.lines_cost:
             invoice.matched_to_lines = "unmatched"
             invoice.update_db()
         else:
@@ -97,7 +104,9 @@ class PurchaseManipulateView(MethodView):
         if invoice.destination_type == "expense":
             expense_addition(item_id=transaction.item_id, invoice_id=invoice.id, date=invoice.date,
                              quantity=transaction.quantity, unit_cost=transaction.buying_price)
-        return transaction
+
+        invoice = InvoiceModel.query.get(data["invoice_id"])
+        return invoice
 
 
 

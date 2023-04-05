@@ -11,14 +11,14 @@ class CustomerBalanceModel(db.Model):
     date = db.Column(db.DateTime)
 
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False)
+    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"))
 
     customer = db.relationship("CustomerModel", back_populates="balances")
-    sales = db.relationship("SalesModel", back_populates="customer_balance")
+    receipt = db.relationship("ReceiptModel", back_populates="customer_balance")
     accounting = db.relationship("CustomerPayAccountingModel", back_populates="balance")
 
     __table_args__ = (
-        db.UniqueConstraint('sale_id', 'currency', "customer_id"),
+        db.UniqueConstraint('receipt_id', 'currency', "customer_id"),
     )
 
     @classmethod

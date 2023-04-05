@@ -1,6 +1,7 @@
 from .resources import (userblueprint, itemsblueprint, supplierblueprint,
                         customerblueprint, confirmationblueprint , purchaseaccountsblueprint,
-                        paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint)
+                        paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint,
+                        receiptblueprint)
 from .tranx_resources import purchasingblueprint, paymentblueprint, salesblueprint, customerpaymentblueprint
 from flask import Flask, jsonify
 from flask_smorest import Api
@@ -22,6 +23,7 @@ def create_app():
 
     app.config.from_object("invapp.default_config")
     app.config.from_envvar("APPLICATION_SETTINGS")
+    #app.config.from_pyfile("config.py")
     db.init_app(app)
     api = Api(app)
     cors.init_app(app, resources={r"*": {"origins": "*"}})
@@ -94,6 +96,7 @@ def create_app():
     api.register_blueprint(customerpaymentblueprint)
     api.register_blueprint(expenseaccountingblueprint)
     api.register_blueprint(invoiceblueprint)
+    api.register_blueprint(receiptblueprint)
     return app
 
 

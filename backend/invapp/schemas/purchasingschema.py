@@ -1,10 +1,7 @@
-import datetime
-
 from marshmallow import Schema, fields
 
-from .supplierschema import PlainSupplierSchema, SupplierSchema
+from .supplierschema import SupplierSchema
 from .itemschema import PlainItemSchema
-from ..models import ItemModel
 
 class Invoice(Schema):
  id = fields.Int(required=True)
@@ -13,7 +10,7 @@ class Invoice(Schema):
  amount = fields.Float(dump_only=True,required=True)
  matched_to_lines = fields.String(required=True, dump_only=True)
 
-class ItemSchema(Schema):
+class PurchaseItemSchema(Schema):
  item_id = fields.Int(required=True)
  buying_price = fields.Float(required=True)
  quantity = fields.Int(required=True)
@@ -23,7 +20,7 @@ class PlainPurchasingSchema(Schema):
 
  id = fields.Int(dump_only=True, required=True)
  item_cost = fields.Float(dump_only=True, required=True)
- items_list = fields.List(fields.Nested(ItemSchema()))
+ items_list = fields.List(fields.Nested(PurchaseItemSchema()))
  invoice_id = fields.Int(required=True)
 
 
@@ -32,4 +29,10 @@ class PurchasingSchema(PlainPurchasingSchema):
  invoice = fields.Nested(Invoice(), dump_only=True)
 
 class PurchaseUpdateSchema(Schema):
- pass
+ item_id = fields.Int()
+ buying_price = fields.Float()
+ quantity = fields.Int()
+ description = fields.String()
+ item_cost = fields.Float(dump_only=True, required=True)
+
+

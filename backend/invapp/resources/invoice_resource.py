@@ -1,17 +1,18 @@
+import datetime
 import traceback
-
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
 from ..models import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
-from ..schemas.invoice_schema import InvoiceSchema, InvoiceApproveSchema
+from ..schemas.invoice_schema import BaseInvoiceSchema, InvoiceApproveSchema, InvoiceSchema
 from ..signals import add_supplier_balance, purchase_accouting_transaction, SignalException
 
-invoices_bp = Blueprint("invoices", "invoices", url_prefix="/invoices")
+invoices_bp = Blueprint("invoices", __name__, url_prefix="/invoices", description="Invoice creation")
 
 @invoices_bp.route("/")
 class Invoices(MethodView):
+
     @jwt_required(fresh=True)
     @invoices_bp.response(200,InvoiceSchema(many=True))
     def get(self):
@@ -24,13 +25,14 @@ class Invoices(MethodView):
     @invoices_bp.response(201, InvoiceSchema)
     def post(self, data):
         """Create a new invoice"""
-        supplier = SupplierModel.query.get(data["supplier_id"])
+        supplier = SupplierModel.query.filter_by(supplier_name = data["supplier_name"]).first()
         if supplier is None:
-            abort(400, message="Invalid supplier ID")
-        invoice = InvoiceModel.query.filter_by(invoice_number=data["invoice_number"], supplier_id=data["supplier_id"]).first()
+            abort(404, message="Supplier does not exist")
+        invoice = InvoiceModel.query.filter_by(invoice_number=data["invoice_number"], supplier_id=supplier.id).first()
         if invoice:
             abort(400, message="This invoice number for this supplier already exists!!")
-        new_trx = InvoiceModel(**data)
+        data.pop('supplier_name', None)
+        new_trx = InvoiceModel(supplier_id=supplier.id,**data)
         new_trx.supplier = supplier
         new_trx.save_to_db()
         try:
@@ -39,7 +41,7 @@ class Invoices(MethodView):
             return new_trx
         except SignalException as e:
             new_trx.delete_from_db()
-            abort(500, message="Did not ass supplier balance")
+            abort(500, message="Did not add supplier balance")
 
 @invoices_bp.route("/<int:invoice_id>")
 class Invoice(MethodView):
@@ -52,17 +54,25 @@ class Invoice(MethodView):
         return invoice
 
     @jwt_required(fresh=True)
-    @invoices_bp.arguments(InvoiceSchema)
+    @invoices_bp.arguments(BaseInvoiceSchema)
     @invoices_bp.response(201,InvoiceSchema)
     def patch(self, invoice, invoice_id):
         """Update an existing invoice"""
         existing_invoice = InvoiceModel.query.get_or_404(invoice_id)
-        supplier = SupplierModel.query.get(invoice["supplier_id"])
+        if existing_invoice.accounted == "fully_accounted":
+            abort(400, message="Cannot edit an accounted invoice")
+        supplier = SupplierModel.query.filter_by(supplier_name=invoice["supplier_name"]).first()
         if supplier is None:
-            abort(400, message="Invalid supplier ID")
+            abort(404, message="Supplier does not exist")
         existing_invoice.update_from_dict(invoice)
+        existing_invoice.supplier_id = supplier.id
         existing_invoice.supplier = supplier
+        existing_invoice.update_date = datetime.datetime.utcnow()
         existing_invoice.update_db()
+
+        if existing_invoice.amount != existing_invoice.purchase_items.item_cost:
+            existing_invoice.matched_to_lines = "unmatched"
+            existing_invoice.update_db()
         try:
             add_supplier_balance(supplier_id=existing_invoice.supplier_id, invoice_id=existing_invoice.id, invoice_amount=existing_invoice.amount,
                                  currency=existing_invoice.currency)
@@ -76,6 +86,8 @@ class Invoice(MethodView):
     def delete(self, invoice_id):
         """Delete an invoice"""
         invoice = InvoiceModel.query.get_or_404(invoice_id)
+        if invoice.status == "partially paid":
+            abort(400, message="Complete the payment to delete")
         invoice.delete_from_db()
         return ({"message":"deleted"})
 
@@ -87,11 +99,12 @@ class InvoiceAccounting(MethodView):
     @invoices_bp.response(201,InvoiceSchema)
     def post(self, data,invoice_id):
         invoice = InvoiceModel.query.get_or_404(invoice_id)
-        if invoice.accounted and invoice.matched_to_lines == "matched":
+        if invoice.accounted == "fully_accounted" and invoice.matched_to_lines == "matched":
             abort(400, message="Invoice is already accounted and matched")
         if invoice.matched_to_lines == "unmatched":
             abort(400, message="Invoice is unmatched. Add invoice lines to allow accounting")
-        invoice.accounted = True
+        invoice.accounted = "fully_accounted"
+        invoice.matched_to_lines = "matched"
         invoice.update_db()
         if invoice.purchase_type == "cash" and invoice.destination_type == "expense":
             try:

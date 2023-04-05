@@ -15,6 +15,8 @@ class CustomerModel(db.Model):
     customer_number = db.Column(db.Integer, db.Sequence("customers_id_seq", start= 2000,increment=1))
     customer_phone_no = db.Column(db.String(80), unique=True)
     customer_email = db.Column(db.String(80), unique=True)
+    customer_site = db.Column(db.String(80), nullable=True,)
+    customer_bill_to_site = db.Column(db.String(80), nullable=True,)
     is_active = db.Column(db.Boolean, default=True)
     is_archived = db.Column(db.Boolean, default=False)
     date_registered = db.Column(db.DateTime, default=datetime.utcnow())
@@ -24,7 +26,7 @@ class CustomerModel(db.Model):
     date_unarchived = db.Column(db.DateTime)
 
     account = db.relationship("AccountModel", back_populates="customer")
-    sales = db.relationship("SalesModel", back_populates="customer")
+    receipt = db.relationship("ReceiptModel", back_populates="customer")
     balances = db.relationship("CustomerBalanceModel", back_populates="customer")
 
     def deactivate_customer(self):

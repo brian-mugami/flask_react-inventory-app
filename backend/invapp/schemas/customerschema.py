@@ -7,6 +7,8 @@ class BaseCustomerSchema(Schema):
     customer_number = fields.Integer(required=True, dump_only=True)
     customer_phone_no = fields.String()
     customer_email = fields.Email()
+    customer_site = fields.String()
+    customer_bill_to_site = fields.String()
 
 
 class CustomerSchema(BaseCustomerSchema):
@@ -28,6 +30,8 @@ class CustomerUpdateSchema(Schema):
     customer_name = fields.String()
     account_id = fields.Integer()
     is_active = fields.Boolean()
+    customer_site = fields.String()
+    customer_bill_to_site = fields.String()
 
 
 class CustomerAccountUpdateSchema(Schema):

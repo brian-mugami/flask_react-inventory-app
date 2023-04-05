@@ -17,9 +17,9 @@ class CustomerPaymentModel(db.Model):
     payment_status = db.Column(db.Enum("not_paid","fully_paid","partially_paid","over_paid", name="payment_status"), nullable=False, default="not_paid")
 
     receive_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
-    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id"), nullable=False)
+    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False)
 
-    sales = db.relationship("SalesModel", back_populates="received")
+    receipt = db.relationship("ReceiptModel", back_populates="received")
     accounting = db.relationship("CustomerPayAccountingModel", back_populates="payments")
 
     @classmethod
