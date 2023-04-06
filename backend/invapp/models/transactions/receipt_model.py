@@ -14,7 +14,10 @@ class ReceiptModel(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
     amount = db.Column(db.Float(precision=4), default=0.00)
-    accounted = db.Column(db.Boolean, default=False)
+    accounted_status = db.Column(db.Enum("fully_accounted", "partially_accounted", "not_accounted", name="accounting_status"),
+                          default="not_accounted")
+    status = db.Column(db.Enum("fully paid", "partially paid", "not paid", "over paid", name="invoice_status"),
+                       default="not paid")
     sale_type = db.Column(db.Enum("cash", "credit", name="sales_header_types"), default="cash", nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
 

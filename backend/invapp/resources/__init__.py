@@ -7,5 +7,5 @@ from .purchase_accounts import blp as purchaseaccountsblueprint
 from .payment_accounts import blp as paymentaccountsblueprint
 from .sales_accounts import blp as salesaccountblueprint
 from .expense_accounts import blp as expenseaccountingblueprint
-from .invoice_resource import invoices_bp as invoiceblueprint
-from .receipt_resource import receipt_bp as receiptblueprint
+from .invoice_resource import blp as invoiceblueprint
+from .receipt_resource import blp as receiptblueprint

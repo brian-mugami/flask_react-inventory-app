@@ -8,21 +8,21 @@ from ..models.transactions.invoice_model import InvoiceModel
 from ..schemas.invoice_schema import BaseInvoiceSchema, InvoiceApproveSchema, InvoiceSchema
 from ..signals import add_supplier_balance, purchase_accouting_transaction, SignalException
 
-invoices_bp = Blueprint("invoices", __name__, url_prefix="/invoices", description="Invoice creation")
+blp = Blueprint("invoice", __name__, description="Invoice creation")
 
-@invoices_bp.route("/")
+@blp.route("/invoice")
 class Invoices(MethodView):
 
     @jwt_required(fresh=True)
-    @invoices_bp.response(200,InvoiceSchema(many=True))
+    @blp.response(200,InvoiceSchema(many=True))
     def get(self):
         """Get all invoices"""
         invoices = InvoiceModel.query.all()
         return invoices
 
     @jwt_required(fresh=True)
-    @invoices_bp.arguments(InvoiceSchema)
-    @invoices_bp.response(201, InvoiceSchema)
+    @blp.arguments(InvoiceSchema)
+    @blp.response(201, InvoiceSchema)
     def post(self, data):
         """Create a new invoice"""
         supplier = SupplierModel.query.filter_by(supplier_name = data["supplier_name"]).first()
@@ -43,19 +43,19 @@ class Invoices(MethodView):
             new_trx.delete_from_db()
             abort(500, message="Did not add supplier balance")
 
-@invoices_bp.route("/<int:invoice_id>")
+@blp.route("/invoice/<int:invoice_id>")
 class Invoice(MethodView):
 
     @jwt_required(fresh=True)
-    @invoices_bp.response(200,InvoiceSchema)
+    @blp.response(200,InvoiceSchema)
     def get(self, invoice_id):
         """Get an invoice by ID"""
         invoice = InvoiceModel.query.get_or_404(invoice_id)
         return invoice
 
     @jwt_required(fresh=True)
-    @invoices_bp.arguments(BaseInvoiceSchema)
-    @invoices_bp.response(201,InvoiceSchema)
+    @blp.arguments(BaseInvoiceSchema)
+    @blp.response(201,InvoiceSchema)
     def patch(self, invoice, invoice_id):
         """Update an existing invoice"""
         existing_invoice = InvoiceModel.query.get_or_404(invoice_id)
@@ -64,6 +64,7 @@ class Invoice(MethodView):
         supplier = SupplierModel.query.filter_by(supplier_name=invoice["supplier_name"]).first()
         if supplier is None:
             abort(404, message="Supplier does not exist")
+        invoice.pop("supplier_name", None)
         existing_invoice.update_from_dict(invoice)
         existing_invoice.supplier_id = supplier.id
         existing_invoice.supplier = supplier
@@ -92,11 +93,11 @@ class Invoice(MethodView):
         return ({"message":"deleted"})
 
 
-@invoices_bp.route("/account/<int:invoice_id>")
+@blp.route("/invoice/account/<int:invoice_id>")
 class InvoiceAccounting(MethodView):
     @jwt_required(fresh=True)
-    @invoices_bp.arguments(InvoiceApproveSchema)
-    @invoices_bp.response(201,InvoiceSchema)
+    @blp.arguments(InvoiceApproveSchema)
+    @blp.response(201,InvoiceSchema)
     def post(self, data,invoice_id):
         invoice = InvoiceModel.query.get_or_404(invoice_id)
         if invoice.accounted == "fully_accounted" and invoice.matched_to_lines == "matched":
@@ -170,3 +171,4 @@ class InvoiceAccounting(MethodView):
 
 
 
+blp

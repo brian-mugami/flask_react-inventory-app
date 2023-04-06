@@ -2,6 +2,7 @@ from flask import jsonify
 from sqlalchemy import func
 
 from ..db import db
+from sqlalchemy.exc import IntegrityError
 from ..models import AccountModel
 from invapp.models.masters.customermodels import CustomerModel
 from flask.views import MethodView
@@ -87,11 +88,12 @@ class Customer(MethodView):
         account_id = customer_account.id
 
         customer = CustomerModel(customer_name=data["customer_name"], account_id=account_id, customer_phone_no=data["customer_phone_no"],customer_email=data["customer_email"], is_active=data["is_active"], payment_type=data["payment_type"])
-
-        db.session.add(customer)
-        db.session.commit()
-
-        return customer
+        try:
+            db.session.add(customer)
+            db.session.commit()
+            return customer
+        except IntegrityError as e:
+            abort(500, message="Please provide unique email and phone number for this customer")
 
     @jwt_required(fresh=False)
     @blp.response(200, CustomerSchema(many=True))
