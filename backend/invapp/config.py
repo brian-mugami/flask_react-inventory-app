@@ -2,7 +2,7 @@ import os
 from datetime import timedelta
 
 DEBUG = False
-SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE", "sqlite:///inventory.db")
+SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE1", "sqlite:///inventory.db")
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 PROPAGATE_EXCEPTIONS = True
 SECRET_KEY = os.environ.get("APP_SECRET_KEY")

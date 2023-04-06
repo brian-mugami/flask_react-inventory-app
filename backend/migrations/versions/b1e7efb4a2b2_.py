@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 1433c64f88e5
-Revises: 937ec6ad7cb2
-Create Date: 2023-04-03 12:41:13.420011
+Revision ID: b1e7efb4a2b2
+Revises: bdb7a9725691
+Create Date: 2023-04-05 10:47:16.858759
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1433c64f88e5'
-down_revision = '937ec6ad7cb2'
+revision = 'b1e7efb4a2b2'
+down_revision = 'bdb7a9725691'
 branch_labels = None
 depends_on = None
 
@@ -24,11 +24,24 @@ def upgrade():
                type_=sa.Float(precision=2),
                existing_nullable=False)
 
+    with op.batch_alter_table('purchase accounting', schema=None) as batch_op:
+        batch_op.drop_constraint('purchase accounting_credit_account_id_fkey', type_='foreignkey')
+        batch_op.drop_constraint('purchase accounting_debit_account_id_fkey', type_='foreignkey')
+        batch_op.create_foreign_key(None, 'accounts', ['credit_account_id'], ['id'])
+        batch_op.create_foreign_key(None, 'accounts', ['debit_account_id'], ['id'])
+
     with op.batch_alter_table('purchases', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('lines_cost', sa.Float(precision=2), nullable=False))
         batch_op.alter_column('buying_price',
                existing_type=sa.REAL(),
                type_=sa.Float(precision=4),
                existing_nullable=False)
+
+    with op.batch_alter_table('receipts', schema=None) as batch_op:
+        batch_op.alter_column('amount',
+               existing_type=sa.REAL(),
+               type_=sa.Float(precision=4),
+               existing_nullable=True)
 
     with op.batch_alter_table('sales', schema=None) as batch_op:
         batch_op.alter_column('selling_price',
@@ -47,11 +60,24 @@ def downgrade():
                type_=sa.REAL(),
                existing_nullable=False)
 
+    with op.batch_alter_table('receipts', schema=None) as batch_op:
+        batch_op.alter_column('amount',
+               existing_type=sa.Float(precision=4),
+               type_=sa.REAL(),
+               existing_nullable=True)
+
     with op.batch_alter_table('purchases', schema=None) as batch_op:
         batch_op.alter_column('buying_price',
                existing_type=sa.Float(precision=4),
                type_=sa.REAL(),
                existing_nullable=False)
+        batch_op.drop_column('lines_cost')
+
+    with op.batch_alter_table('purchase accounting', schema=None) as batch_op:
+        batch_op.drop_constraint(None, type_='foreignkey')
+        batch_op.drop_constraint(None, type_='foreignkey')
+        batch_op.create_foreign_key('purchase accounting_debit_account_id_fkey', 'accounts', ['debit_account_id'], ['id'], ondelete='SET NULL')
+        batch_op.create_foreign_key('purchase accounting_credit_account_id_fkey', 'accounts', ['credit_account_id'], ['id'], ondelete='SET NULL')
 
     with op.batch_alter_table('items', schema=None) as batch_op:
         batch_op.alter_column('price',

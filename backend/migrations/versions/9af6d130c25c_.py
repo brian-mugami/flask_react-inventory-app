@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: d964377e9f4c
-Revises: e371ab865664
-Create Date: 2023-04-03 14:05:36.483138
+Revision ID: 9af6d130c25c
+Revises: 9b8f3a6fe85f
+Create Date: 2023-04-05 13:51:35.512458
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd964377e9f4c'
-down_revision = 'e371ab865664'
+revision = '9af6d130c25c'
+down_revision = '9b8f3a6fe85f'
 branch_labels = None
 depends_on = None
 
@@ -29,6 +29,16 @@ def upgrade():
                existing_type=sa.REAL(),
                type_=sa.Float(precision=4),
                existing_nullable=False)
+        batch_op.alter_column('lines_cost',
+               existing_type=sa.REAL(),
+               type_=sa.Float(precision=2),
+               existing_nullable=False)
+
+    with op.batch_alter_table('receipts', schema=None) as batch_op:
+        batch_op.alter_column('amount',
+               existing_type=sa.REAL(),
+               type_=sa.Float(precision=4),
+               existing_nullable=True)
 
     with op.batch_alter_table('sales', schema=None) as batch_op:
         batch_op.alter_column('selling_price',
@@ -47,7 +57,17 @@ def downgrade():
                type_=sa.REAL(),
                existing_nullable=False)
 
+    with op.batch_alter_table('receipts', schema=None) as batch_op:
+        batch_op.alter_column('amount',
+               existing_type=sa.Float(precision=4),
+               type_=sa.REAL(),
+               existing_nullable=True)
+
     with op.batch_alter_table('purchases', schema=None) as batch_op:
+        batch_op.alter_column('lines_cost',
+               existing_type=sa.Float(precision=2),
+               type_=sa.REAL(),
+               existing_nullable=False)
         batch_op.alter_column('buying_price',
                existing_type=sa.Float(precision=4),
                type_=sa.REAL(),

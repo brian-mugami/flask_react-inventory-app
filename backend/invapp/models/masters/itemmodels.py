@@ -20,7 +20,7 @@ class ItemModel(db.Model):
 
     category = db.relationship("CategoryModel", back_populates="items")
     lot = db.relationship("LotModel", back_populates="items", secondary="item_lots")
-    purchases = db.relationship("PurchaseModel", back_populates="items", lazy="dynamic")
+    purchase = db.relationship("PurchaseModel", back_populates="item", lazy="dynamic")
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="item", lazy="dynamic")
     sales = db.relationship("SalesModel", back_populates="item", lazy="dynamic")
     expense_item = db.relationship("ExpensesModel", back_populates="item", lazy="dynamic")

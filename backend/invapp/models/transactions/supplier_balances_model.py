@@ -10,8 +10,8 @@ class SupplierBalanceModel(db.Model):
     balance = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime)
 
-    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
-    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"), nullable=False)
+    supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"))
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))
 
     supplier = db.relationship("SupplierModel", back_populates="balances")
     invoice = db.relationship("InvoiceModel", back_populates="supplier_balance")

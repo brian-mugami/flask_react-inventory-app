@@ -58,6 +58,13 @@ def increase_stock_addition(item_id,invoice_id:int,quantity: int, unit_cost: int
 
 @purchase_account.connect
 def purchase_accouting_transaction(purchase_account_id: int, invoice_id: int,supplier_account_id: int,invoice_amount: float):
+    existing_accounting = PurchaseAccountingModel.query.filter_by(invoice_id=invoice_id).first()
+    if existing_accounting:
+        existing_accounting.credit_account_id = supplier_account_id
+        existing_accounting.debit_account_id = purchase_account_id
+        existing_accounting.debit_amount = invoice_amount
+        existing_accounting.credit_amount = -invoice_amount
+        existing_accounting.update_db()
     purchase_account = PurchaseAccountingModel(credit_account_id=supplier_account_id,debit_account_id=purchase_account_id,
                                           debit_amount=invoice_amount, credit_amount=-invoice_amount, invoice_id=invoice_id)
     try:
@@ -68,11 +75,11 @@ def purchase_accouting_transaction(purchase_account_id: int, invoice_id: int,sup
 
 @pay_supplier.connect
 def make_payement(supplier_account_id: int, credit_account: int, amount: float, payment_id: int, balance_id: int):
-        new_payment = SupplierPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= credit_account, debit_account_id=supplier_account_id, payment_id=payment_id, balance_id=balance_id)
-        try:
-            new_payment.save_to_db()
-        except:
-            raise SignalException("Payment failed")
+    new_payment = SupplierPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= credit_account, debit_account_id=supplier_account_id, payment_id=payment_id, balance_id=balance_id)
+    try:
+        new_payment.save_to_db()
+    except:
+        raise SignalException("Payment failed")
 
 @customer_payment.connect
 def receive_payment(customer_account_id: int, bank_account: int, amount: float, payment_id: int, balance_id: int):
@@ -116,11 +123,11 @@ def sales_accounting_transaction(sales_account_id: int, sale_id: int,customer_ac
 
 
 @customer_balance.connect
-def add_customer_balance(customer_id: int,sale_id: int,receipt_amount: float , currency: str = "KES", paid: float = 0.00):
+def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float , currency: str = "KES", paid: float = 0.00):
     balance = receipt_amount - paid
 
     existing_balance = CustomerBalanceModel.query.filter_by(customer_id=customer_id, currency=currency,
-                                                            sale_id=sale_id).first()
+                                                            receipt_id=receipt_id).first()
     if existing_balance:
         existing_balance.paid += paid
         existing_balance.invoice_amount = receipt_amount

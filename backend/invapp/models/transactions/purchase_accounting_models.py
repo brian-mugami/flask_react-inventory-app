@@ -12,9 +12,8 @@ class PurchaseAccountingModel(db.Model):
     credit_amount = db.Column(db.Float,default=0.000)
     debit_amount = db.Column(db.Float,default=0.000)
     update_date = db.Column(db.DateTime)
-
-    credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
-    debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
+    credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"))
+    debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"))
 
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete='CASCADE'))
 

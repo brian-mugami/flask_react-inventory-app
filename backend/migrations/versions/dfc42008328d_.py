@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: e371ab865664
-Revises: 36607fb0d911
-Create Date: 2023-04-03 13:34:56.390406
+Revision ID: dfc42008328d
+Revises: 0c2a4643cde8
+Create Date: 2023-04-06 01:14:31.718562
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e371ab865664'
-down_revision = '36607fb0d911'
+revision = 'dfc42008328d'
+down_revision = '0c2a4643cde8'
 branch_labels = None
 depends_on = None
 
@@ -29,6 +29,17 @@ def upgrade():
                existing_type=sa.REAL(),
                type_=sa.Float(precision=4),
                existing_nullable=False)
+        batch_op.alter_column('lines_cost',
+               existing_type=sa.REAL(),
+               type_=sa.Float(precision=2),
+               existing_nullable=False)
+
+    with op.batch_alter_table('receipts', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('accounted_status', sa.Enum('fully_accounted', 'partially_accounted', 'not_accounted', name='accounting_status'), nullable=True))
+        batch_op.alter_column('amount',
+               existing_type=sa.REAL(),
+               type_=sa.Float(precision=4),
+               existing_nullable=True)
 
     with op.batch_alter_table('sales', schema=None) as batch_op:
         batch_op.alter_column('selling_price',
@@ -47,7 +58,18 @@ def downgrade():
                type_=sa.REAL(),
                existing_nullable=False)
 
+    with op.batch_alter_table('receipts', schema=None) as batch_op:
+        batch_op.alter_column('amount',
+               existing_type=sa.Float(precision=4),
+               type_=sa.REAL(),
+               existing_nullable=True)
+        batch_op.drop_column('accounted_status')
+
     with op.batch_alter_table('purchases', schema=None) as batch_op:
+        batch_op.alter_column('lines_cost',
+               existing_type=sa.Float(precision=2),
+               type_=sa.REAL(),
+               existing_nullable=False)
         batch_op.alter_column('buying_price',
                existing_type=sa.Float(precision=4),
                type_=sa.REAL(),
