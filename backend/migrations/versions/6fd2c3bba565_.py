@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 5f1de3ce2841
+Revision ID: 6fd2c3bba565
 Revises: 
-Create Date: 2023-04-04 21:05:15.521180
+Create Date: 2023-04-06 12:58:02.656794
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '5f1de3ce2841'
+revision = '6fd2c3bba565'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -102,6 +102,8 @@ def upgrade():
     sa.Column('customer_number', sa.Integer(), nullable=True),
     sa.Column('customer_phone_no', sa.String(length=80), nullable=True),
     sa.Column('customer_email', sa.String(length=80), nullable=True),
+    sa.Column('customer_site', sa.String(length=80), nullable=True),
+    sa.Column('customer_bill_to_site', sa.String(length=80), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('is_archived', sa.Boolean(), nullable=True),
     sa.Column('date_registered', sa.DateTime(), nullable=True),
@@ -151,7 +153,7 @@ def upgrade():
     sa.Column('date', sa.DateTime(), nullable=True),
     sa.Column('accounted', sa.Enum('fully_accounted', 'partially_accounted', 'not_accounted', name='accounting_status'), nullable=True),
     sa.Column('status', sa.Enum('fully paid', 'partially paid', 'not paid', 'over paid', name='invoice_status'), nullable=True),
-    sa.Column('matched_to_lines', sa.Enum('matched', 'unmatched', 'partially_matched', name='invoice_matched_types'), nullable=False),
+    sa.Column('matched_to_lines', sa.Enum('matched', 'unmatched', 'partially matched', name='invoice_matched_types'), nullable=False),
     sa.Column('destination_type', sa.Enum('expense', 'stores', name='destination_types'), nullable=False),
     sa.Column('purchase_type', sa.Enum('cash', 'credit', name='payment_types'), nullable=False),
     sa.Column('update_date', sa.DateTime(), nullable=True),
@@ -194,7 +196,8 @@ def upgrade():
     sa.Column('date', sa.DateTime(), nullable=True),
     sa.Column('update_date', sa.DateTime(), nullable=True),
     sa.Column('amount', sa.Float(precision=4), nullable=True),
-    sa.Column('accounted', sa.Boolean(), nullable=True),
+    sa.Column('accounted_status', sa.Enum('fully_accounted', 'partially_accounted', 'not_accounted', name='accounting_status'), nullable=True),
+    sa.Column('status', sa.Enum('fully paid', 'partially paid', 'not paid', 'over paid', name='invoice_status'), nullable=True),
     sa.Column('sale_type', sa.Enum('cash', 'credit', name='sales_header_types'), nullable=False),
     sa.Column('customer_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['customer_id'], ['customers.id'], ),
@@ -266,7 +269,7 @@ def upgrade():
     sa.Column('date', sa.DateTime(), nullable=True),
     sa.Column('update_date', sa.DateTime(), nullable=True),
     sa.Column('approved', sa.Boolean(), nullable=True),
-    sa.Column('payment_status', sa.Enum('not_paid', 'fully_paid', 'partially_paid', 'over_paid', name='payment_status'), nullable=False),
+    sa.Column('payment_status', sa.Enum('not paid', 'fully paid', 'partially paid', 'over paid', name='payment_status'), nullable=False),
     sa.Column('pay_account_id', sa.Integer(), nullable=False),
     sa.Column('invoice_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['invoice_id'], ['invoices.id'], ),
@@ -283,8 +286,8 @@ def upgrade():
     sa.Column('credit_account_id', sa.Integer(), nullable=True),
     sa.Column('debit_account_id', sa.Integer(), nullable=True),
     sa.Column('invoice_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['credit_account_id'], ['accounts.id'], ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['debit_account_id'], ['accounts.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['credit_account_id'], ['accounts.id'], ),
+    sa.ForeignKeyConstraint(['debit_account_id'], ['accounts.id'], ),
     sa.ForeignKeyConstraint(['invoice_id'], ['invoices.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -293,10 +296,11 @@ def upgrade():
     sa.Column('description', sa.String(length=256), nullable=True),
     sa.Column('item_quantity', sa.Integer(), nullable=False),
     sa.Column('buying_price', sa.Float(precision=4), nullable=False),
-    sa.Column('item_cost', sa.Float(), nullable=False),
+    sa.Column('item_cost', sa.Float(precision=2), nullable=False),
+    sa.Column('lines_cost', sa.Float(precision=2), nullable=False),
     sa.Column('item_id', sa.Integer(), nullable=True),
     sa.Column('invoice_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['invoice_id'], ['invoices.id'], ),
+    sa.ForeignKeyConstraint(['invoice_id'], ['invoices.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('item_id', 'invoice_id', name='purchase_constraint')
@@ -334,8 +338,8 @@ def upgrade():
     sa.Column('paid', sa.Float(), nullable=True),
     sa.Column('balance', sa.Float(), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=True),
-    sa.Column('supplier_id', sa.Integer(), nullable=False),
-    sa.Column('invoice_id', sa.Integer(), nullable=False),
+    sa.Column('supplier_id', sa.Integer(), nullable=True),
+    sa.Column('invoice_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['invoice_id'], ['invoices.id'], ),
     sa.ForeignKeyConstraint(['supplier_id'], ['suppliers.id'], ),
     sa.PrimaryKeyConstraint('id'),
