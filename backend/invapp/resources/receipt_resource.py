@@ -7,7 +7,6 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from invapp.models import CustomerModel
 from invapp.models.transactions.receipt_model import ReceiptModel
 from invapp.schemas.receiptschema import ReceiptSchema
-from invapp.signals import add_customer_balance, SignalException
 
 blp = Blueprint("receipts", __name__, description="Receipt creation")
 
