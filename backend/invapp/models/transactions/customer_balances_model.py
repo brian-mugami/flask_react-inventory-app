@@ -13,6 +13,7 @@ class CustomerBalanceModel(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"))
 
+
     customer = db.relationship("CustomerModel", back_populates="balances")
     receipt = db.relationship("ReceiptModel", back_populates="customer_balance")
     accounting = db.relationship("CustomerPayAccountingModel", back_populates="balance")

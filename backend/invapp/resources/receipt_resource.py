@@ -23,7 +23,8 @@ class ReceiptView(MethodView):
     @blp.arguments(ReceiptSchema)
     @blp.response(201, ReceiptSchema)
     def post(self, data):
-        customer = CustomerModel.query.filter_by(customer_name=data["customer_name"]).first()
+        #customer = CustomerModel.query.filter_by(customer_name=data["customer_name"]).first()
+        customer = CustomerModel.query.get(data["customer_id"])
         if customer is None:
             abort(404, message="Customer not found")
         data.pop("customer_name", None)

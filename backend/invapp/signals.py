@@ -111,10 +111,10 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
             raise SignalException("supplier balance update failed")
 
 @sales_account.connect
-def sales_accounting_transaction(sales_account_id: int, sale_id: int,customer_account_id: int, selling_price: float, quantity: int):
-    amount = selling_price * quantity
+def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer_account_id: int,amount:float):
+
     sales_account = SalesAccountingModel(credit_account_id=sales_account_id,debit_account_id=customer_account_id,
-                                          debit_amount=amount, credit_amount=-amount, sale_id=sale_id)
+                                          debit_amount=amount, credit_amount=-amount, receipt_id=receipt_id)
     try:
         sales_account.save_to_db()
         return jsonify({"added": "success"})
@@ -136,7 +136,7 @@ def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float 
         existing_balance.update_db()
         return existing_balance.id
     else:
-        sup_balance = CustomerBalanceModel(customer_id=customer_id, sale_id=sale_id,
+        sup_balance = CustomerBalanceModel(customer_id=customer_id, receipt_id=receipt_id,
                                            receipt_amount=receipt_amount, paid=paid, balance=balance, currency=currency,
                                            date=datetime.datetime.utcnow())
         try:

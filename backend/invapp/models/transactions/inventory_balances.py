@@ -11,15 +11,14 @@ class InventoryBalancesModel(db.Model):
     update_date = db.Column(db.DateTime)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete='SET NULL'), nullable=True)
-    sales_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete='SET NULL'), nullable=True)
+    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id", ondelete='SET NULL'), nullable=True)
 
     item = db.relationship("ItemModel", back_populates="inventory_item")
     invoice = db.relationship("InvoiceModel", back_populates="inventory_item")
-
-    sales = db.relationship("SalesModel", back_populates="inventory_item")
+    receipt = db.relationship("ReceiptModel", back_populates="inventory_item")
 
     __table_args__ = (
-        db.UniqueConstraint('item_id', 'invoice_id'),
+        db.UniqueConstraint('item_id', 'invoice_id', 'receipt_id'),
     )
 
     def save_to_db(self):

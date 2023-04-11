@@ -25,6 +25,8 @@ class ReceiptModel(db.Model):
     customer_balance = db.relationship("CustomerBalanceModel", back_populates="receipt")
     accounting = db.relationship("SalesAccountingModel", back_populates="receipt")
     received = db.relationship("CustomerPaymentModel", back_populates="receipt")
+    sale_items = db.relationship("SalesModel", back_populates="receipt", cascade="all, delete-orphan")
+    inventory_item = db.relationship("InventoryBalancesModel", back_populates="receipt")
 
     __table_args__ = (
         db.UniqueConstraint('customer_id', "currency", 'receipt_number', name="sales_header_constraint"),
