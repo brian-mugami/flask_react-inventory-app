@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
 class SalesAccountingModel(db.Model):
-    __tablename__ = "sales accounting"
+    __tablename__ = "sales_accounting"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date = db.Column(db.DateTime, default=datetime.utcnow())
@@ -32,7 +32,7 @@ class SalesAccountingModel(db.Model):
 
 
 class CustomerPayAccountingModel(db.Model):
-    __tablename__ = "customer payment accounting"
+    __tablename__ = "customer_payment_accounting"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date = db.Column(db.DateTime, default=datetime.utcnow())
@@ -42,8 +42,8 @@ class CustomerPayAccountingModel(db.Model):
     credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
 
-    payment_id = db.Column(db.Integer, db.ForeignKey("customer payments.id", ondelete="CASCADE"), nullable=False)
-    balance_id = db.Column(db.Integer, db.ForeignKey("customer balances.id",ondelete="CASCADE"), nullable=False)
+    payment_id = db.Column(db.Integer, db.ForeignKey("customer_payments.id", ondelete="CASCADE"), nullable=False)
+    balance_id = db.Column(db.Integer, db.ForeignKey("customer_balances.id",ondelete="CASCADE"), nullable=False)
 
     payments = db.relationship("CustomerPaymentModel", back_populates="accounting")
     balance = db.relationship("CustomerBalanceModel", back_populates="accounting")

@@ -2,7 +2,7 @@ from invapp.db import db
 from datetime import datetime
 
 class InventoryBalancesModel(db.Model):
-    __tablename__ = "inventory balances"
+    __tablename__ = "inventory_balances"
 
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)

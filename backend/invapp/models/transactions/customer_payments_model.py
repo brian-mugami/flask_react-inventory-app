@@ -4,7 +4,7 @@ from invapp.db import db
 from datetime import datetime
 
 class CustomerPaymentModel(db.Model):
-    __tablename__ = "customer payments"
+    __tablename__ = "customer_payments"
 
     id = db.Column(db.Integer, primary_key=True)
     transaction_number = db.Column(UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4)
@@ -14,7 +14,7 @@ class CustomerPaymentModel(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
     approved = db.Column(db.Boolean, default=False)
-    payment_status = db.Column(db.Enum("not_paid","fully_paid","partially_paid","over_paid", name="payment_status"), nullable=False, default="not_paid")
+    payment_status = db.Column(db.Enum("not_paid","fully_paid","partially_paid","over_paid", name="customer_payment_status"), nullable=False, default="not_paid")
 
     receive_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False)

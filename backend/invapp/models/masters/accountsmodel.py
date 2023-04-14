@@ -22,7 +22,9 @@ class AccountModel(db.Model):
     category = db.relationship("CategoryModel", back_populates="account", passive_deletes=True, lazy="dynamic")
     supplier = db.relationship("SupplierModel", back_populates="account", lazy="dynamic", passive_deletes=True)
     customer = db.relationship("CustomerModel", back_populates="account", passive_deletes=True, lazy="dynamic")
-    payment_account = db.relationship("PaymentModel", back_populates="account", lazy="dynamic")
+    payment_account = db.relationship("SupplierPaymentModel", back_populates="account", lazy="dynamic")
+    expense_invoice = db.relationship("InvoiceModel", back_populates="expense_account", lazy="dynamic")
+    bank_balance = db.relationship("BankBalanceModel", back_populates="account", lazy="dynamic")
 
     def deactivate_account(self):
         self.is_active = False

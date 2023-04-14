@@ -11,14 +11,15 @@ class Invoice(Schema):
  matched_to_lines = fields.String(required=True, dump_only=True)
 
 class PurchaseItemSchema(Schema):
- item_id = fields.Int(required=True)
+ item_id = fields.Int(required=True, dump_only=True)
+ item_name = fields.String(required=True)
  buying_price = fields.Float(required=True)
  item_quantity = fields.Int(required=True)
+ item_cost = fields.Float(dump_only=True, required=True)
  description = fields.String()
 
 class PlainPurchasingSchema(Schema):
  id = fields.Int(dump_only=True, required=True)
- item_cost = fields.Float(dump_only=True, required=True)
  items_list = fields.List(fields.Nested(PurchaseItemSchema(), required=True))
  invoice_id = fields.Int(required=True)
  line_cost = fields.Float(required=True,dump_only=True)

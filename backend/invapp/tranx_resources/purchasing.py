@@ -23,25 +23,26 @@ class PurchasingView(MethodView):
 
         cost = 0
         for item in data["items_list"]:
-            existing_inv = PurchaseModel.query.filter_by(invoice_id=data["invoice_id"], item_id=item["item_id"]).first()
-            if existing_inv:
-                abort(400, message="Item is already in invoice")
-            existing_item = ItemModel.query.get(item["item_id"])
+            existing_item = ItemModel.query.filter_by(item_name=item["item_name"]).first()
             if not existing_item:
                 abort(404, message="Item does not exist")
+            existing_inv = PurchaseModel.query.filter_by(invoice_id=data["invoice_id"], item_id=existing_item.id).first()
+            if existing_inv:
+                abort(400, message="Item is already in invoice")
             item_cost = item["item_quantity"] * item["buying_price"]
+            item["item_cost"] = item_cost
             cost += item_cost
-            line = PurchaseModel(item_id=item["item_id"],description=item["description"],item_cost=item_cost , lines_cost=cost,item_quantity=item["item_quantity"], buying_price=item["buying_price"], invoice_id=invoice.id)
+            line = PurchaseModel(item_id=existing_item.id,item_cost=item_cost , lines_cost=cost,item_quantity=item["item_quantity"], buying_price=item["buying_price"], invoice_id=invoice.id)
             line.save_to_db()
             line.invoice = invoice
             line.items = item
 
             if invoice.destination_type == "stores":
-                increase_stock_addition(item_id=item["item_id"], invoice_id=invoice.id,
+                increase_stock_addition(item_id=existing_item.id, invoice_id=invoice.id,
                                                  date=invoice.date, quantity=item["item_quantity"], unit_cost=item["buying_price"])
 
             if invoice.destination_type == "expense":
-                expense_addition(item_id=item["item_id"], invoice_id=invoice.id, date=invoice.date, quantity=item["item_quantity"], unit_cost=item["buying_price"])
+                expense_addition(item_id=existing_item.id, invoice_id=invoice.id, date=invoice.date, quantity=item["item_quantity"], unit_cost=item["buying_price"])
 
         if invoice.amount != cost:
             invoice.matched_to_lines = "unmatched"

@@ -1,6 +1,12 @@
 import datetime
 from marshmallow import Schema, fields, validate
 from invapp.schemas.itemschema import PlainItemSchema
+from invapp.schemas.paymentsschema import PayAccountSchema
+
+class SupplierBalanceSchema(Schema):
+    date = fields.Date()
+    balance = fields.Float()
+    paid = fields.Float()
 
 class InvoiceSupplierSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
@@ -8,10 +14,10 @@ class InvoiceSupplierSchema(Schema):
 
 class Purchase_items(Schema):
     item_quantity = fields.Integer()
-    buying_price =  fields.Float()
+    buying_price = fields.Float()
     item_cost = fields.Float()
     item_id = fields.Int()
-    items = fields.Nested(PlainItemSchema(), dump_only=True)
+    item = fields.Nested(PlainItemSchema(), dump_only=True)
 
 class BaseInvoiceSchema(Schema):
     id = fields.Integer(dump_only=True)
@@ -28,10 +34,37 @@ class BaseInvoiceSchema(Schema):
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
     update_date = fields.DateTime()
     supplier_name = fields.String(required=True)
+    expense_account = fields.String()
+    expense_account_id = fields.Int(dump_only=True)
 
 class InvoiceSchema(BaseInvoiceSchema):
     supplier = fields.Nested(InvoiceSupplierSchema(), dump_only=True)
     purchase_items = fields.Nested(Purchase_items(), many=True)
+    supplier_balance = fields.Nested(SupplierBalanceSchema(),many=True ,dump_only=True)
 
-class InvoiceApproveSchema(Schema):
-    expense_type = fields.Str()
+class InvoiceUpdateSchema(Schema):
+    purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
+    destination_type = fields.String(validate=validate.OneOf(["expense", "stores"]))
+    invoice_number = fields.String(validate=validate.Length(max=256))
+    description = fields.String(validate=validate.Length(max=256))
+    currency = fields.String(validate=validate.Length(max=10))
+    amount = fields.Float()
+    supplier_name = fields.String()
+    expense_account = fields.String()
+    update_date = fields.DateTime(dump_only=True, required=True)
+
+class InvoicePaymentSchema(Schema):
+    id = fields.Integer(required=True, dump_only=True)
+    transaction_number = fields.UUID(required=True, dump_only=True)
+    payment_description = fields.String()
+    amount = fields.Float(required=True)
+    currency = fields.String(required=True)
+    date = fields.Date(dump_only=True)
+    payment_status = fields.String(dump_only=True, required=True)
+    update_date = fields.Date()
+    bank_account_id = fields.Int(required=True, dump_only=True)
+    bank_account = fields.String(required=True)
+    approved = fields.Boolean(required=True, dump_only=True)
+
+    invoice = fields.Nested(InvoiceSchema(), dump_only=True)
+    account = fields.Nested(PayAccountSchema(), dump_only=True)

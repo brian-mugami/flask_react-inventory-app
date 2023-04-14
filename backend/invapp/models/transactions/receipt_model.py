@@ -23,6 +23,7 @@ class ReceiptModel(db.Model):
 
     customer = db.relationship("CustomerModel", back_populates="receipt")
     customer_balance = db.relationship("CustomerBalanceModel", back_populates="receipt")
+    bank_balance = db.relationship("BankBalanceModel", back_populates="receipt")
     accounting = db.relationship("SalesAccountingModel", back_populates="receipt")
     received = db.relationship("CustomerPaymentModel", back_populates="receipt")
     sale_items = db.relationship("SalesModel", back_populates="receipt", cascade="all, delete-orphan")
