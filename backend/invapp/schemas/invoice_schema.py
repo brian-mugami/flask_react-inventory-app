@@ -12,6 +12,11 @@ class InvoiceSupplierSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
     supplier_name = fields.String()
 
+class InvoicePaymentSchema(Schema):
+    approved = fields.Boolean()
+    amount = fields.Float()
+    payment_status = fields.String()
+
 class Purchase_items(Schema):
     item_quantity = fields.Integer()
     buying_price = fields.Float()
@@ -41,6 +46,7 @@ class InvoiceSchema(BaseInvoiceSchema):
     supplier = fields.Nested(InvoiceSupplierSchema(), dump_only=True)
     purchase_items = fields.Nested(Purchase_items(), many=True)
     supplier_balance = fields.Nested(SupplierBalanceSchema(),many=True ,dump_only=True)
+    payments = fields.Nested(InvoicePaymentSchema(), many=True, dump_only=True)
 
 class InvoiceUpdateSchema(Schema):
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
