@@ -11,8 +11,9 @@ class SalesModel(db.Model):
     selling_price = db.Column(db.Float(precision=4), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False)
+    item_cost = db.Column(db.Float(precision=4), nullable=False)
 
-    inventory_item = db.relationship("InventoryBalancesModel", back_populates="sales", lazy="dynamic")
+    receipt = db.relationship("ReceiptModel", back_populates="sale_items")
     item = db.relationship("ItemModel", back_populates="sales")
 
 

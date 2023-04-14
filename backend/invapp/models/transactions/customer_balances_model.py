@@ -1,7 +1,7 @@
 from invapp.db import db
 
 class CustomerBalanceModel(db.Model):
-    __tablename__ = "customer balances"
+    __tablename__ = "customer_balances"
 
     id = db.Column(db.Integer, primary_key = True)
     currency = db.Column(db.String(10), default="KES")
@@ -12,6 +12,7 @@ class CustomerBalanceModel(db.Model):
 
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"))
+
 
     customer = db.relationship("CustomerModel", back_populates="balances")
     receipt = db.relationship("ReceiptModel", back_populates="customer_balance")

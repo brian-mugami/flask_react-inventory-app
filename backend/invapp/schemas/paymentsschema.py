@@ -12,12 +12,13 @@ class PlainPaymentSchema(Schema):
 
     id = fields.Integer(required=True, dump_only=True)
     transaction_number = fields.UUID(required=True, dump_only=True)
+    payment_description = fields.String()
     amount = fields.Float(required=True)
     currency = fields.String(required=True)
     date = fields.Date(dump_only=True)
     payment_status = fields.String(dump_only=True, required=True)
     update_date = fields.Date()
-    pay_account_id = fields.Int(required=True)
+    bank_account_id = fields.Int(required=True)
     invoice_id = fields.Int(required=True)
     approved = fields.Boolean(required=True, dump_only=True)
 
@@ -26,6 +27,6 @@ class PlainPaymentSchema(Schema):
 
 class PaymentUpdateSchema(Schema):
     amount = fields.Float()
-    pay_account_id = fields.Int()
+    bank_account_id = fields.Int()
     invoice_id = fields.Int()
     approved = fields.Boolean()

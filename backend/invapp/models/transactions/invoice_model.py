@@ -20,15 +20,18 @@ class InvoiceModel(db.Model):
     purchase_type = db.Column(db.Enum("cash", "credit", name="payment_types"), default="cash", nullable=False)
     update_date = db.Column(db.DateTime)
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
+    expense_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=True)
 
-    purchase_items = db.relationship("PurchaseModel", back_populates="invoice")
+    purchase_items = db.relationship("PurchaseModel", back_populates="invoice", cascade="all, delete-orphan")
     supplier = db.relationship("SupplierModel", back_populates="invoice")
+    supplier_balance = db.relationship("SupplierBalanceModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
 
-    inventory_item = db.relationship("InventoryBalancesModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
+    expense_account = db.relationship("AccountModel", back_populates="expense_invoice")
+    inventory_item = db.relationship("InventoryBalancesModel", back_populates="invoice", lazy="dynamic")
+    bank_balance = db.relationship("BankBalanceModel", back_populates="invoice", lazy="dynamic")
     expense_item = db.relationship("ExpensesModel", back_populates="invoice", lazy="dynamic")
     accounting = db.relationship("PurchaseAccountingModel", back_populates="invoice", lazy="dynamic")
-    payments = db.relationship("PaymentModel", back_populates="invoice", lazy="dynamic")
-    supplier_balance = db.relationship("SupplierBalanceModel", back_populates="invoice", lazy="dynamic")
+    payments = db.relationship("SupplierPaymentModel", back_populates="invoice", lazy="dynamic")
 
     __table_args__ = (
         db.UniqueConstraint('invoice_number','currency', 'supplier_id', name="purchase_unique_constraint"),

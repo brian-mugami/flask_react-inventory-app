@@ -1,7 +1,7 @@
 from invapp.db import db
 
 class SupplierBalanceModel(db.Model):
-    __tablename__ = "supplier balances"
+    __tablename__ = "supplier_balances"
 
     id = db.Column(db.Integer, primary_key = True)
     currency = db.Column(db.String(10), default="KES")

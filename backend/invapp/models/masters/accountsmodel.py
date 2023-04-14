@@ -19,11 +19,16 @@ class AccountModel(db.Model):
     __table_args__ = (
         db.UniqueConstraint('account_name', "account_number", 'account_category', name="account_unique_check"),
     )
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
     category = db.relationship("CategoryModel", back_populates="account", passive_deletes=True, lazy="dynamic")
     supplier = db.relationship("SupplierModel", back_populates="account", lazy="dynamic", passive_deletes=True)
     customer = db.relationship("CustomerModel", back_populates="account", passive_deletes=True, lazy="dynamic")
-    payment_account = db.relationship("PaymentModel", back_populates="account", lazy="dynamic")
+    payment_account = db.relationship("SupplierPaymentModel", back_populates="account", lazy="dynamic")
+    expense_invoice = db.relationship("InvoiceModel", back_populates="expense_account", lazy="dynamic")
+    bank_balance = db.relationship("BankBalanceModel", back_populates="account", lazy="dynamic")
 
     def deactivate_account(self):
         self.is_active = False

@@ -3,8 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from invapp.db import db
 from datetime import datetime
 
-class PaymentModel(db.Model):
-    __tablename__ = "payments"
+class SupplierPaymentModel(db.Model):
+    __tablename__ = "supplier_payments"
     id = db.Column(db.Integer, primary_key=True)
     transaction_number = db.Column(UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4)
     payment_description = db.Column(db.String(256))
@@ -13,8 +13,8 @@ class PaymentModel(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
     approved = db.Column(db.Boolean, default=False)
-    payment_status = db.Column(db.Enum("not paid","fully paid","partially paid","over paid", name="payment_status"), nullable=False, default="not_paid")
-    pay_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
+    payment_status = db.Column(db.Enum("not paid","fully paid","partially paid","over paid", name="paid_status"), nullable=False, default="not_paid")
+    bank_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"), nullable=False)
 
     account = db.relationship("AccountModel", back_populates="payment_account")
