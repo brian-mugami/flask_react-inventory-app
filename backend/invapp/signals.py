@@ -92,7 +92,7 @@ def purchase_accounting_transaction(purchase_account_id: int, invoice_id: int,su
 @pay_supplier.connect
 def make_payement(supplier_account_id: int, credit_account: int, amount: float, payment_id: int, balance_id: int):
     balance = SupplierBalanceModel.query.get(balance_id)
-    if balance.balance <= 0:
+    if balance.balance < 0:
         raise SignalException("This balance is already fully sorted")
     new_payment = SupplierPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= credit_account, debit_account_id=supplier_account_id, payment_id=payment_id, balance_id=balance_id)
     try:

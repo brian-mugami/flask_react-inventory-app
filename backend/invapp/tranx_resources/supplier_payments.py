@@ -3,8 +3,9 @@ import datetime
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 
-from ..models import AccountModel
+from ..models import AccountModel, SupplierModel
 from ..models.transactions.invoice_model import InvoiceModel
+from ..schemas.invoice_schema import SearchInvoiceToPaySchema, InvoiceSchema, InvoicePaymentSchema
 from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
@@ -12,6 +13,25 @@ from flask_jwt_extended import jwt_required
 from ..signals import add_supplier_balance, make_payement, manipulate_bank_balance, SignalException
 
 blp = Blueprint("payments", __name__, description="Supplier payments")
+
+
+
+@blp.route("/payment/search/")
+class Invoices(MethodView):
+
+    @jwt_required(fresh=True)
+    @blp.arguments(SearchInvoiceToPaySchema, location="query")
+    @blp.response(202,InvoiceSchema(many=True))
+    def get(self, data):
+        name = data.get("supplier_name", "")
+        ids = []
+        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.ilike(name)).all()
+        for supplier in suppliers:
+            ids.append(supplier.id)
+        #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))
+        supplier_invoices = InvoiceModel.query.filter(InvoiceModel.supplier_id.in_(ids),InvoiceModel.status.in_(["partially paid", "not paid"])).order_by(InvoiceModel.date.desc()).all()
+
+        return supplier_invoices
 
 @blp.route("/payment")
 class PaymentView(MethodView):
@@ -49,13 +69,14 @@ class PaymentView(MethodView):
         payment.invoice = invoice
         payment.account = account
         payment.save_to_db()
-        payment.invoice.status = status
+        invoice.status = payment.payment_status
+        invoice.update_db()
         return payment
 
     @jwt_required(fresh=True)
     @blp.response(200, PlainPaymentSchema(many=True))
     def get(self):
-        payments = SupplierPaymentModel.query.all()
+        payments = SupplierPaymentModel.query.order_by(SupplierPaymentModel.date.desc()).all()
         return payments
 
 @blp.route("/payment/<int:id>")
@@ -116,19 +137,20 @@ class PaymentApproveView(MethodView):
     @blp.response(202, PlainPaymentSchema)
     def post(self, id):
         payment = SupplierPaymentModel.query.get_or_404(id)
-        supplier_account_id = payment.purchase.supplier.account_id
-        supplier_id = payment.purchase.supplier_id
-        invoice_amount = payment.purchase.amount
+        supplier_account_id = payment.invoice.supplier.account_id
+        supplier_id = payment.invoice.supplier_id
+        invoice_amount = payment.invoice.amount
         invoice_id = payment.invoice_id
-        currency = payment.purchase.currency
+        currency = payment.invoice.currency
         if payment.approved:
             abort(400, message="This payment is already approved!!")
         payment.approve_payment()
         try:
             balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount, invoice_id=invoice_id, currency=currency)
-            make_payement(supplier_account_id=supplier_account_id,credit_account=payment.pay_account_id,amount=payment.amount,payment_id=payment.id,balance_id=balance)
-            manipulate_bank_balance(bank_account_id=payment.pay_account_id,invoice_id=invoice_id,amount=-payment.amount, currency=currency)
+            make_payement(supplier_account_id=supplier_account_id,credit_account=payment.bank_account_id,amount=payment.amount,payment_id=payment.id,balance_id=balance)
+            manipulate_bank_balance(bank_account_id=payment.bank_account_id,invoice_id=invoice_id,amount=-payment.amount, currency=currency)
             return payment
         except SignalException as e:
             abort(400, message=f"{str(e)}")
+
 

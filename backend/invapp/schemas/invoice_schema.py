@@ -43,6 +43,7 @@ class BaseInvoiceSchema(Schema):
     expense_account_id = fields.Int(dump_only=True)
 
 class InvoiceSchema(BaseInvoiceSchema):
+    message = fields.Str()
     supplier = fields.Nested(InvoiceSupplierSchema(), dump_only=True)
     purchase_items = fields.Nested(Purchase_items(), many=True)
     supplier_balance = fields.Nested(SupplierBalanceSchema(),many=True ,dump_only=True)
@@ -74,3 +75,7 @@ class InvoicePaymentSchema(Schema):
 
     invoice = fields.Nested(InvoiceSchema(), dump_only=True)
     account = fields.Nested(PayAccountSchema(), dump_only=True)
+
+class SearchInvoiceToPaySchema(Schema):
+    supplier_name = fields.String()
+    date = fields.Date()
