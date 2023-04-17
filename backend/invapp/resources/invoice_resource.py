@@ -1,13 +1,17 @@
 import datetime
 import traceback
+
+from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
+
+from .. import db
 from ..models import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
-from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema
+from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, SearchInvoiceToPaySchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException
 
 blp = Blueprint("invoice", __name__, description="Invoice creation")
@@ -215,7 +219,8 @@ class PaymentView(MethodView):
         payment.invoice = invoice
         payment.account = bank_account
         payment.save_to_db()
-        payment.invoice.status = status
+        invoice.status = payment.payment_status
+        invoice.update_db()
         return payment
 
 
