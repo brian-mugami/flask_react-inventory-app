@@ -4,7 +4,7 @@ import traceback
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 from flask_jwt_extended import jwt_required
-from ..models import AccountModel
+from ..models import AccountModel, ItemModel
 from ..models.transactions.receipt_model import ReceiptModel
 from ..models.transactions.sales_models import SalesModel
 from ..schemas.receiptschema import ReceiptSchema
@@ -28,19 +28,22 @@ class SalesView(MethodView):
         total_cost = 0
         cost = 0
         for receipt_item in data["item_list"]:
-            repeated_item = SalesModel.query.filter_by(item_id=receipt_item["item_id"], receipt_id=receipt.id).first()
+            in_receipt_item = ItemModel.query.filter_by(item_name=receipt_item["item_name"]).first()
+            if not in_receipt_item:
+                abort(404, message=f"{data['item_name']} not found")
+            repeated_item = SalesModel.query.filter_by(item_id=in_receipt_item.id, receipt_id=receipt.id).first()
             if repeated_item:
                 abort(400, message="Item is already in the receipt")
-            item_in_stock = InventoryBalancesModel.query.filter_by(item_id=receipt_item["item_id"]).first()
+            item_in_stock = InventoryBalancesModel.query.filter_by(item_id=in_receipt_item.id).first()
             if not item_in_stock:
                 abort(400, message="Item is not in stock! It might have never been bought!!")
 
             sale_item_quantity = db.session.query(db.func.sum(InventoryBalancesModel.quantity)).filter_by(
-                item_id=receipt_item["item_id"]).scalar()
+                item_id=in_receipt_item.id).scalar()
             if sale_item_quantity <= 0:
                 abort(400, message="You do not have enough quantity")
 
-            sale_items = InventoryBalancesModel.query.filter_by(item_id=receipt_item["item_id"]).order_by(
+            sale_items = InventoryBalancesModel.query.filter_by(item_id=in_receipt_item.id).order_by(
                 InventoryBalancesModel.date).all()
 
             if sale_item_quantity >= receipt_item["quantity"]:
@@ -63,7 +66,7 @@ class SalesView(MethodView):
                         break
 
                 # Add sale item to Sales model
-                sale_item = SalesModel(item_id=receipt_item["item_id"],
+                sale_item = SalesModel(item_id=in_receipt_item.id,
                                        receipt_id=receipt.id,
                                        quantity=receipt_item["quantity"],
                                        selling_price=receipt_item["selling_price"],
