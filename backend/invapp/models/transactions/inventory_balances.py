@@ -31,3 +31,4 @@ class InventoryBalancesModel(db.Model):
 
     def update_db(self):
         db.session.commit()
+

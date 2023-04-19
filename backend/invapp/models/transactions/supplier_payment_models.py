@@ -15,7 +15,7 @@ class SupplierPaymentModel(db.Model):
     approved = db.Column(db.Boolean, default=False)
     payment_status = db.Column(db.Enum("not paid","fully paid","partially paid","over paid", name="paid_status"), nullable=False, default="not_paid")
     bank_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
-    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"), nullable=False)
+    invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))
 
     account = db.relationship("AccountModel", back_populates="payment_account")
     invoice = db.relationship("InvoiceModel", back_populates="payments")

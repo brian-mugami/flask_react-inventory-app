@@ -10,3 +10,4 @@ from .expense_accounts import blp as expenseaccountingblueprint
 from .invoice_resource import blp as invoiceblueprint
 from .receipt_resource import blp as receiptblueprint
 from .bank_balance_resource import blp as bankbalanceblueprint
+from .inventory_balance_resource import blp as inventorybalanceblueprint

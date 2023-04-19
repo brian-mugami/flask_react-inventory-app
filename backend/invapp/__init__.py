@@ -1,7 +1,7 @@
 from .resources import (userblueprint, itemsblueprint, supplierblueprint,
                         customerblueprint, confirmationblueprint , purchaseaccountsblueprint,
                         paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint,
-                        receiptblueprint,bankbalanceblueprint)
+                        receiptblueprint,bankbalanceblueprint, inventorybalanceblueprint)
 from .tranx_resources import purchasingblueprint, paymentblueprint, salesblueprint, customerpaymentblueprint
 from flask import Flask, jsonify
 from flask_smorest import Api
@@ -98,6 +98,7 @@ def create_app():
     api.register_blueprint(invoiceblueprint)
     api.register_blueprint(receiptblueprint)
     api.register_blueprint(bankbalanceblueprint)
+    api.register_blueprint(inventorybalanceblueprint)
 
     return app
 

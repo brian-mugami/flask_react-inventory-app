@@ -6,9 +6,10 @@ class Receipt(Schema):
     customer = fields.Nested(BaseCustomerSchema(), dump_only=True)
 
 class ReceiptItemSchema(Schema):
-    item_id = fields.Int()
-    selling_price = fields.Float()
-    quantity = fields.Int()
+    item_id = fields.Int(dump_only=True)
+    selling_price = fields.Float(required=True)
+    quantity = fields.Int(required=True)
+    item_name = fields.String(required=True)
 
 class PlainSalesSchema(Schema):
     id = fields.Int(dump_only=True, required=True)

@@ -30,8 +30,8 @@ class InvoiceModel(db.Model):
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="invoice", lazy="dynamic")
     bank_balance = db.relationship("BankBalanceModel", back_populates="invoice", lazy="dynamic")
     expense_item = db.relationship("ExpensesModel", back_populates="invoice", lazy="dynamic")
-    accounting = db.relationship("PurchaseAccountingModel", back_populates="invoice", lazy="dynamic")
-    payments = db.relationship("SupplierPaymentModel", back_populates="invoice", lazy="dynamic")
+    accounting = db.relationship("PurchaseAccountingModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
+    payments = db.relationship("SupplierPaymentModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
 
     __table_args__ = (
         db.UniqueConstraint('invoice_number','currency', 'supplier_id', name="purchase_unique_constraint"),

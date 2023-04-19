@@ -6,15 +6,32 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
 
-from .. import db
 from ..models import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
+from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
-from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, SearchInvoiceToPaySchema
+from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException
 
 blp = Blueprint("invoice", __name__, description="Invoice creation")
+
+@blp.route("/invoice/<int:id>/account")
+class InvoiceAccountingView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self, id):
+        invoice = InvoiceModel.query.get(id)
+        if not invoice:
+            abort(404, message="Invoice does not exist")
+        accounted_invoice = PurchaseAccountingModel.query.filter_by(invoice_id=invoice.id).first()
+        if not accounted_invoice:
+            abort(400, message="No invoice accounting on this invoice")
+
+        debit_account = AccountModel.query.get(accounted_invoice.debit_account_id)
+        credit_account = AccountModel.query.get(accounted_invoice.credit_account_id)
+
+        return jsonify({"debit_account":debit_account.account_name, "credit_account": credit_account.account_name, "debit_amount": accounted_invoice.debit_amount, "credit_amount": accounted_invoice.credit_amount})
+
 
 @blp.route("/invoice")
 class Invoices(MethodView):
@@ -23,7 +40,7 @@ class Invoices(MethodView):
     @blp.response(200,InvoiceSchema(many=True))
     def get(self):
         """Get all invoices"""
-        invoices = InvoiceModel.query.all()
+        invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
         return invoices
 
     @jwt_required(fresh=True)
@@ -208,11 +225,11 @@ class PaymentView(MethodView):
         elif data["amount"] <= 0:
             status = "not paid"
 
+        data.pop("bank_account")
         payment = SupplierPaymentModel(
-        amount = data["amount"],
+        **data,
         bank_account_id = bank_account.id,
         invoice_id = invoice.id,
-        currency = data["currency"],
         approved = False,
         payment_status = status
         )

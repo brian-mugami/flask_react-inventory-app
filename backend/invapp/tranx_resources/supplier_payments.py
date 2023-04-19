@@ -1,10 +1,12 @@
 import datetime
 
+from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 
 from ..models import AccountModel, SupplierModel
 from ..models.transactions.invoice_model import InvoiceModel
+from ..models.transactions.purchase_accounting_models import SupplierPayAccountingModel
 from ..schemas.invoice_schema import SearchInvoiceToPaySchema, InvoiceSchema, InvoicePaymentSchema
 from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
@@ -13,6 +15,28 @@ from flask_jwt_extended import jwt_required
 from ..signals import add_supplier_balance, make_payement, manipulate_bank_balance, SignalException
 
 blp = Blueprint("payments", __name__, description="Supplier payments")
+
+@blp.route("/payment/<int:id>/account")
+class PaymentAccountingView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self, id):
+        accounts = []
+        payment = SupplierPaymentModel.query.get(id)
+        if not payment:
+            abort(404, message="Payment does not exist")
+        payment_accounting = SupplierPayAccountingModel.query.filter_by(payment_id=payment.id).all()
+        if not payment_accounting:
+            abort(404, message="Accounting has not been done")
+        for accounting in payment_accounting:
+            debit_account= AccountModel.query.get(accounting.debit_account_id)
+            credit_account = AccountModel.query.get(accounting.credit_account_id)
+            account = {"debit_account": debit_account.account_name,
+                       "credit_account": credit_account.account_name,
+                       "credit_amount": accounting.credit_amount,
+                       "debit_amount":accounting.debit_amount}
+            accounts.append(account)
+
+        return jsonify({"accounting": accounts})
 
 
 
@@ -58,11 +82,7 @@ class PaymentView(MethodView):
         elif data["amount"] <= 0:
             status = "not paid"
 
-        payment = SupplierPaymentModel(
-        amount = data["amount"],
-        bank_account_id = data["bank_account_id"],
-        invoice_id = data["invoice_id"],
-        currency = data["currency"],
+        payment = SupplierPaymentModel(**data,
         approved = False,
         payment_status = status
         )
