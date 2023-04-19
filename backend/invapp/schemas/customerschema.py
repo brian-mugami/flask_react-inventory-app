@@ -6,7 +6,7 @@ class BaseCustomerSchema(Schema):
     customer_name = fields.String(required=True)
     customer_number = fields.Integer(required=True, dump_only=True)
     customer_phone_no = fields.String()
-    customer_email = fields.Email()
+    customer_email = fields.String()
     customer_site = fields.String()
     customer_bill_to_site = fields.String()
 

@@ -19,7 +19,7 @@ class PlainSupplierSchema(Schema):
     supplier_number = fields.Int(required=True, dump_only=True)
     supplier_site = fields.String()
     supplier_phone_no = fields.String()
-    supplier_email = fields.Email()
+    supplier_email = fields.String()
 
 class SupplierSchema(PlainSupplierSchema):
 

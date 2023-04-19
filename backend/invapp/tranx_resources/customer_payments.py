@@ -16,7 +16,7 @@ class PaymentView(MethodView):
     @blp.arguments(PlainCustomerPaymentSchema)
     @blp.response(201, PlainCustomerPaymentSchema)
     def post(self, data):
-        customer_amount = CustomerBalanceModel.query.filter_by(sale_id=data["sale_id"], currency=data["currency"]).first()
+        customer_amount = CustomerBalanceModel.query.filter_by(receipt_id=data["receipt_id"], currency=data["currency"]).first()
         status = ""
         if customer_amount.balance < data["amount"]:
             status = "over_paid"

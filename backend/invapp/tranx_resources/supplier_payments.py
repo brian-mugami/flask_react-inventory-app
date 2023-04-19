@@ -82,11 +82,7 @@ class PaymentView(MethodView):
         elif data["amount"] <= 0:
             status = "not paid"
 
-        payment = SupplierPaymentModel(
-        amount = data["amount"],
-        bank_account_id = data["bank_account_id"],
-        invoice_id = data["invoice_id"],
-        currency = data["currency"],
+        payment = SupplierPaymentModel(**data,
         approved = False,
         payment_status = status
         )

@@ -1,5 +1,6 @@
 from flask import jsonify
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 from ..db import db
 from ..models import AccountModel
@@ -80,29 +81,27 @@ class Supplier(MethodView):
     def post(self, data):
         supplier = SupplierModel.query.filter_by(supplier_name=data["supplier_name"]).first()
         if supplier:
-            abort(409, message="Supplier already exists")
+            abort(409, message=f"Supplier {data.get('supplier_name')} already exists")
         account = AccountModel.query.filter_by(
             account_name=data["account_name"],
             account_category="Supplier Account"
         ).first()
         if account is None:
             abort(404, message="Account does not exist")
-
         account_id = account.id
-
-        supplier = SupplierModel(supplier_name=data["supplier_name"], account_id=account_id,
-                                 supplier_phone_no=data["supplier_phone_no"], supplier_email=data["supplier_email"],supplier_site=data["supplier_site"], is_active=data["is_active"], payment_type=data["payment_type"])
-
-        db.session.add(supplier)
-        db.session.commit()
-
-        return supplier
+        data.pop("account_name")
+        try:
+            supplier = SupplierModel(**data, account_id=account_id)
+            db.session.add(supplier)
+            db.session.commit()
+            return supplier
+        except IntegrityError:
+            abort(500, message="Please review the creation details, there was an error")
 
     @jwt_required(fresh=False)
     @blp.response(200, SupplierSchema(many=True))
     def get(self):
         suppliers = SupplierModel.query.all()
-
         return suppliers
 
 @blp.route("/supplier/<int:id>")

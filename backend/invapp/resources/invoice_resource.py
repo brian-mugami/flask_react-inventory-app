@@ -225,11 +225,11 @@ class PaymentView(MethodView):
         elif data["amount"] <= 0:
             status = "not paid"
 
+        data.pop("bank_account")
         payment = SupplierPaymentModel(
-        amount = data["amount"],
+        **data,
         bank_account_id = bank_account.id,
         invoice_id = invoice.id,
-        currency = data["currency"],
         approved = False,
         payment_status = status
         )

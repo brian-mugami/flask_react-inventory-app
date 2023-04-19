@@ -16,6 +16,7 @@ class InvoicePaymentSchema(Schema):
     approved = fields.Boolean()
     amount = fields.Float()
     payment_status = fields.String()
+    payment_description = fields.String()
 
 class Purchase_items(Schema):
     item_quantity = fields.Integer()

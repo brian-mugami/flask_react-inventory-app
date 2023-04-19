@@ -25,7 +25,6 @@ class SalesView(MethodView):
         if not receipt:
             abort(404, message="receipt not found")
 
-        total_cost = 0
         cost = 0
         for receipt_item in data["item_list"]:
             in_receipt_item = ItemModel.query.filter_by(item_name=receipt_item["item_name"]).first()
@@ -33,15 +32,15 @@ class SalesView(MethodView):
                 abort(404, message=f"{data['item_name']} not found")
             repeated_item = SalesModel.query.filter_by(item_id=in_receipt_item.id, receipt_id=receipt.id).first()
             if repeated_item:
-                abort(400, message="Item is already in the receipt")
+                abort(400, message=f"{in_receipt_item.item_name} is in the receipt twice")
             item_in_stock = InventoryBalancesModel.query.filter_by(item_id=in_receipt_item.id).first()
             if not item_in_stock:
-                abort(400, message="Item is not in stock! It might have never been bought!!")
+                abort(400, message=f"{in_receipt_item.item_name} is not in stock! It might have never been bought!!")
 
             sale_item_quantity = db.session.query(db.func.sum(InventoryBalancesModel.quantity)).filter_by(
                 item_id=in_receipt_item.id).scalar()
             if sale_item_quantity <= 0:
-                abort(400, message="You do not have enough quantity")
+                abort(400, message=f"{in_receipt_item.item_name} has insufficient quantity")
 
             sale_items = InventoryBalancesModel.query.filter_by(item_id=in_receipt_item.id).order_by(
                 InventoryBalancesModel.date).all()
@@ -54,14 +53,12 @@ class SalesView(MethodView):
                             item.quantity -= remaining_qty
                             remaining_qty = 0
                             item_cost = receipt_item["quantity"] * receipt_item["selling_price"]
-                            cost = item_cost
-                            total_cost += item_cost
+
                         else:
                             remaining_qty -= item.quantity
                             item.quantity = 0
                             item_cost = receipt_item["quantity"] * receipt_item["selling_price"]
-                            cost = item_cost
-                            total_cost += item_cost
+
                     else:
                         break
 
@@ -70,14 +67,15 @@ class SalesView(MethodView):
                                        receipt_id=receipt.id,
                                        quantity=receipt_item["quantity"],
                                        selling_price=receipt_item["selling_price"],
-                                       item_cost=cost)
+                                       item_cost=item_cost)
+                cost += item_cost
                 sale_item.save_to_db()
 
             else:
                 abort(400, message="Sale has not be made, not enough quantity!!")
 
         # Update receipt amount
-        receipt.amount = total_cost
+        receipt.amount = cost
         receipt.update_db()
 
         if receipt.sale_type == "cash":
@@ -95,7 +93,7 @@ class SalesView(MethodView):
                 return receipt
             except SignalException as e:
                 traceback.print_exc()
-                return {"message": f"{str(e)}"}
+                abort(500, message="Server error when accounting")
         else:
             cash_account = AccountModel.query.filter_by(account_type="credit",
                                                         account_category="Sale Account").first()
@@ -110,7 +108,7 @@ class SalesView(MethodView):
                 return receipt
             except SignalException as e:
                 traceback.print_exc()
-                return {"message": f"{str(e)}"}
+                abort(500, message="Server error when accounting")
 
     @jwt_required(fresh=True)
     @blp.response(201,SalesSchema(many=True))
