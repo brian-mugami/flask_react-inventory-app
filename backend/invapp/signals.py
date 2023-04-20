@@ -102,11 +102,14 @@ def make_payement(supplier_account_id: int, credit_account: int, amount: float, 
 
 @customer_payment.connect
 def receive_payment(customer_account_id: int, bank_account: int, amount: float, payment_id: int, balance_id: int):
-        new_payment = CustomerPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= customer_account_id, debit_account_id=bank_account, payment_id=payment_id, balance_id=balance_id)
-        try:
-            new_payment.save_to_db()
-        except:
-            raise SignalException("Payment failed")
+    balance = CustomerBalanceModel.query.get(balance_id)
+    if balance.balance < 0:
+        raise SignalException("This balance is already fully sorted")
+    new_payment = CustomerPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= customer_account_id, debit_account_id=bank_account, payment_id=payment_id, balance_id=balance_id)
+    try:
+        new_payment.save_to_db()
+    except:
+        raise SignalException("Payment failed")
 
 
 @supplier_balance.connect
@@ -132,7 +135,14 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
 
 @sales_account.connect
 def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer_account_id: int,amount:float):
-
+    existing_sale_accounting = SalesAccountingModel.query.filter_by(receipt_id=receipt_id).first()
+    if existing_sale_accounting:
+        existing_sale_accounting.credit_account_id = sales_account_id
+        existing_sale_accounting.debit_account_id = customer_account_id
+        existing_sale_accounting.debit_amount = amount
+        existing_sale_accounting.credit_amount = -amount
+        existing_sale_accounting.update_date = datetime.datetime.utcnow()
+        existing_sale_accounting.update_db()
     sales_account = SalesAccountingModel(credit_account_id=sales_account_id,debit_account_id=customer_account_id,
                                           debit_amount=amount, credit_amount=-amount, receipt_id=receipt_id)
     try:
@@ -145,7 +155,6 @@ def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer
 @customer_balance.connect
 def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float , currency: str = "KES", paid: float = 0.00):
     balance = receipt_amount - paid
-
     existing_balance = CustomerBalanceModel.query.filter_by(customer_id=customer_id, currency=currency,
                                                             receipt_id=receipt_id).first()
     if existing_balance:

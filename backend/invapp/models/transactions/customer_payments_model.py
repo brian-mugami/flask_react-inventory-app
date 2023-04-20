@@ -14,7 +14,7 @@ class CustomerPaymentModel(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
     approved = db.Column(db.Boolean, default=False)
-    payment_status = db.Column(db.Enum("not_paid","fully_paid","partially_paid","over_paid", name="customer_payment_status"), nullable=False, default="not_paid")
+    payment_status = db.Column(db.Enum("fully_paid", "partially_paid", "not_paid", "over_paid", name="customer_payment_status"), nullable=False, default="not paid")
 
     receive_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False)

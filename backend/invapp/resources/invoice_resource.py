@@ -212,9 +212,13 @@ class PaymentView(MethodView):
         invoice = InvoiceModel.query.get(invoice_id)
         if not invoice:
             abort(404, message="Could not find invoice")
+        if invoice.accounted != "fully_accounted":
+            abort(400, message="This invoice is not accounted")
         if invoice.status == "fully paid":
             abort(400, message="Invoice is already fully paid")
         purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=invoice.id, currency=data["currency"]).first()
+        if purchase_amount.balance == 0:
+            abort(400, message="This supplier balance is fully sorted, Please check your payments and approve them")
         status = ""
         if purchase_amount.balance < data["amount"]:
             abort(400, message="Amount is higher than the balance")

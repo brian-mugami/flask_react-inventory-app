@@ -38,8 +38,6 @@ class PaymentAccountingView(MethodView):
 
         return jsonify({"accounting": accounts})
 
-
-
 @blp.route("/payment/search/")
 class Invoices(MethodView):
 
