@@ -1,18 +1,64 @@
 import datetime
 import traceback
 
+from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 
-from ..models import AccountModel
+from ..models import AccountModel, CustomerModel
 from ..models.transactions.receipt_model import ReceiptModel
-from ..schemas.customerpaymentschema import PlainCustomerPaymentSchema,PaymentUpdateSchema
+from ..models.transactions.sales_accounting_models import CustomerPayAccountingModel
+from ..schemas.customerpaymentschema import PlainCustomerPaymentSchema,PaymentUpdateSchema, SearchReceiptToPaySchema
 from ..models.transactions.customer_payments_model import CustomerPaymentModel
 from ..models.transactions.customer_balances_model import CustomerBalanceModel
 from flask_jwt_extended import jwt_required
+
+from ..schemas.receiptschema import ReceiptSchema
 from ..signals import add_customer_balance, receive_payment, manipulate_bank_balance, SignalException
 
 blp = Blueprint("Customer payments", __name__, description="Customer payments")
+
+@blp.route("/customer/payment/<int:id>/account")
+class PaymentAccountingView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self, id):
+        accounts = []
+        payment = CustomerPaymentModel.query.get(id)
+        if not payment:
+            abort(404, message="Payment does not exist")
+        payment_accounting = CustomerPayAccountingModel.query.filter_by(payment_id=payment.id).all()
+        if not payment_accounting:
+            abort(404, message="Accounting has not been done")
+        for accounting in payment_accounting:
+            debit_account= AccountModel.query.get(accounting.debit_account_id)
+            credit_account = AccountModel.query.get(accounting.credit_account_id)
+            account = {"debit_account": debit_account.account_name,
+                       "credit_account": credit_account.account_name,
+                       "credit_amount": accounting.credit_amount,
+                       "debit_amount":accounting.debit_amount}
+            accounts.append(account)
+
+        return jsonify({"accounting": accounts})
+
+@blp.route("/customer/payment/search/")
+class Invoices(MethodView):
+
+    @jwt_required(fresh=True)
+    @blp.arguments(SearchReceiptToPaySchema, location="query")
+    @blp.response(202,ReceiptSchema(many=True))
+    def get(self, data):
+        name = data.get("customer_name", "")
+        ids = []
+        customers = CustomerModel.query.filter(CustomerModel.customer_name.contains(name)).all()
+        if len(customers) < 1:
+            abort(404, message="No such customer has an unpaid receipt")
+        for customer in customers:
+            ids.append(customer.id)
+        #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))
+        customer_receipts = ReceiptModel.query.filter(ReceiptModel.customer_id.in_(ids),ReceiptModel.status.in_(["partially paid", "not paid"])).order_by(ReceiptModel.date.desc()).all()
+        print(customer_receipts)
+
+        return customer_receipts
 
 @blp.route("/customer/payment")
 class PaymentView(MethodView):
@@ -70,7 +116,7 @@ class PaymentView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(200, PlainCustomerPaymentSchema(many=True))
     def get(self):
-        payments = CustomerPaymentModel.query.all()
+        payments = CustomerPaymentModel.query.order_by(CustomerPaymentModel.date.desc()).all()
         return payments
 
 @blp.route("/customer/payment/<int:id>")
@@ -121,7 +167,7 @@ class PaymentApproveView(MethodView):
     @blp.response(202,PlainCustomerPaymentSchema)
     def post(self, id):
         payment = CustomerPaymentModel.query.get_or_404(id)
-        customer_account_id = payment.sales.customer.account_id
+        customer_account_id = payment.receipt.customer.account_id
         customer_id = payment.receipt.customer_id
         receipt_amount = payment.receipt.amount
         receipt_id = payment.receipt_id

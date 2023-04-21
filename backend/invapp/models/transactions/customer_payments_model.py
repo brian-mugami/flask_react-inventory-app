@@ -19,6 +19,7 @@ class CustomerPaymentModel(db.Model):
     receive_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False)
 
+    account = db.relationship("AccountModel", back_populates="receivable_account")
     receipt = db.relationship("ReceiptModel", back_populates="received")
     accounting = db.relationship("CustomerPayAccountingModel", back_populates="payments")
 

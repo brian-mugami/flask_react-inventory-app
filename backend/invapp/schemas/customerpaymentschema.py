@@ -1,6 +1,10 @@
 from marshmallow import fields,Schema
 from .receiptschema import ReceiptSchema
 
+class Receivableaccount(Schema):
+    account_name = fields.String()
+    account_number = fields.String()
+
 class PlainCustomerPaymentSchema(Schema):
 
     id = fields.Integer(required=True, dump_only=True)
@@ -15,7 +19,7 @@ class PlainCustomerPaymentSchema(Schema):
     receive_account_id = fields.Int(required=True, dump_only=True)
     receipt_id= fields.Int(required=True)
     approved = fields.Boolean(required=True, dump_only=True)
-
+    account = fields.Nested(Receivableaccount(), dump_only=True)
     receipt = fields.Nested(ReceiptSchema(), dump_only=True)
 
 class PaymentUpdateSchema(Schema):
@@ -23,3 +27,6 @@ class PaymentUpdateSchema(Schema):
     receive_account_id = fields.Int()
     receipt_id = fields.Int()
     approved = fields.Boolean()
+
+class SearchReceiptToPaySchema(Schema):
+    customer_name = fields.String(required=True)
