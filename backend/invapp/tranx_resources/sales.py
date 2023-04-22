@@ -73,8 +73,6 @@ class SalesView(MethodView):
 
             else:
                 abort(400, message="Sale has not be made, not enough quantity!!")
-
-        # Update receipt amount
         receipt.amount = cost
         receipt.update_db()
 
@@ -90,6 +88,8 @@ class SalesView(MethodView):
                 sales_accounting_transaction(sales_account_id=cash_account.id, receipt_id=receipt.id,
                                              customer_account_id=customer_account, amount=amount)
                 receipt = ReceiptModel.query.get(receipt.id)
+                receipt.accounted_status = "fully_accounted"
+                receipt.update_db()
                 return receipt
             except SignalException as e:
                 traceback.print_exc()
@@ -105,6 +105,8 @@ class SalesView(MethodView):
                 sales_accounting_transaction(sales_account_id=cash_account.id, receipt_id=receipt.id,
                                              customer_account_id=customer_account, amount=amount)
                 receipt = ReceiptModel.query.get(receipt.id)
+                receipt.accounted_status = "fully_accounted"
+                receipt.update_db()
                 return receipt
             except SignalException as e:
                 traceback.print_exc()

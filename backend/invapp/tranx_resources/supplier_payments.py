@@ -16,6 +16,26 @@ from ..signals import add_supplier_balance, make_payement, manipulate_bank_balan
 
 blp = Blueprint("payments", __name__, description="Supplier payments")
 
+@blp.route("/payment/search/")
+class Invoices(MethodView):
+
+    @jwt_required(fresh=True)
+    @blp.arguments(SearchInvoiceToPaySchema, location="query")
+    @blp.response(202,InvoiceSchema(many=True))
+    def get(self, data):
+        name = data.get("supplier_name", "")
+        ids = []
+        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.contains(name)).all()
+        print(suppliers)
+        if len(suppliers) < 1:
+            abort(404, message="No such supplier has an unpaid invoice")
+        for supplier in suppliers:
+            ids.append(supplier.id)
+        #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))
+        supplier_invoices = InvoiceModel.query.filter(InvoiceModel.supplier_id.in_(ids),InvoiceModel.status.in_(["partially paid", "not paid"])).order_by(InvoiceModel.date.desc()).all()
+
+        return supplier_invoices
+
 @blp.route("/payment/<int:id>/account")
 class PaymentAccountingView(MethodView):
     @jwt_required(fresh=True)
@@ -38,8 +58,6 @@ class PaymentAccountingView(MethodView):
 
         return jsonify({"accounting": accounts})
 
-
-
 @blp.route("/payment/search/")
 class Invoices(MethodView):
 
@@ -49,7 +67,10 @@ class Invoices(MethodView):
     def get(self, data):
         name = data.get("supplier_name", "")
         ids = []
-        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.ilike(name)).all()
+        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.contains(name)).all()
+        print(suppliers)
+        if len(suppliers) < 1:
+            abort(404, message="No such supplier has an unpaid invoice")
         for supplier in suppliers:
             ids.append(supplier.id)
         #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))

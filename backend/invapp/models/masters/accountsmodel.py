@@ -25,6 +25,7 @@ class AccountModel(db.Model):
     payment_account = db.relationship("SupplierPaymentModel", back_populates="account", lazy="dynamic")
     expense_invoice = db.relationship("InvoiceModel", back_populates="expense_account", lazy="dynamic")
     bank_balance = db.relationship("BankBalanceModel", back_populates="account", lazy="dynamic")
+    receivable_account = db.relationship("CustomerPaymentModel", back_populates="account", lazy="dynamic")
 
     def deactivate_account(self):
         self.is_active = False

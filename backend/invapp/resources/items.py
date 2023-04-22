@@ -1,5 +1,4 @@
 from flask import jsonify
-
 from ..db import db
 from invapp.models.masters.accountsmodel import AccountModel
 from invapp.models.masters.itemmodels import CategoryModel, ItemModel, LotModel
@@ -10,7 +9,6 @@ from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema,  PlainCa
 from ..schemas.accountsschema import AccountSchema,AccountUpdateSchema
 
 blp = Blueprint("Items", __name__, description="Actions on items")
-
 
 @blp.route("/category/account")
 class Categoryaccount(MethodView):
