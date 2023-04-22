@@ -10,12 +10,9 @@ from invapp.models import CustomerModel, AccountModel
 from invapp.models.transactions.customer_balances_model import CustomerBalanceModel
 from invapp.models.transactions.customer_payments_model import CustomerPaymentModel
 from invapp.models.transactions.receipt_model import ReceiptModel
-<<<<<<< HEAD
-from invapp.schemas.receiptschema import ReceiptSchema
-=======
 from invapp.models.transactions.sales_accounting_models import SalesAccountingModel
 from invapp.schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema
->>>>>>> main
+
 
 blp = Blueprint("receipts", __name__, description="Receipt creation")
 
