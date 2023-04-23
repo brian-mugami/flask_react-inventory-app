@@ -15,8 +15,9 @@ class PlainBankBalanceSchema(Schema):
     update_date = fields.Date(dump_only=True)
 
 class BankBalanceSchema(PlainBankBalanceSchema):
-
     account = fields.Nested(AccountSchema(), dump_only=True)
+    invoice = fields.Nested(InvoiceSchema(), dump_only=True)
+    receipt = fields.Nested(ReceiptSchema(), dump_only=True)
 
 class BankBalanceUpdateSchema(Schema):
     amount = fields.Float()
