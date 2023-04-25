@@ -14,13 +14,15 @@ class SupplierBalanceModel(db.Model):
 
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"))
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))
+    payment_id = db.Column(db.Integer, db.ForeignKey("supplier_payments.id"))
 
+    payment = db.relationship("SupplierPaymentModel", back_populates="balances")
     supplier = db.relationship("SupplierModel", back_populates="balances")
     invoice = db.relationship("InvoiceModel", back_populates="supplier_balance")
     accounting = db.relationship("SupplierPayAccountingModel", back_populates="balance")
 
     __table_args__ = (
-        db.UniqueConstraint('supplier_id', 'currency', "invoice_id"),
+        db.UniqueConstraint('supplier_id', 'currency', "invoice_id", "payment_id"),
     )
 
     @classmethod

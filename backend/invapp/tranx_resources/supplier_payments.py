@@ -7,7 +7,7 @@ from flask_smorest import Blueprint,abort
 from ..models import AccountModel, SupplierModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import SupplierPayAccountingModel
-from ..schemas.invoice_schema import SearchInvoiceToPaySchema, InvoiceSchema, InvoicePaymentSchema
+from ..schemas.invoice_schema import SearchInvoiceToPaySchema, InvoiceSchema
 from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
@@ -131,6 +131,11 @@ class PaymentMainView(MethodView):
     @jwt_required(fresh=True)
     def delete(self, id):
         transaction = SupplierPaymentModel.query.get_or_404(id)
+        balance = SupplierBalanceModel.query.filter_by(payment_id=transaction.id).first()
+        if transaction.approved == True and transaction.payment_status != "not paid":
+            abort(400, message="Cannot delete a payment that is paid and approved")
+        balance.balance += transaction.amount
+        balance.update_db()
         transaction.delete_from_db()
         return {"message": "deleted"}, 204
 
@@ -187,11 +192,13 @@ class PaymentApproveView(MethodView):
             abort(400, message="This payment is already approved!!")
         payment.approve_payment()
         try:
-            balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount, invoice_id=invoice_id, currency=currency)
+            balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount, invoice_id=invoice_id, currency=currency, payment_id=payment.id)
             make_payement(supplier_account_id=supplier_account_id,credit_account=payment.bank_account_id,amount=payment.amount,payment_id=payment.id,balance_id=balance)
             manipulate_bank_balance(bank_account_id=payment.bank_account_id,invoice_id=invoice_id,amount=-payment.amount, currency=currency)
             return payment
         except SignalException as e:
+            payment.approved = False
+            payment.update_db()
             abort(400, message=f"{str(e)}")
 
 

@@ -19,6 +19,8 @@ class InvoiceModel(db.Model):
     destination_type = db.Column(db.Enum("expense", "stores", name="destination_types"), default="stores", nullable=False)
     purchase_type = db.Column(db.Enum("cash", "credit", name="payment_types"), default="cash", nullable=False)
     update_date = db.Column(db.DateTime)
+    voided = db.Column(db.Boolean, default=False)
+    reason = db.Column(db.String(256))
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
     expense_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=True)
 
@@ -27,9 +29,9 @@ class InvoiceModel(db.Model):
     supplier_balance = db.relationship("SupplierBalanceModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
 
     expense_account = db.relationship("AccountModel", back_populates="expense_invoice")
-    inventory_item = db.relationship("InventoryBalancesModel", back_populates="invoice", lazy="dynamic")
-    bank_balance = db.relationship("BankBalanceModel", back_populates="invoice", lazy="dynamic")
-    expense_item = db.relationship("ExpensesModel", back_populates="invoice", lazy="dynamic")
+    inventory_item = db.relationship("InventoryBalancesModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
+    bank_balance = db.relationship("BankBalanceModel", back_populates="invoice", lazy="dynamic",cascade="all, delete-orphan")
+    expense_item = db.relationship("ExpensesModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
     accounting = db.relationship("PurchaseAccountingModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
     payments = db.relationship("SupplierPaymentModel", back_populates="invoice", lazy="dynamic", cascade="all, delete-orphan")
 
