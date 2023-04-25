@@ -1,3 +1,5 @@
+import datetime
+
 from invapp.db import db
 
 class SupplierBalanceModel(db.Model):
@@ -8,17 +10,19 @@ class SupplierBalanceModel(db.Model):
     invoice_amount = db.Column(db.Float, nullable=False, default=0.00)
     paid = db.Column(db.Float, nullable= True, default=0.00)
     balance = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime)
+    date = db.Column(db.DateTime, default=datetime.datetime.utcnow())
 
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"))
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))
+    payment_id = db.Column(db.Integer, db.ForeignKey("supplier_payments.id"))
 
+    payment = db.relationship("SupplierPaymentModel", back_populates="balances")
     supplier = db.relationship("SupplierModel", back_populates="balances")
     invoice = db.relationship("InvoiceModel", back_populates="supplier_balance")
     accounting = db.relationship("SupplierPayAccountingModel", back_populates="balance")
 
     __table_args__ = (
-        db.UniqueConstraint('supplier_id', 'currency', "invoice_id"),
+        db.UniqueConstraint('supplier_id', 'currency', "invoice_id", "payment_id"),
     )
 
     @classmethod

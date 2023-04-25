@@ -17,9 +17,10 @@ class SupplierPaymentModel(db.Model):
     bank_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))
 
+    balances = db.relationship("SupplierBalanceModel", back_populates="payment")
     account = db.relationship("AccountModel", back_populates="payment_account")
     invoice = db.relationship("InvoiceModel", back_populates="payments")
-    accounting = db.relationship("SupplierPayAccountingModel", back_populates="payments", lazy="dynamic")
+    accounting = db.relationship("SupplierPayAccountingModel", back_populates="payments", lazy="dynamic", cascade="all, delete-orphan")
 
     @classmethod
     def find_by_id(cls,_id: int):

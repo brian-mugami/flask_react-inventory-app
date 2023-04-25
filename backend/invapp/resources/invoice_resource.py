@@ -11,10 +11,28 @@ from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
-from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema
+from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException
 
 blp = Blueprint("invoice", __name__, description="Invoice creation")
+
+@blp.route("/invoice/<int:id>/void")
+class InvoiceVoidView(MethodView):
+    @jwt_required(fresh=True)
+    @blp.arguments(InvoiceVoidSchema)
+    @blp.response(202, InvoiceSchema)
+    def post(self, data,id):
+        invoice = InvoiceModel.query.get(id)
+        if not invoice:
+            abort(404, message="Invoice does not exist")
+        if invoice.status == "not paid" and invoice.accounted == "not_accounted":
+            abort(400, message= "Just delete this invoice, it has no accounting and payments")
+        invoice.voided = data.get("voided")
+        invoice.reason = data.get("reason")
+
+        invoice.update_db()
+        return invoice
+
 
 @blp.route("/invoice/<int:id>/account")
 class InvoiceAccountingView(MethodView):
@@ -51,25 +69,33 @@ class Invoices(MethodView):
         supplier = SupplierModel.query.filter_by(supplier_name = data["supplier_name"]).first()
         if supplier is None:
             abort(404, message="Supplier does not exist")
-        invoice = InvoiceModel.query.filter_by(invoice_number=data["invoice_number"], supplier_id=supplier.id).first()
+        invoice = InvoiceModel.query.filter_by(invoice_number=data["invoice_number"], supplier_id=supplier.id, currency=data["currency"]).first()
         if invoice:
             abort(400, message="This invoice number for this supplier already exists!!")
         if data["destination_type"] == "expense":
-            account = AccountModel.query.filter_by(account_name=data["expense_account"], account_category="Expense Account").first()
+            account = AccountModel.query.filter_by(account_name=data["expense_account_name"], account_category="Expense Account").first()
             if not account:
                 abort(404, message="Expense account not found")
             account_id = account.id
             data.pop('supplier_name', None)
-            data.pop('expense_account', None)
+            data.pop('expense_account_name', None)
             new_trx = InvoiceModel(supplier_id=supplier.id,expense_account_id=account_id,**data)
             new_trx.supplier = supplier
             new_trx.expense_account = account
             new_trx.save_to_db()
+            try:
+                add_supplier_balance(supplier_id=new_trx.supplier_id, invoice_id=new_trx.id,
+                                     invoice_amount=new_trx.amount,
+                                     currency=new_trx.currency)
+                return new_trx
+            except SignalException as e:
+                new_trx.delete_from_db()
+                abort(500, message="Did not add supplier balance")
         data.pop('supplier_name', None)
-        data.pop('expense_account', None)
+        data.pop('expense_account_name', None)
         new_trx = InvoiceModel(supplier_id=supplier.id, **data)
-        new_trx.supplier = supplier
         new_trx.save_to_db()
+        new_trx.supplier = supplier
         try:
             add_supplier_balance(supplier_id=new_trx.supplier_id, invoice_id=new_trx.id, invoice_amount=new_trx.amount,
                                  currency=new_trx.currency)
@@ -96,15 +122,16 @@ class Invoice(MethodView):
         existing_invoice = InvoiceModel.query.get_or_404(invoice_id)
         if existing_invoice.accounted == "fully_accounted":
             abort(400, message="Cannot edit an accounted invoice")
+        if existing_invoice.status != "not paid":
+            abort(400, message="Cannot edit an invoice that has began payments")
         supplier = SupplierModel.query.filter_by(supplier_name=invoice["supplier_name"]).first()
         if supplier is None:
             abort(404, message="Supplier does not exist")
         if invoice["destination_type"] == "expense":
-            account = AccountModel.query.filter_by(account_name=invoice["expense_account"],
+            account = AccountModel.query.filter_by(account_name=invoice["expense_account_name"],
                                                    account_category="Expense Account").first()
             if not account:
                 abort(404, message="Expense account not found")
-
             existing_invoice.expense_account_id = account.id
         invoice.pop("supplier_name", None)
         existing_invoice.currency = invoice["currency"]
@@ -136,8 +163,10 @@ class Invoice(MethodView):
     def delete(self, invoice_id):
         """Delete an invoice"""
         invoice = InvoiceModel.query.get_or_404(invoice_id)
-        if invoice.status == "partially paid":
-            abort(400, message="Complete the payment to delete")
+        if invoice.status != "not paid":
+            abort(400, message="Cannot delete an invoice with payments, instead void this invoice")
+        if invoice.accounted != "not_accounted":
+            abort(400, message="Cannot delete an invoice that is accounted, instead void this invoice")
         invoice.delete_from_db()
         return ({"message":"deleted"})
 

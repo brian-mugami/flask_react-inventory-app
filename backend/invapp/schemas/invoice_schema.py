@@ -19,11 +19,16 @@ class InvoicePaymentSchema(Schema):
     payment_description = fields.String()
 
 class Purchase_items(Schema):
+    id = fields.Integer()
     item_quantity = fields.Integer()
     buying_price = fields.Float()
     item_cost = fields.Float()
     item_id = fields.Int()
     item = fields.Nested(PlainItemSchema(), dump_only=True)
+
+class ExpenseAccountSchema(Schema):
+    account_name = fields.String()
+    account_number = fields.String()
 
 class BaseInvoiceSchema(Schema):
     id = fields.Integer(dump_only=True)
@@ -40,7 +45,7 @@ class BaseInvoiceSchema(Schema):
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
     update_date = fields.DateTime()
     supplier_name = fields.String(required=True)
-    expense_account = fields.String()
+    expense_account_name = fields.String()
     expense_account_id = fields.Int(dump_only=True)
 
 class InvoiceSchema(BaseInvoiceSchema):
@@ -49,6 +54,7 @@ class InvoiceSchema(BaseInvoiceSchema):
     purchase_items = fields.Nested(Purchase_items(), many=True)
     supplier_balance = fields.Nested(SupplierBalanceSchema(),many=True ,dump_only=True)
     payments = fields.Nested(InvoicePaymentSchema(), many=True, dump_only=True)
+    expense_account = fields.Nested(ExpenseAccountSchema(), dump_only=True)
 
 class InvoiceUpdateSchema(Schema):
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
@@ -58,8 +64,7 @@ class InvoiceUpdateSchema(Schema):
     currency = fields.String(validate=validate.Length(max=10))
     amount = fields.Float()
     supplier_name = fields.String()
-    expense_account = fields.String()
-    update_date = fields.DateTime(dump_only=True, required=True)
+    expense_account_name = fields.String()
 
 class InvoicePaymentSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
@@ -80,3 +85,7 @@ class InvoicePaymentSchema(Schema):
 class SearchInvoiceToPaySchema(Schema):
     supplier_name = fields.String()
     date = fields.Date()
+
+class InvoiceVoidSchema(Schema):
+    voided = fields.Boolean(required=True)
+    reason = fields.String(required=True)

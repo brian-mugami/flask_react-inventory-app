@@ -28,7 +28,7 @@ class PaymentAccount(MethodView):
         return account
 
     @jwt_required(fresh=False)
-    @blp.response(201, AccountSchema(many=True))
+    @blp.response(200, AccountSchema(many=True))
     def get(self):
         accounts = AccountModel.query.filter_by(account_category="Expense Account").all()
         return accounts

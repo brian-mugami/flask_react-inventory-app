@@ -1,7 +1,12 @@
 import datetime
 
+from sqlalchemy import func
+
+from ..db import db
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+
+from ..models import AccountModel
 from ..models.transactions.bank_balances_model import BankBalanceModel
 from ..schemas.bank_balance_schema import PlainBankBalanceSchema,BankBalanceSchema
 from flask_jwt_extended import jwt_required
@@ -11,10 +16,28 @@ blp = Blueprint("bank_balances", __name__, description="Bank balance actions")
 @blp.route("/bank/balance")
 class BankBalanceView(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(200, BankBalanceSchema(many=True))
     def get(self):
-        balances = BankBalanceModel.query.all()
-        return balances
+        all_bank_balances = []
+        number = 0
+        result = db.session.query(BankBalanceModel.bank_account_id,
+                                  func.sum(BankBalanceModel.amount).label("Total_Bank_Balance"),
+                                  BankBalanceModel.currency
+                                  ).group_by(BankBalanceModel.currency, BankBalanceModel.bank_account_id).all()
+        for row in result:
+            bank_id = row.bank_account_id
+            account = AccountModel.query.get(bank_id)
+            if not account:
+                abort(404, message="No such bank account is available")
+            account_name = account.account_name
+            currency = row.currency
+            total_amount = row.Total_Bank_Balance
+            number += 1
+            item = {"number": number, "account_name": account_name, "currency": currency, "total_amount":total_amount}
+            all_bank_balances.append(item)
+
+
+        return {"balances": all_bank_balances}
+
 
     @jwt_required(fresh=True)
     @blp.arguments(PlainBankBalanceSchema)

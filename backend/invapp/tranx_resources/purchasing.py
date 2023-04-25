@@ -2,7 +2,7 @@ from flask.views import MethodView
 
 from ..models import ItemModel
 from ..schemas.invoice_schema import InvoiceSchema
-from ..schemas.purchasingschema import PurchasingSchema, PlainPurchasingSchema, PurchaseUpdateSchema
+from ..schemas.purchasingschema import PurchasingSchema,PurchaseUpdateSchema
 from flask_smorest import Blueprint,abort
 from invapp.models.transactions.purchasing_models import PurchaseModel
 from invapp.models.transactions.invoice_model import InvoiceModel
@@ -66,8 +66,10 @@ class PurchaseManipulateView(MethodView):
     @jwt_required(fresh=True)
     def delete(self, id):
         transaction = PurchaseModel.query.get_or_404(id)
-        if transaction.invoice.accounted == "fully_accounted":
+        if transaction.invoice.accounted != "not_accounted":
             abort(400, message="Invoice is already accounted")
+        if transaction.invoice.status != "not paid":
+            abort(400, message="Invoice is already paid")
         transaction.delete_from_db()
         return {"message": "deleted"}, 204
 
@@ -83,14 +85,22 @@ class PurchaseManipulateView(MethodView):
     def patch(self,data, id):
         transaction = PurchaseModel.query.get_or_404(id)
         invoice = transaction.invoice
-        if transaction.invoice.accounted == "fully_accounted":
+        if transaction.invoice.accounted != "not_accounted":
             abort(400, message="Invoice is already accounted")
-        transaction.update_from_dict(data)
-        transaction.lines_cost -= transaction.item_cost
-        transaction.update_db()
-        transaction.item_cost = data["quantity"] * data["buying_price"]
-        transaction.lines_cost += transaction.item_cost
-        transaction.update_db()##check logic in frontend
+        if transaction.invoice.status != "not paid":
+            abort(400, message="Invoice is already paid")
+        for line in data:
+            item = ItemModel.query.filter_by(item_name=line.get("item_name")).first()
+            if not item:
+                abort(404, message="Item does not exist")
+            transaction.item_id = item.id
+            transaction.quantity = line.get("quantity")
+            transaction.buying_price = line.get("buying_price")
+            transaction.item_cost = line.get("quantity") * line.get("buying_price")
+            transaction.lines_cost -= transaction.item_cost
+            transaction.update_db()
+            transaction.lines_cost += transaction.item_cost
+            transaction.update_db()##check logic in frontend
 
         if invoice.amount != transaction.lines_cost:
             invoice.matched_to_lines = "unmatched"
