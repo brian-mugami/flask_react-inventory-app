@@ -81,7 +81,7 @@ class PurchaseManipulateView(MethodView):
 
     @jwt_required(fresh=True)
     @blp.arguments(PurchaseUpdateSchema)
-    @blp.response(200, InvoiceSchema)
+    @blp.response(202, InvoiceSchema)
     def patch(self,data, id):
         transaction = PurchaseModel.query.get_or_404(id)
         invoice = transaction.invoice
@@ -89,18 +89,23 @@ class PurchaseManipulateView(MethodView):
             abort(400, message="Invoice is already accounted")
         if transaction.invoice.status != "not paid":
             abort(400, message="Invoice is already paid")
-        for line in data:
+        for line in data["item_list"]:
             item = ItemModel.query.filter_by(item_name=line.get("item_name")).first()
             if not item:
                 abort(404, message="Item does not exist")
-            transaction.item_id = item.id
-            transaction.quantity = line.get("quantity")
-            transaction.buying_price = line.get("buying_price")
-            transaction.item_cost = line.get("quantity") * line.get("buying_price")
-            transaction.lines_cost -= transaction.item_cost
-            transaction.update_db()
-            transaction.lines_cost += transaction.item_cost
-            transaction.update_db()##check logic in frontend
+            if transaction.item_id == item.id and transaction.invoice_id == invoice.id:
+
+                transaction.item_quantity = line.get("quantity")
+                transaction.buying_price = line.get("buying_price")
+                transaction.lines_cost -= transaction.item_cost
+                cost = line.get("quantity") * line.get("buying_price")
+                transaction.item_cost = cost
+                transaction.lines_cost += cost
+                transaction.update_db()
+                invoice_lines = PurchaseModel.query.filter_by(invoice_id=invoice.id).all()
+                for line in invoice_lines:
+                    line.lines_cost = transaction.lines_cost
+                    line.update_db()
 
         if invoice.amount != transaction.lines_cost:
             invoice.matched_to_lines = "unmatched"
@@ -111,11 +116,11 @@ class PurchaseManipulateView(MethodView):
 
         if invoice.destination_type == "stores":
             increase_stock_addition(item_id=transaction.item_id, invoice_id=invoice.id,
-                                    date=invoice.date, quantity=transaction.quantity, unit_cost=transaction.buying_price)
+                                    date=invoice.date, quantity=transaction.item_quantity, unit_cost=transaction.buying_price)
 
         if invoice.destination_type == "expense":
             expense_addition(item_id=transaction.item_id, invoice_id=invoice.id, date=invoice.date,
-                             quantity=transaction.quantity, unit_cost=transaction.buying_price)
+                             quantity=transaction.item_quantity, unit_cost=transaction.buying_price)
 
         invoice = InvoiceModel.query.get(data["invoice_id"])
         return invoice

@@ -127,8 +127,8 @@ class Invoice(MethodView):
         supplier = SupplierModel.query.filter_by(supplier_name=invoice["supplier_name"]).first()
         if supplier is None:
             abort(404, message="Supplier does not exist")
-        if invoice["destination_type"] == "expense":
-            account = AccountModel.query.filter_by(account_name=invoice["expense_account_name"],
+        if invoice.get("destination_type")== "expense":
+            account = AccountModel.query.filter_by(account_name=invoice.get("expense_account_name"),
                                                    account_category="Expense Account").first()
             if not account:
                 abort(404, message="Expense account not found")
@@ -147,7 +147,7 @@ class Invoice(MethodView):
         existing_invoice.update_date = datetime.datetime.utcnow()
         existing_invoice.update_db()
 
-        if existing_invoice.amount != existing_invoice.purchase_items.lines_cost:
+        if existing_invoice.amount != existing_invoice.purchase_items[0].lines_cost:
             existing_invoice.matched_to_lines = "unmatched"
             existing_invoice.update_db()
         try:

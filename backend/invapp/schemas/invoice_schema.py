@@ -24,6 +24,7 @@ class Purchase_items(Schema):
     buying_price = fields.Float()
     item_cost = fields.Float()
     item_id = fields.Int()
+    lines_cost = fields.Float()
     item = fields.Nested(PlainItemSchema(), dump_only=True)
 
 class ExpenseAccountSchema(Schema):
@@ -43,7 +44,7 @@ class BaseInvoiceSchema(Schema):
     date = fields.Date(required=True, default=datetime.datetime.utcnow())
     destination_type = fields.String(validate=validate.OneOf(["expense", "stores"]), required=True)
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
-    update_date = fields.DateTime()
+    update_date = fields.Date()
     supplier_name = fields.String(required=True)
     expense_account_name = fields.String()
     expense_account_id = fields.Int(dump_only=True)
