@@ -124,16 +124,16 @@ class CustomerView(MethodView):
     @blp.response(201, CustomerSchema)
     def patch(self, data, id):
         customer = CustomerModel.query.get_or_404(id)
+        customer_account = AccountModel.query.filter_by(account_name=data["account_name"],
+                                                        account_category="Customer Account").first()
+        if customer_account is None:
+            abort(404, message="Account does not exist")
         if customer:
             customer.customer_name = data["customer_name"]
             customer.customer_phone_no = data["customer_phone_no"]
             customer.customer_email = data["customer_email"]
             customer.is_active = data["is_active"]
             customer.payment_type = data["payment_type"]
-
-            customer_account = AccountModel.query.filter_by(account_name=data["account_name"], account_category="Customer Account").first()
-            if customer_account is None:
-                abort(404, message="Account does not exist")
 
             customer.account_id = customer_account.id
 
