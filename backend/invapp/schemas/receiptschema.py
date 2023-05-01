@@ -3,7 +3,6 @@ from marshmallow import fields, Schema, validate
 
 from invapp.schemas.itemschema import PlainItemSchema
 
-
 class CustomerSchema(Schema):
     id = fields.Int(dump_only=True)
     customer_name = fields.Str()

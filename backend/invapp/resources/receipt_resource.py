@@ -139,7 +139,9 @@ class ReceiptMethodView(MethodView):
         if not customer:
             abort(404, message="Customer not found")
         data.pop("customer_name", None)
-        receipt.update_from_dict(data)
+        receipt.description = data.get("description")
+        receipt.currency = data.get("currency")
+        receipt.amount = data.get("amount")
         receipt.customer = customer
         receipt.update_date = datetime.datetime.utcnow()
         receipt.update_db()

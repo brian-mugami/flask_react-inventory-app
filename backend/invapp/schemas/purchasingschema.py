@@ -21,7 +21,7 @@ class PlainPurchasingSchema(Schema):
  id = fields.Int(dump_only=True, required=True)
  items_list = fields.List(fields.Nested(PurchaseItemSchema(), required=True))
  invoice_id = fields.Int(required=True)
- line_cost = fields.Float(required=True,dump_only=True)
+ lines_cost = fields.Float(required=True,dump_only=True)
 
 class PurchasingSchema(PlainPurchasingSchema):
  items = fields.Nested(PlainItemSchema(), dump_only=True)

@@ -20,12 +20,13 @@ class ReceiptModel(db.Model):
                        default="not paid")
     sale_type = db.Column(db.Enum("cash", "credit", name="sales_header_types"), default="cash", nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
-
+    voided = db.Column(db.Boolean, default=False)
+    reason = db.Column(db.String(256))
     customer = db.relationship("CustomerModel", back_populates="receipt")
-    customer_balance = db.relationship("CustomerBalanceModel", back_populates="receipt")
-    bank_balance = db.relationship("BankBalanceModel", back_populates="receipt")
-    accounting = db.relationship("SalesAccountingModel", back_populates="receipt")
-    received = db.relationship("CustomerPaymentModel", back_populates="receipt")
+    customer_balance = db.relationship("CustomerBalanceModel", back_populates="receipt", cascade="all, delete-orphan")
+    bank_balance = db.relationship("BankBalanceModel", back_populates="receipt", cascade="all, delete-orphan")
+    accounting = db.relationship("SalesAccountingModel", back_populates="receipt", cascade="all, delete-orphan")
+    received = db.relationship("CustomerPaymentModel", back_populates="receipt", cascade="all, delete-orphan")
     sale_items = db.relationship("SalesModel", back_populates="receipt", cascade="all, delete-orphan")
     inventory_item = db.relationship("InventoryBalancesModel", back_populates="receipt")
 
