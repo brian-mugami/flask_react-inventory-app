@@ -29,6 +29,7 @@ class CustomerUpdateSchema(Schema):
     payment_type = fields.String()
     customer_name = fields.String()
     account_id = fields.Integer()
+    account_name = fields.String()
     is_active = fields.Boolean()
     customer_site = fields.String()
     customer_bill_to_site = fields.String()
