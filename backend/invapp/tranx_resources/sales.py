@@ -12,7 +12,6 @@ from ..schemas.salesschema import PlainSalesSchema, SalesSchema
 from ..models.transactions.inventory_balances import InventoryBalancesModel
 from ..signals import sales_accounting_transaction, add_customer_balance, SignalException
 from ..db import db
-
 blp = Blueprint("Sales", __name__, description="Sales operations")
 
 @blp.route("/sales")
