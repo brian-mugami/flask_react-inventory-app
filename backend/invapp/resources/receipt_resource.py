@@ -97,7 +97,7 @@ class ReceiptView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(200, ReceiptSchema(many=True))
     def get(self):
-        receipts = ReceiptModel.query.all()
+        receipts = ReceiptModel.query.order_by(ReceiptModel.date.desc()).all()
         return receipts
 
     @jwt_required(fresh=True)
