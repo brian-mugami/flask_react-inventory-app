@@ -1,7 +1,7 @@
 from flask import jsonify
 from ..db import db
-from invapp.models.masters.accountsmodel import AccountModel
-from invapp.models.masters.itemmodels import CategoryModel, ItemModel, LotModel
+from ..models.masters import AccountModel
+from ..models.masters.itemmodels import CategoryModel, ItemModel, LotModel
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
