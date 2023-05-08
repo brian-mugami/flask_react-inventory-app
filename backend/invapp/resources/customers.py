@@ -125,11 +125,7 @@ class CustomerView(MethodView):
         customer = CustomerModel.query.get_or_404(id)
         customer_account = AccountModel.query.filter_by(account_name=data["account_name"],
                                                         account_category="Customer Account").first()
-<<<<<<< HEAD
-        if not customer_account:
-=======
         if customer_account is None:
->>>>>>> origin/main
             abort(404, message="Account does not exist")
         if customer:
             customer.customer_name = data["customer_name"]
