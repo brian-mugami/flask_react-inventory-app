@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
-from invapp.db import db
 from datetime import datetime
+from invapp.db import db
 
 class SupplierPaymentModel(db.Model):
     __tablename__ = "supplier_payments"
@@ -12,7 +12,8 @@ class SupplierPaymentModel(db.Model):
     currency = db.Column(db.String(10), nullable=False, default="KES")
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
-    approved = db.Column(db.Boolean, default=False)
+    approval_status = db.Column(db.Enum('pending approval', 'approved', 'rejected', name='supplier_payment_approval_status'), nullable=False, default='pending approval')
+    reason = db.Column(db.String(256))
     payment_status = db.Column(db.Enum("not paid","fully paid","partially paid","over paid", name="paid_status"), nullable=False, default="not_paid")
     bank_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))
@@ -39,6 +40,10 @@ class SupplierPaymentModel(db.Model):
 
 
     def approve_payment(self):
-        self.approved = True
+        self.approval_status = "approved"
+        self.save_to_db()
+
+    def reject_payment(self):
+        self.approval_status = 'rejected'
         self.save_to_db()
 

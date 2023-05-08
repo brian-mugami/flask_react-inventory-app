@@ -10,7 +10,7 @@ class InvoiceSupplierSchema(Schema):
     supplier_name = fields.String()
 
 class InvoicePaymentSchema(Schema):
-    approved = fields.Boolean()
+    approval_status = fields.String(validate=validate.OneOf(["approved", "pending approval", "rejected"]))
     amount = fields.Float()
     payment_status = fields.String()
 
@@ -41,7 +41,8 @@ class PlainPaymentSchema(Schema):
     update_date = fields.Date(dump_only=True)
     bank_account_id = fields.Int(required=True)
     invoice_id = fields.Int(required=True)
-    approved = fields.Boolean(required=True, dump_only=True)
+    approval_status = fields.String(validate=validate.OneOf(["approved", "pending approval", "rejected"]))
+
 
     invoice = fields.Nested(PaymentInvoiceSchema(), dump_only=True)
     account = fields.Nested(PayAccountSchema(), dump_only=True)
@@ -50,4 +51,7 @@ class PaymentUpdateSchema(Schema):
     amount = fields.Float()
     bank_account_id = fields.Int()
     invoice_id = fields.Int()
-    approved = fields.Boolean()
+    approval_status = fields.String(validate=validate.OneOf(["approved", "pending approval", "rejected"]))
+
+class PaymentRejectSchema(Schema):
+    reason = fields.String(required=True)
