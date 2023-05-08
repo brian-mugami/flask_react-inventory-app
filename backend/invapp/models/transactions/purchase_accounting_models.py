@@ -1,8 +1,7 @@
 import uuid
-
-from invapp.db import db
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
+from invapp.db import db
 
 class PurchaseAccountingModel(db.Model):
     __tablename__ = "purchase_accounting"
@@ -12,6 +11,7 @@ class PurchaseAccountingModel(db.Model):
     credit_amount = db.Column(db.Float,default=0.000)
     debit_amount = db.Column(db.Float,default=0.000)
     update_date = db.Column(db.DateTime)
+    accounting_status = db.Column(db.Enum("account","void", name="accounting_rules"), default="account")
     credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"))
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"))
 

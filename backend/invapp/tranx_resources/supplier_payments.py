@@ -3,12 +3,11 @@ import datetime
 from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
-
-from ..models import AccountModel, SupplierModel
+from ..models.masters import AccountModel, SupplierModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import SupplierPayAccountingModel
 from ..schemas.invoice_schema import SearchInvoiceToPaySchema, InvoiceSchema
-from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema
+from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema, PaymentRejectSchema
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from flask_jwt_extended import jwt_required
@@ -58,26 +57,6 @@ class PaymentAccountingView(MethodView):
 
         return jsonify({"accounting": accounts})
 
-@blp.route("/payment/search/")
-class Invoices(MethodView):
-
-    @jwt_required(fresh=True)
-    @blp.arguments(SearchInvoiceToPaySchema, location="query")
-    @blp.response(202,InvoiceSchema(many=True))
-    def get(self, data):
-        name = data.get("supplier_name", "")
-        ids = []
-        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.contains(name)).all()
-        print(suppliers)
-        if len(suppliers) < 1:
-            abort(404, message="No such supplier has an unpaid invoice")
-        for supplier in suppliers:
-            ids.append(supplier.id)
-        #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))
-        supplier_invoices = InvoiceModel.query.filter(InvoiceModel.supplier_id.in_(ids),InvoiceModel.status.in_(["partially paid", "not paid"])).order_by(InvoiceModel.date.desc()).all()
-
-        return supplier_invoices
-
 @blp.route("/payment")
 class PaymentView(MethodView):
     @jwt_required(fresh=True)
@@ -92,20 +71,14 @@ class PaymentView(MethodView):
             abort(404, message="Account can not be found")
         if account.account_category != "Bank Account":
             abort(400, message="This is not a bank account")
-        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=data["invoice_id"], currency=data["currency"]).first()
-        status = ""
-        if purchase_amount.balance < data["amount"]:
+        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=data["invoice_id"], currency=data['currency']).first()
+
+        if purchase_amount.balance < data['amount']:
             abort(400, message="Amount is higher than the balance")
-        elif purchase_amount.balance > data["amount"]:
-            status = "partially paid"
-        elif purchase_amount.balance == data["amount"]:
-            status = "fully paid"
-        elif data["amount"] <= 0:
-            status = "not paid"
 
         payment = SupplierPaymentModel(**data,
-        approved = False,
-        payment_status = status
+        approval_status = 'pending approval',
+        payment_status = 'not paid'
         )
         payment.invoice = invoice
         payment.account = account
@@ -132,7 +105,7 @@ class PaymentMainView(MethodView):
     def delete(self, id):
         transaction = SupplierPaymentModel.query.get_or_404(id)
         balance = SupplierBalanceModel.query.filter_by(payment_id=transaction.id).first()
-        if transaction.approved == True and transaction.payment_status != "not paid":
+        if transaction.approval_status == "approved" and transaction.payment_status != "not paid":
             abort(400, message="Cannot delete a payment that is paid and approved")
         balance.balance += transaction.amount
         balance.update_db()
@@ -154,7 +127,7 @@ class PaymentMainView(MethodView):
         status = ""
         if payment and purchase_amount:
             payment.amount = data["amount"]
-            payment.approved = False
+            payment.approval_status = "pending approval"
             payment.pay_account_id = data["bank_account_id"]
             payment.invoice_id = data["invoice_id"]
             payment.update_date = datetime.datetime.utcnow()
@@ -188,17 +161,45 @@ class PaymentApproveView(MethodView):
         invoice_amount = payment.invoice.amount
         invoice_id = payment.invoice_id
         currency = payment.invoice.currency
-        if payment.approved:
-            abort(400, message="This payment is already approved!!")
+
+        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=invoice_id, currency=currency).first()
+        status = ""
+        if purchase_amount.balance < payment.amount:
+            abort(400, message="Amount is higher than the balance")
+        elif purchase_amount.balance > payment.amount:
+            status = "partially paid"
+        elif purchase_amount.balance == payment.amount:
+            status = "fully paid"
+        elif payment.amount <= 0:
+            status = "not paid"
+        if payment.approval_status == "approved" or payment.approval_status == "rejected":
+            abort(400, message="This payment is already approved or rejected!!")
         payment.approve_payment()
+        payment.payment_status = status
+        payment.invoice.status = status
+        payment.update_db()
+
         try:
             balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount, invoice_id=invoice_id, currency=currency, payment_id=payment.id)
             make_payement(supplier_account_id=supplier_account_id,credit_account=payment.bank_account_id,amount=payment.amount,payment_id=payment.id,balance_id=balance)
             manipulate_bank_balance(bank_account_id=payment.bank_account_id,invoice_id=invoice_id,amount=-payment.amount, currency=currency)
             return payment
         except SignalException as e:
-            payment.approved = False
+            payment.approved = 'pending approval'
             payment.update_db()
             abort(400, message=f"{str(e)}")
+
+@blp.route("/payment/reject/<int:id>")
+class PaymentRejectView(MethodView):
+    @jwt_required(fresh=True)
+    @blp.arguments(PaymentRejectSchema)
+    @blp.response(202, PlainPaymentSchema)
+    def post(self,data, id):
+        payment = SupplierPaymentModel.query.get_or_404(id)
+        if payment.approval_status == "approved" or payment.approval_status == "rejected":
+            abort(400, message="This payment is already approved or rejected!!")
+        payment.reason = data.get('reason')
+        payment.reject_payment()
+        payment.update_db()
 
 

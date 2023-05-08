@@ -3,18 +3,18 @@ import traceback
 
 from blinker import signal
 
-from invapp.models import AccountModel
-from invapp.models.transactions.bank_balances_model import BankBalanceModel
-from invapp.models.transactions.inventory_balances import InventoryBalancesModel
-from invapp.models.transactions.invoice_model import InvoiceModel
-from invapp.models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
-from invapp.models.transactions.supplier_balances_model import SupplierBalanceModel
-from invapp.models.transactions.customer_balances_model import CustomerBalanceModel
-from invapp.models.transactions.expenses_model import ExpensesModel
+from .models.masters import AccountModel
+from .models.transactions.bank_balances_model import BankBalanceModel
+from .models.transactions.inventory_balances import InventoryBalancesModel
+from .models.transactions.invoice_model import InvoiceModel
+from .models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
+from .models.transactions.supplier_balances_model import SupplierBalanceModel
+from .models.transactions.customer_balances_model import CustomerBalanceModel
+from .models.transactions.expenses_model import ExpensesModel
 from flask import jsonify
-from invapp.models.transactions.sales_accounting_models import SalesAccountingModel, CustomerPayAccountingModel
-from invapp.models.transactions.supplier_payment_models import SupplierPaymentModel
+from .models.transactions.sales_accounting_models import SalesAccountingModel, CustomerPayAccountingModel
 
+reverse_accounting = signal('reverse-accounting')
 send_data = signal('send-data')
 purchase_account = signal('purchase_account')
 pay_supplier = signal("pay-supplier")
@@ -28,6 +28,20 @@ bank_balance = signal("bank_balance")
 class SignalException(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+@reverse_accounting.connect
+def void_invoice(invoice_id: int):
+    accounting_invoice = PurchaseAccountingModel.query.filter_by(invoice_id=invoice_id).first()
+    if not accounting_invoice:
+        raise SignalException("This invoice has no accounting")
+    if accounting_invoice.accounting_status == "void":
+        raise SignalException("You have already voided this invoice!!")
+    voided = PurchaseAccountingModel(invoice_id=invoice_id, debit_account_id=accounting_invoice.credit_account_id, credit_account_id=accounting_invoice.debit_account_id, accounting_status="void", credit_amount=accounting_invoice.credit_amount, debit_amount=accounting_invoice.debit_amount)
+    try:
+        voided.save_to_db()
+    except:
+        traceback.print_exc()
+        raise SignalException("Failed to void!! Please try again")
+
 
 @bank_balance.connect
 def manipulate_bank_balance(bank_account_id: int, invoice_id: int = None, receipt_id: int = None, amount: float = 0.00, currency: str ="KES", date = None):
@@ -91,7 +105,7 @@ def purchase_accounting_transaction(purchase_account_id: int, invoice_id: int,su
         existing_accounting.credit_amount = -invoice_amount
         existing_accounting.update_db()
     purchase_account = PurchaseAccountingModel(credit_account_id=supplier_account_id,debit_account_id=purchase_account_id,
-                                          debit_amount=invoice_amount, credit_amount=-invoice_amount, invoice_id=invoice_id)
+                                          debit_amount=invoice_amount, credit_amount=-invoice_amount, invoice_id=invoice_id, accounting_status='account')
     try:
         purchase_account.save_to_db()
         return jsonify({"added": "success"})

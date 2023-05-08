@@ -13,6 +13,7 @@ class InvoiceModel(db.Model):
     currency = db.Column(db.String(10), nullable=False)
     amount = db.Column(db.Float, nullable=False, default=0)
     date = db.Column(db.DateTime, default=datetime.utcnow())
+    accounting_status = db.Column(db.Enum("account","void", name="accounting_rules"), default="account")
     accounted = db.Column(db.Enum("fully_accounted", "partially_accounted", "not_accounted",name="accounting_status"), default="not_accounted")
     status = db.Column(db.Enum("fully paid", "partially paid", "not paid", "over paid",name="invoice_status"), default="not paid")
     matched_to_lines = db.Column(db.Enum("matched", "unmatched","partially matched", name="invoice_matched_types"), default="unmatched", nullable=False)
@@ -47,4 +48,8 @@ class InvoiceModel(db.Model):
 
     def delete_from_db(self):
         db.session.delete(self)
+        db.session.commit()
+
+    def void_invoice(self):
+        self.voided = True
         db.session.commit()

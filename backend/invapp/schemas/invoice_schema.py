@@ -1,7 +1,7 @@
 import datetime
 from marshmallow import Schema, fields, validate
-from invapp.schemas.itemschema import PlainItemSchema
-from invapp.schemas.paymentsschema import PayAccountSchema
+from .itemschema import PlainItemSchema
+from .paymentsschema import PayAccountSchema
 
 class SupplierBalanceSchema(Schema):
     date = fields.Date()
@@ -13,7 +13,7 @@ class InvoiceSupplierSchema(Schema):
     supplier_name = fields.String()
 
 class InvoicePaymentSchema(Schema):
-    approved = fields.Boolean()
+    approval_status = fields.String()
     amount = fields.Float()
     payment_status = fields.String()
     payment_description = fields.String()
@@ -48,6 +48,7 @@ class BaseInvoiceSchema(Schema):
     supplier_name = fields.String(required=True)
     expense_account_name = fields.String()
     expense_account_id = fields.Int(dump_only=True)
+    accounting_status = fields.Str(dump_only=True)
 
 class InvoiceSchema(BaseInvoiceSchema):
     message = fields.Str()
@@ -78,7 +79,7 @@ class InvoicePaymentSchema(Schema):
     update_date = fields.Date()
     bank_account_id = fields.Int(required=True, dump_only=True)
     bank_account = fields.String(required=True)
-    approved = fields.Boolean(required=True, dump_only=True)
+    approval_status = fields.String(required=True, dump_only=True)
 
     invoice = fields.Nested(InvoiceSchema(), dump_only=True)
     account = fields.Nested(PayAccountSchema(), dump_only=True)
@@ -88,5 +89,4 @@ class SearchInvoiceToPaySchema(Schema):
     date = fields.Date()
 
 class InvoiceVoidSchema(Schema):
-    voided = fields.Boolean(required=True)
     reason = fields.String(required=True)

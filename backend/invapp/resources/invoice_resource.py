@@ -6,17 +6,17 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
 
-from ..models import SupplierModel, AccountModel
+from ..models.masters import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema
-from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException
+from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
 blp = Blueprint("invoice", __name__, description="Invoice creation")
 
-@blp.route("/invoice/<int:id>/void")
+@blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(InvoiceVoidSchema)
@@ -27,12 +27,21 @@ class InvoiceVoidView(MethodView):
             abort(404, message="Invoice does not exist")
         if invoice.status == "not paid" and invoice.accounted == "not_accounted":
             abort(400, message= "Just delete this invoice, it has no accounting and payments")
-        invoice.voided = data.get("voided")
+        if invoice.status != 'not paid':
+            abort(400, message='Invoice payment has began. You cannot void this invoice if payment is not voided')
+        if invoice.accounting_status == "void":
+            abort(400, message="This invoice is already voided")
         invoice.reason = data.get("reason")
-
+        invoice.void_invoice()
         invoice.update_db()
-        return invoice
-
+        try:
+            void_invoice(invoice_id=invoice.id)
+            invoice.accounting_status = "void"
+            invoice.update_db()
+            return {"invoice voided":"success"}, 202
+        except SignalException as e:
+            traceback.print_exc()
+            abort(500, message=f'{str(e)}')
 
 @blp.route("/invoice/<int:id>/account")
 class InvoiceAccountingView(MethodView):
@@ -248,23 +257,16 @@ class PaymentView(MethodView):
         purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=invoice.id, currency=data["currency"]).first()
         if purchase_amount.balance == 0:
             abort(400, message="This supplier balance is fully sorted, Please check your payments and approve them")
-        status = ""
         if purchase_amount.balance < data["amount"]:
             abort(400, message="Amount is higher than the balance")
-        elif purchase_amount.balance > data["amount"]:
-            status = "partially paid"
-        elif purchase_amount.balance == data["amount"]:
-            status = "fully paid"
-        elif data["amount"] <= 0:
-            status = "not paid"
 
         data.pop("bank_account")
         payment = SupplierPaymentModel(
         **data,
         bank_account_id = bank_account.id,
         invoice_id = invoice.id,
-        approved = False,
-        payment_status = status
+        approval_status = 'pending approval',
+        payment_status = 'not paid'
         )
         payment.invoice = invoice
         payment.account = bank_account
