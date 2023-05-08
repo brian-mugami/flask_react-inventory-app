@@ -12,8 +12,8 @@ class BaseItemSchema(Schema):
 
 class PlainItemSchema(BaseItemSchema):
     item_image = fields.String()
-    item_weight = fields.Float()
-    item_volume = fields.Float()
+    item_unit = fields.Float()
+    unit_type = fields.String()
     is_active = fields.Boolean()
     date_created = fields.Date()
     date_archived = fields.Date()

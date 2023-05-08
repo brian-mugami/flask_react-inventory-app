@@ -1,7 +1,7 @@
 from flask import jsonify
 from ..db import db
-from invapp.models.masters.accountsmodel import AccountModel
-from invapp.models.masters.itemmodels import CategoryModel, ItemModel, LotModel
+from ..models.masters import AccountModel
+from ..models.masters.itemmodels import CategoryModel, ItemModel, LotModel
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
@@ -202,7 +202,7 @@ class Item(MethodView):
         if category is None:
             abort(404, message="Category does not exist")
         category_id = category.id
-        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=category_id, item_weight=data["item_weight"], item_volume=data["item_volume"], is_active=data["is_active"])
+        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=category_id, unit_type=data["unit_type"], item_unit=data["item_unit"], is_active=data["is_active"])
         db.session.add(item)
         db.session.commit()
 
@@ -240,8 +240,8 @@ class ItemView(MethodView):
         item = ItemModel.query.get_or_404(id)
         if item:
             item.price = data["price"]
-            item.item_weight = data["item_weight"]
-            item.item_volume = data["item_volume"]
+            item.unit_type = data["unit_type"]
+            item.item_unit = data["item_unit"]
             item.item_name = data["item_name"]
             item.is_active = data["is_active"]
             category = CategoryModel.query.filter_by(name=data["category_name"]).first()
