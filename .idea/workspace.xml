@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/supplier_payment_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/supplier_payment_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/customers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/customers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
