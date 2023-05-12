@@ -14,6 +14,7 @@ from .models.transactions.expenses_model import ExpensesModel
 from flask import jsonify
 from .models.transactions.sales_accounting_models import SalesAccountingModel, CustomerPayAccountingModel
 
+void_receipt = signal("void_receipt")
 reverse_accounting = signal('reverse-accounting')
 send_data = signal('send-data')
 purchase_account = signal('purchase_account')
@@ -28,6 +29,21 @@ bank_balance = signal("bank_balance")
 class SignalException(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+@void_receipt.connect
+def void_receipt(receipt_id:int):
+    accounting_receipt = SalesAccountingModel.query.filter_by(receipt_id=receipt_id).first()
+    if not accounting_receipt:
+        raise SignalException("This receipt has no accounting")
+    if accounting_receipt.receipt.voided:
+        raise SignalException("This receipt is already voided")
+    voided = SalesAccountingModel(receipt_id=receipt_id, debit_account_id=accounting_receipt.credit_account_id, credit_account_id=accounting_receipt.debit_account_id,accounting_status="void", credit_amount=accounting_receipt.credit_amount, debit_amount=accounting_receipt.debit_amount)
+    try:
+        voided.save_to_db()
+    except:
+        traceback.print_exc()
+        raise SignalException("Failed to void!! Please try again")
+
 @reverse_accounting.connect
 def void_invoice(invoice_id: int):
     accounting_invoice = PurchaseAccountingModel.query.filter_by(invoice_id=invoice_id).first()

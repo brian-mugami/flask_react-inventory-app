@@ -13,7 +13,11 @@ class CustomerPaymentModel(db.Model):
     currency = db.Column(db.String(10), nullable=False, default="KES")
     date = db.Column(db.DateTime, default=datetime.utcnow())
     update_date = db.Column(db.DateTime)
-    approved = db.Column(db.Boolean, default=False)
+    voided = db.Column(db.Boolean, default=False)
+    reason = db.Column(db.String(256))
+    approval_status = db.Column(
+        db.Enum('pending approval', 'approved', 'rejected', name='supplier_payment_approval_status'), nullable=True,
+        default='pending approval')
     payment_status = db.Column(db.Enum("fully_paid", "partially_paid", "not_paid", "over_paid", name="customer_payment_status"), nullable=False, default="not paid")
 
     receive_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
@@ -40,6 +44,9 @@ class CustomerPaymentModel(db.Model):
 
 
     def approve_payment(self):
-        self.approved = True
-        self.save_to_db()
+        self.approval_status = "approved"
+        self.update_db()
 
+    def reject_payment(self):
+        self.approval_status = "rejected"
+        self.update_db()

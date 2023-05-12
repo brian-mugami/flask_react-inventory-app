@@ -14,11 +14,12 @@ class PlainCustomerPaymentSchema(Schema):
     payment_description = fields.String()
     date = fields.Date(dump_only=True)
     payment_status = fields.String(dump_only=True, required=True)
+    voided = fields.Boolean(dump_only=True)
     update_date = fields.Date()
     receipt_account = fields.String(required=True)
     receive_account_id = fields.Int(required=True, dump_only=True)
     receipt_id= fields.Int(required=True)
-    approved = fields.Boolean(required=True, dump_only=True)
+    approval_status = fields.String(required=True, dump_only=True)
     account = fields.Nested(Receivableaccount(), dump_only=True)
     receipt = fields.Nested(ReceiptSchema(), dump_only=True)
 
@@ -26,7 +27,12 @@ class PaymentUpdateSchema(Schema):
     amount = fields.Float()
     receive_account_id = fields.Int()
     receipt_id = fields.Int()
-    approved = fields.Boolean()
+    approval_status = fields.String()
+    voided = fields.Boolean()
+    reason = fields.String()
 
 class SearchReceiptToPaySchema(Schema):
     customer_name = fields.String(required=True)
+
+class PaymentRejectSchema(Schema):
+    reason = fields.String(required=True)

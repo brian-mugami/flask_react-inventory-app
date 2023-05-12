@@ -14,6 +14,7 @@ class SupplierPaymentModel(db.Model):
     update_date = db.Column(db.DateTime)
     approval_status = db.Column(db.Enum('pending approval', 'approved', 'rejected', name='supplier_payment_approval_status'), nullable=False, default='pending approval')
     reason = db.Column(db.String(256))
+    voided = db.Column(db.Boolean, default=False)
     payment_status = db.Column(db.Enum("not paid","fully paid","partially paid","over paid", name="paid_status"), nullable=False, default="not_paid")
     bank_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id"))

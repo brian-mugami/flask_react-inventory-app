@@ -6,22 +6,42 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
-from invapp.models import CustomerModel, AccountModel
-from invapp.models.transactions.customer_balances_model import CustomerBalanceModel
-from invapp.models.transactions.customer_payments_model import CustomerPaymentModel
-from invapp.models.transactions.receipt_model import ReceiptModel
-from invapp.models.transactions.sales_accounting_models import SalesAccountingModel
-from invapp.schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema
+from ..models.masters import CustomerModel, AccountModel
+from ..models.transactions.customer_balances_model import CustomerBalanceModel
+from ..models.transactions.customer_payments_model import CustomerPaymentModel
+from ..models.transactions.receipt_model import ReceiptModel
+from ..models.transactions.sales_accounting_models import SalesAccountingModel
+from ..schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema, ReceiptVoidSchema
+from ..signals import void_receipt, SignalException
 
 blp = Blueprint("receipts", __name__, description="Receipt creation")
 
+@blp.route("/receipt/void/<int:id>")
+class ReceiptVoidView(MethodView):
+    @jwt_required(fresh=True)
+    @blp.arguments(ReceiptVoidSchema)
+    def post(self, data, id):
+        receipt = ReceiptModel.query.get_or_404(id)
+        if receipt.voided == True:
+            abort(400, message="Receipt is already voided")
+        if receipt.status != "not paid":
+            abort(400, message="You cannot void a receipt with payments")
+        receipt.reason = data.get("reason")
+        receipt.void_receipt()
+        receipt.update_db()
+        try:
+            void_receipt(receipt_id=receipt.id)
+        except SignalException as e:
+            traceback.print_exc()
+            abort(500, message=f'{str(e)}')
+
 @blp.route("/receipt/payment/<int:id>")
 class ReceiptPaymentView(MethodView):
+    @jwt_required(fresh=True)
     @blp.arguments(ReceiptPaymentSchema)
     @blp.response(201, ReceiptPaymentSchema)
-    @jwt_required(fresh=True)
     def post(self, data, id):
-        status = ""
+
         account = AccountModel.query.filter_by(account_name=data.get("receipt_account")).first()
         if not account:
             abort(404, message="Account not found")
@@ -32,31 +52,17 @@ class ReceiptPaymentView(MethodView):
             abort(400, message="This receipt is already paid.")
         if receipt.accounted_status == "not_accounted":
             abort(400, "This receipt is not accounted.")
-
         customer_amount = CustomerBalanceModel.query.filter_by(receipt_id=id, currency=data.get("currency")).first()
         if not customer_amount:
             abort(404, message="This customer has no balance.")
 
-        if customer_amount.balance == 0:
-            abort(400, message="This customer has paid his balance.")
-
-        if customer_amount.balance < data["amount"]:
-            abort(400, message="This is an amount higher than the balance")
-        elif customer_amount.balance > data["amount"]:
-            status = "partially_paid"
-        elif customer_amount.balance == data["amount"]:
-            status = "fully_paid"
-        elif data["amount"] <= 0:
-            status = "not_paid"
-        else:
-            status = "over_paid"
         data.pop("receipt_account")
         payment = CustomerPaymentModel(
         **data,
         receipt_id=id,
         receive_account_id=account.id,
-        approved = False,
-        payment_status = status
+        approval_status = "pending approval",
+        payment_status = "not_paid"
         )
         try:
             payment.save_to_db()
@@ -138,6 +144,10 @@ class ReceiptMethodView(MethodView):
         customer = CustomerModel.query.filter_by(customer_name=data["customer_name"]).first()
         if not customer:
             abort(404, message="Customer not found")
+        if receipt.status != "not paid":
+            abort(400, message="You cannot edit an already paid receipt")
+        if receipt.voided == True:
+            abort(400, message="This receipt is already voided")
         data.pop("customer_name", None)
         receipt.description = data.get("description")
         receipt.currency = data.get("currency")

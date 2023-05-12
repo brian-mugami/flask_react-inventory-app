@@ -1,7 +1,7 @@
 import datetime
 from marshmallow import fields, Schema, validate
 
-from invapp.schemas.itemschema import PlainItemSchema
+from ..schemas.itemschema import PlainItemSchema
 
 class CustomerSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -48,3 +48,6 @@ class ReceiptPaymentSchema(Schema):
     receive_account_id = fields.Int(dump_only=True, required=True)
 
     receipt = fields.Nested(ReceiptSchema(), dump_only=True)
+
+class ReceiptVoidSchema(Schema):
+    reason = fields.String(required=True)

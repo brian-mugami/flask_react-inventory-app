@@ -193,7 +193,6 @@ class PaymentApproveView(MethodView):
 class PaymentRejectView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(PaymentRejectSchema)
-    @blp.response(202, PlainPaymentSchema)
     def post(self,data, id):
         payment = SupplierPaymentModel.query.get_or_404(id)
         if payment.approval_status == "approved" or payment.approval_status == "rejected":

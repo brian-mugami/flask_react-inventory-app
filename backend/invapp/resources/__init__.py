@@ -13,3 +13,4 @@ from .bank_balance_resource import blp as bankbalanceblueprint
 from .inventory_balance_resource import blp as inventorybalanceblueprint
 from .supplier_balance_resource import blp as supplierbalanceblueprint
 from .customer_balance_resource import blp as customerbalanceblueprint
+from .inv_adjustment_account import blp as inventoryadjustmentblueprint

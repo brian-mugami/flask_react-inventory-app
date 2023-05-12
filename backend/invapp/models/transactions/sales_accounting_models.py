@@ -12,7 +12,7 @@ class SalesAccountingModel(db.Model):
     credit_amount = db.Column(db.Float,default=0.000)
     debit_amount = db.Column(db.Float,default=0.000)
     update_date = db.Column(db.DateTime)
-
+    accounting_status = db.Column(db.Enum("account","void", name="accounting_rules"), default="account")
     credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
 

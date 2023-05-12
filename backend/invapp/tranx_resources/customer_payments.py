@@ -5,10 +5,11 @@ from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 
-from ..models import AccountModel, CustomerModel
+from ..models.masters import AccountModel, CustomerModel
 from ..models.transactions.receipt_model import ReceiptModel
 from ..models.transactions.sales_accounting_models import CustomerPayAccountingModel
-from ..schemas.customerpaymentschema import PlainCustomerPaymentSchema,PaymentUpdateSchema, SearchReceiptToPaySchema
+from ..schemas.customerpaymentschema import PlainCustomerPaymentSchema, PaymentUpdateSchema, SearchReceiptToPaySchema, \
+    PaymentRejectSchema
 from ..models.transactions.customer_payments_model import CustomerPaymentModel
 from ..models.transactions.customer_balances_model import CustomerBalanceModel
 from flask_jwt_extended import jwt_required
@@ -93,7 +94,7 @@ class PaymentView(MethodView):
         payment = CustomerPaymentModel(
         **data,
         receive_account_id=account.id,
-        approved = False,
+        approval_status = "pending approval",
         payment_status = status
         )
         try:
@@ -137,14 +138,13 @@ class PaymentMainView(MethodView):
     @blp.arguments(PaymentUpdateSchema)
     @blp.response(202, PlainCustomerPaymentSchema)
     def patch(self, data, id):
-        sale_amount = CustomerBalanceModel.query.filter_by(sale_id=data["sale_id"], currency=data["currency"]).first()
+        sale_amount = CustomerBalanceModel.query.filter_by(receipt_id=data["receipt_id"], currency=data["currency"]).first()
         payment = CustomerPaymentModel.query.get_or_404(id)
         status = ""
         if payment and sale_amount:
             payment.amount = data["amount"]
-            payment.approved = False
+            payment.approval_status = "pending approval"
             payment.receive_account_id = data["receive_account_id"]
-            payment.sale_id = data["sale_id"]
             payment.update_date = datetime.datetime.utcnow()
 
             if sale_amount.balance < payment.amount:
@@ -166,19 +166,50 @@ class PaymentApproveView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202,PlainCustomerPaymentSchema)
     def post(self, id):
+        status = ""
         payment = CustomerPaymentModel.query.get_or_404(id)
         customer_account_id = payment.receipt.customer.account_id
         customer_id = payment.receipt.customer_id
         receipt_amount = payment.receipt.amount
         receipt_id = payment.receipt_id
         currency = payment.receipt.currency
+        customer_amount = CustomerBalanceModel.query.filter_by(receipt_id=receipt_id, currency=currency).first()
+        if not customer_amount:
+            abort(404, message="This customer has no balance.")
+        if customer_amount.balance == 0:
+            abort(400, message="This customer has paid his balance.")
+        if customer_amount.balance < payment.amount:
+            abort(400, message="This is an amount higher than the balance")
+        elif customer_amount.balance > payment.amount:
+            status = "partially_paid"
+        elif customer_amount.balance == payment.amount:
+            status = "fully_paid"
+        elif payment.amount <= 0:
+            status = "not_paid"
+        else:
+            status = "over_paid"
         if payment.approved:
             abort(400, message="This payment is already approved!!")
+        payment.payment_status = status
         payment.approve_payment()
+        payment.update_db()
         try:
-            balance=add_customer_balance(customer_id=customer_id, receipt_amount=receipt_amount, paid=payment.amount, receipt_id=receipt_id, currency=currency)
+            balance = add_customer_balance(customer_id=customer_id, receipt_amount=receipt_amount, paid=payment.amount, receipt_id=receipt_id, currency=currency)
             receive_payment(customer_account_id=customer_account_id,bank_account=payment.receive_account_id,amount=payment.amount,payment_id=payment.id, balance_id=balance)
             manipulate_bank_balance(bank_account_id=payment.receive_account_id,receipt_id=receipt_id, amount=receipt_amount, currency=currency)
             return payment
         except SignalException as e:
             abort(500, message=f"{str(e)}")
+
+@blp.route("/customer/payment/reject/<int:id>")
+class PaymentRejectView(MethodView):
+    @jwt_required
+    @blp.arguments(PaymentRejectSchema)
+    def post(self, data, id):
+        payment = CustomerPaymentModel.query.get_or_404(id)
+        if payment.approval_status == "approved" or payment.approval_status == "rejected":
+            abort(400, message="This payment is already approved or rejected!!")
+        payment.reason = data.get('reason')
+        payment.reject_payment()
+        payment.update_db()
+
