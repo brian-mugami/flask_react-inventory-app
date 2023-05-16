@@ -8,6 +8,7 @@ from .models.transactions.bank_balances_model import BankBalanceModel
 from .models.transactions.inventory_balances import InventoryBalancesModel
 from .models.transactions.invoice_model import InvoiceModel
 from .models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
+from .models.transactions.receipt_model import ReceiptModel
 from .models.transactions.supplier_balances_model import SupplierBalanceModel
 from .models.transactions.customer_balances_model import CustomerBalanceModel
 from .models.transactions.expenses_model import ExpensesModel
@@ -160,8 +161,8 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
     balance = invoice_amount - paid
     invoice = InvoiceModel.query.get_or_404(invoice_id)
     existing_balance = SupplierBalanceModel.query.filter_by(supplier_id=supplier_id, currency=currency, invoice_id=invoice_id).first()
-    existing_balance.balance = invoice_amount
     if existing_balance:
+        existing_balance.balance = invoice_amount
         existing_balance.paid += paid
         existing_balance.invoice_amount = invoice_amount
         existing_balance.balance -= paid
@@ -176,6 +177,7 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
             return sup_balance.id
         except:
             traceback.print_exc()
+            invoice.delete_from_db()
             raise SignalException("supplier balance update failed")
 
 @sales_account.connect
@@ -202,13 +204,15 @@ def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer
 @customer_balance.connect
 def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float , currency: str = "KES", paid: float = 0.00):
     balance = receipt_amount - paid
+    receipt = ReceiptModel.query.get_or_404(receipt_id)
     existing_balance = CustomerBalanceModel.query.filter_by(customer_id=customer_id, currency=currency,
                                                             receipt_id=receipt_id).first()
     if existing_balance:
         existing_balance.paid += paid
-        existing_balance.invoice_amount = receipt_amount
+        existing_balance.receipt_amount = receipt_amount
         existing_balance.balance -= paid
         existing_balance.date = datetime.datetime.utcnow()
+        existing_balance.balance = receipt_amount
         existing_balance.update_db()
         return existing_balance.id
     else:
@@ -217,9 +221,11 @@ def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float 
                                            date=datetime.datetime.utcnow())
         try:
             sup_balance.save_to_db()
+            sup_balance.receipt = receipt
             return sup_balance.id
         except:
-            raise SignalException("supplier balance update failed")
+            receipt.delete_from_db()
+            raise SignalException("customer balance update failed")
 
 
 

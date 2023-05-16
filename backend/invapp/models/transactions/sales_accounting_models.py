@@ -16,7 +16,7 @@ class SalesAccountingModel(db.Model):
     credit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
     debit_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id", ondelete='SET NULL'))
 
-    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id", ondelete='CASCADE'), unique=True)
+    receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id", ondelete='CASCADE'))
     receipt = db.relationship("ReceiptModel", back_populates="accounting")
 
     def save_to_db(self):

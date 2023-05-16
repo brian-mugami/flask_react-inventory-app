@@ -103,10 +103,7 @@ class PurchaseManipulateView(MethodView):
                 cost = transaction.buying_price * transaction.item_quantity
                 transaction.item_cost = cost
                 transaction.update_db()
-        result = db.session.query(PurchaseModel.invoice_id,
-                                  func.sum(PurchaseModel.item_cost).label("total_cost")
-                                  ).group_by(PurchaseModel.invoice_id).all()
-
+        result = db.session.query(func.sum(PurchaseModel.item_cost)).filter_by(invoice_id=invoice.id).scalar()
         if invoice.amount != result:
             invoice.matched_to_lines = "unmatched"
             invoice.update_db()
