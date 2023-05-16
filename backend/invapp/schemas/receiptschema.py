@@ -1,7 +1,7 @@
 import datetime
 from marshmallow import fields, Schema, validate
 
-from invapp.schemas.itemschema import PlainItemSchema
+from ..schemas.itemschema import PlainItemSchema
 
 class CustomerSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -13,6 +13,7 @@ class BalanceSchema(Schema):
     balance = fields.Float()
 
 class ReceiptItems(Schema):
+    id = fields.Int(required=True, dump_only=True)
     item_id = fields.Int()
     quantity = fields.Int()
     selling_price = fields.Float()
@@ -27,7 +28,7 @@ class ReceiptSchema(Schema):
     currency = fields.Str(required=True)
     date = fields.Date(required=True, default=datetime.datetime.utcnow())
     update_date = fields.DateTime(dump_only=True)
-    amount = fields.Float(dump_only=True)
+    amount = fields.Float()
     sale_type = fields.Str(validate=validate.OneOf(["cash", "credit"]))
     accounted_status = fields.String(validate=validate.OneOf(["fully_accounted", "partially_accounted", "not_accounted"]))
     status = fields.String(validate=validate.OneOf(["fully paid", "partially paid", "not paid", "over paid"]))
@@ -48,3 +49,6 @@ class ReceiptPaymentSchema(Schema):
     receive_account_id = fields.Int(dump_only=True, required=True)
 
     receipt = fields.Nested(ReceiptSchema(), dump_only=True)
+
+class ReceiptVoidSchema(Schema):
+    reason = fields.String(required=True)

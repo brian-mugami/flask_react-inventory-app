@@ -7,7 +7,7 @@ class PurchaseModel(db.Model):
     item_quantity = db.Column(db.Integer, nullable=False, default=0)
     buying_price = db.Column(db.Float(precision=4), nullable=False, default=0)
     item_cost = db.Column(db.Float(precision=2), nullable=False, default=0)
-    lines_cost = db.Column(db.Float(precision=2), nullable=False, default=0)
+    invoice_amount = db.Column(db.Float(precision=2), nullable=False, default=0)
 
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"))
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete="CASCADE"))

@@ -4,7 +4,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
 
-from ..models import CustomerModel
+from ..models.masters import CustomerModel
 from ..models.transactions.customer_balances_model import CustomerBalanceModel
 
 blp = Blueprint("Customer balances", __name__, description="Customer balance actions")

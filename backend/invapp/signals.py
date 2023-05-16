@@ -8,12 +8,14 @@ from .models.transactions.bank_balances_model import BankBalanceModel
 from .models.transactions.inventory_balances import InventoryBalancesModel
 from .models.transactions.invoice_model import InvoiceModel
 from .models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
+from .models.transactions.receipt_model import ReceiptModel
 from .models.transactions.supplier_balances_model import SupplierBalanceModel
 from .models.transactions.customer_balances_model import CustomerBalanceModel
 from .models.transactions.expenses_model import ExpensesModel
 from flask import jsonify
 from .models.transactions.sales_accounting_models import SalesAccountingModel, CustomerPayAccountingModel
 
+void_receipt = signal("void_receipt")
 reverse_accounting = signal('reverse-accounting')
 send_data = signal('send-data')
 purchase_account = signal('purchase_account')
@@ -28,6 +30,21 @@ bank_balance = signal("bank_balance")
 class SignalException(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+@void_receipt.connect
+def void_receipt(receipt_id:int):
+    accounting_receipt = SalesAccountingModel.query.filter_by(receipt_id=receipt_id).first()
+    if not accounting_receipt:
+        raise SignalException("This receipt has no accounting")
+    if accounting_receipt.receipt.voided:
+        raise SignalException("This receipt is already voided")
+    voided = SalesAccountingModel(receipt_id=receipt_id, debit_account_id=accounting_receipt.credit_account_id, credit_account_id=accounting_receipt.debit_account_id,accounting_status="void", credit_amount=accounting_receipt.credit_amount, debit_amount=accounting_receipt.debit_amount)
+    try:
+        voided.save_to_db()
+    except:
+        traceback.print_exc()
+        raise SignalException("Failed to void!! Please try again")
+
 @reverse_accounting.connect
 def void_invoice(invoice_id: int):
     accounting_invoice = PurchaseAccountingModel.query.filter_by(invoice_id=invoice_id).first()
@@ -145,6 +162,7 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
     invoice = InvoiceModel.query.get_or_404(invoice_id)
     existing_balance = SupplierBalanceModel.query.filter_by(supplier_id=supplier_id, currency=currency, invoice_id=invoice_id).first()
     if existing_balance:
+        existing_balance.balance = invoice_amount
         existing_balance.paid += paid
         existing_balance.invoice_amount = invoice_amount
         existing_balance.balance -= paid
@@ -159,6 +177,7 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
             return sup_balance.id
         except:
             traceback.print_exc()
+            invoice.delete_from_db()
             raise SignalException("supplier balance update failed")
 
 @sales_account.connect
@@ -185,13 +204,15 @@ def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer
 @customer_balance.connect
 def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float , currency: str = "KES", paid: float = 0.00):
     balance = receipt_amount - paid
+    receipt = ReceiptModel.query.get_or_404(receipt_id)
     existing_balance = CustomerBalanceModel.query.filter_by(customer_id=customer_id, currency=currency,
                                                             receipt_id=receipt_id).first()
     if existing_balance:
         existing_balance.paid += paid
-        existing_balance.invoice_amount = receipt_amount
+        existing_balance.receipt_amount = receipt_amount
         existing_balance.balance -= paid
         existing_balance.date = datetime.datetime.utcnow()
+        existing_balance.balance = receipt_amount
         existing_balance.update_db()
         return existing_balance.id
     else:
@@ -200,9 +221,11 @@ def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float 
                                            date=datetime.datetime.utcnow())
         try:
             sup_balance.save_to_db()
+            sup_balance.receipt = receipt
             return sup_balance.id
         except:
-            raise SignalException("supplier balance update failed")
+            receipt.delete_from_db()
+            raise SignalException("customer balance update failed")
 
 
 

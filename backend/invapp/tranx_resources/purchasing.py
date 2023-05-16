@@ -1,11 +1,13 @@
 from flask.views import MethodView
+from sqlalchemy import func
 
-from ..models import ItemModel
+from .. import db
+from ..models.masters import ItemModel
 from ..schemas.invoice_schema import InvoiceSchema
 from ..schemas.purchasingschema import PurchasingSchema,PurchaseUpdateSchema
 from flask_smorest import Blueprint,abort
-from invapp.models.transactions.purchasing_models import PurchaseModel
-from invapp.models.transactions.invoice_model import InvoiceModel
+from ..models.transactions.purchasing_models import PurchaseModel
+from ..models.transactions.invoice_model import InvoiceModel
 from ..signals import increase_stock_addition,expense_addition
 from flask_jwt_extended import jwt_required,get_current_user, get_jwt_identity
 
@@ -32,7 +34,7 @@ class PurchasingView(MethodView):
             item_cost = item["item_quantity"] * item["buying_price"]
             item["item_cost"] = item_cost
             cost += item_cost
-            line = PurchaseModel(item_id=existing_item.id,item_cost=item_cost , lines_cost=cost,item_quantity=item["item_quantity"], buying_price=item["buying_price"], invoice_id=invoice.id)
+            line = PurchaseModel(item_id=existing_item.id,item_cost=item_cost , invoice_amount=invoice.amount,item_quantity=item["item_quantity"], buying_price=item["buying_price"], invoice_id=invoice.id)
             line.save_to_db()
             line.invoice = invoice
             line.items = item
@@ -82,8 +84,8 @@ class PurchaseManipulateView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(PurchaseUpdateSchema)
     @blp.response(202, InvoiceSchema)
-    def patch(self,data, id):
-        transaction = PurchaseModel.query.get_or_404(id)
+    def put(self,data, id):
+        transaction = PurchaseModel.query.get(id)
         invoice = transaction.invoice
         if transaction.invoice.accounted != "not_accounted":
             abort(400, message="Invoice is already accounted")
@@ -97,17 +99,12 @@ class PurchaseManipulateView(MethodView):
 
                 transaction.item_quantity = line.get("quantity")
                 transaction.buying_price = line.get("buying_price")
-                transaction.lines_cost -= transaction.item_cost
-                cost = line.get("quantity") * line.get("buying_price")
+                transaction.invoice_amount = invoice.amount
+                cost = transaction.buying_price * transaction.item_quantity
                 transaction.item_cost = cost
-                transaction.lines_cost += cost
                 transaction.update_db()
-                invoice_lines = PurchaseModel.query.filter_by(invoice_id=invoice.id).all()
-                for line in invoice_lines:
-                    line.lines_cost = transaction.lines_cost
-                    line.update_db()
-
-        if invoice.amount != transaction.lines_cost:
+        result = db.session.query(func.sum(PurchaseModel.item_cost)).filter_by(invoice_id=invoice.id).scalar()
+        if invoice.amount != result:
             invoice.matched_to_lines = "unmatched"
             invoice.update_db()
         else:

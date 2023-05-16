@@ -4,7 +4,9 @@ import traceback
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 from flask_jwt_extended import jwt_required
-from ..models import AccountModel, ItemModel
+from sqlalchemy import func
+
+from ..models.masters import AccountModel, ItemModel
 from ..models.transactions.receipt_model import ReceiptModel
 from ..models.transactions.sales_models import SalesModel
 from ..schemas.receiptschema import ReceiptSchema
@@ -134,81 +136,84 @@ class SalesMethodView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(SalesSchema)
     @blp.response(200, SalesSchema)
-    def patch(self,data, id):
+    def put(self,data, id):
         transaction = SalesModel.query.get_or_404(id)
-        if transaction:
-            transaction.item_id = data["item_id"]
-            transaction.customer_id = data["customer_id"]
-            transaction.description = data["description"]
-            transaction.quantity = data["quantity"]
-            transaction.selling_price = data["selling_price"]
-            transaction.currency = data["currency"]
-            transaction.update_date = datetime.datetime.utcnow()
-            transaction.sale_type = data["sale_type"]
+        receipt = transaction.receipt
+        if receipt.status != "not paid":
+            abort(400, message="This receipt cant be edited as payment has began")
+        for line in data.get("item_list"):
+            item = ItemModel.query.filter_by(item_name=line.get("item_name")).first()
+            if not item:
+                abort(404, message="Item does not exist")
+            if transaction.item_id == item.id and transaction.receipt_id == receipt.id:
 
-            item_in_stock = InventoryBalancesModel.query.filter_by(item_id=data["item_id"]).first()
-            if not item_in_stock:
-                abort(400, message="Item is not in stock! It might have never been bought!!")
+                transaction.item_quantity = line.get("quantity")
+                transaction.selling_price = line.get("selling_price")
+                transaction.item_cost = transaction.selling_price * transaction.quantity
+                transaction.update_db()
 
-            sale_item_quantity = db.session.query(db.func.sum(InventoryBalancesModel.quantity)).filter_by(
-                item_id=data["item_id"]).scalar()
-            if sale_item_quantity <= 0:
-                abort(400, message="You do not have enough quantity")
+                item_in_stock = InventoryBalancesModel.query.filter_by(item_id=item.id).first()
+                if not item_in_stock:
+                    abort(400, message="Item is not in stock! It might have never been bought!!")
 
-            sale_items = InventoryBalancesModel.query.filter_by(item_id=data["item_id"]).order_by(
-                InventoryBalancesModel.date).all()
+                sale_item_quantity = db.session.query(db.func.sum(InventoryBalancesModel.quantity)).filter_by(
+                    item_id=item.id).scalar()
+                if sale_item_quantity <= 0:
+                    abort(400, message="You do not have enough quantity")
 
-            if sale_item_quantity >= data["quantity"]:
-                remaining_qty = data["quantity"]
-                for item in sale_items:
-                    if remaining_qty > 0:
-                        if item.quantity >= remaining_qty:
-                            item.quantity -= remaining_qty
-                            remaining_qty = 0
+                sale_items = InventoryBalancesModel.query.filter_by(item_id=item.id).order_by(
+                    InventoryBalancesModel.date).all()
+
+                if sale_item_quantity >= line["quantity"]:
+                    remaining_qty = line["quantity"]
+                    for item in sale_items:
+                        if remaining_qty > 0:
+                            if item.quantity >= remaining_qty:
+                                item.quantity -= remaining_qty
+                                remaining_qty = 0
+                            else:
+                                remaining_qty -= item.quantity
+                                item.quantity = 0
                         else:
-                            remaining_qty -= item.quantity
-                            item.quantity = 0
-                    else:
-                        break
-                if data["sale_type"] == "cash":
-                    """cash sale"""
-                    transaction.update_db()
-                    cash_account = AccountModel.query.filter_by(account_type="cash",
-                                                                account_category="Sale Account").first()
-                    customer_account = transaction.customer.account_id
-                    selling_price = transaction.selling_price
-                    quantity = transaction.quantity
-                    customer_id = transaction.customer.id
-                    try:
-                        sales_accounting_transaction(sales_account_id=cash_account.id, sale_id=transaction.id,
-                                                     customer_account_id=customer_account, selling_price=selling_price,
-                                                     quantity=quantity)
-                        add_customer_balance(customer_id=customer_id, sale_id=transaction.id,
-                                             receipt_amount=transaction.amount)
-                    except:
-                        traceback.print_exc()
-                        return {"message": "Could not create accounting"}
-                    return transaction
-                else:
-                    transaction.save_to_db()
-                    cash_account = AccountModel.query.filter_by(account_type="credit",
-                                                                account_category="Sale Account").first()
-                    customer_account = transaction.customer.account_id
-                    selling_price = transaction.selling_price
-                    quantity = transaction.quantity
-                    customer_id = transaction.customer.id
-                    try:
-                        sales_accounting_transaction(sales_account_id=cash_account.id, sale_id=transaction.id,
-                                                     customer_account_id=customer_account, selling_price=selling_price,
-                                                     quantity=quantity)
-                        add_customer_balance(customer_id=customer_id, sale_id=transaction.id,
-                                             receipt_amount=transaction.amount)
-                    except:
-                        traceback.print_exc()
-                        return {"message": "Could not create accounting"}
-                    return transaction
-            else:
-                abort(400, message="Sale has not be made, not enough quantity!!")
+                            break
+        result = db.session.query(func.sum(SalesModel.item_cost)).filter_by(receipt_id=receipt.id).scalar()
+
+        receipt.amount = result
+        receipt.update_db()
+
+        if receipt.sale_type == "cash":
+            """cash sale"""
+            cash_account = AccountModel.query.filter_by(account_type="cash",
+                                                        account_category="Sale Account").first()
+            customer_account = receipt.customer.account_id
+            customer_id = receipt.customer.id
+            try:
+                add_customer_balance(customer_id=customer_id, receipt_id=receipt.id, receipt_amount=result)
+                sales_accounting_transaction(sales_account_id=cash_account.id, receipt_id=receipt.id,
+                                             customer_account_id=customer_account, amount=result)
+                receipt = ReceiptModel.query.get(receipt.id)
+                receipt.accounted_status = "fully_accounted"
+                receipt.update_db()
+                return receipt
+            except SignalException as e:
+                traceback.print_exc()
+                abort(500, message="Server error when accounting")
+        else:
+            cash_account = AccountModel.query.filter_by(account_type="credit",
+                                                        account_category="Sale Account").first()
+            customer_account = receipt.customer.account_id
+            customer_id = receipt.customer.id
+            try:
+                add_customer_balance(customer_id=customer_id, receipt_id=receipt.id, receipt_amount=result)
+                sales_accounting_transaction(sales_account_id=cash_account.id, receipt_id=receipt.id,
+                                             customer_account_id=customer_account, amount=result)
+                receipt = ReceiptModel.query.get(receipt.id)
+                receipt.accounted_status = "fully_accounted"
+                receipt.update_db()
+                return receipt
+            except SignalException as e:
+                traceback.print_exc()
+                abort(500, message="Server error when accounting")
 
 
 

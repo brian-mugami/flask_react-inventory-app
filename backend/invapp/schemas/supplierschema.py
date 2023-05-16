@@ -22,12 +22,10 @@ class PlainSupplierSchema(Schema):
     supplier_email = fields.String()
 
 class SupplierSchema(PlainSupplierSchema):
-
     is_active = fields.Boolean()
     is_archived = fields.Boolean()
     date_registered = fields.Date()
     date_archived = fields.Date()
-    payment_type = fields.String()
     account_id = fields.Integer(required=True, dump_only=True)
     account_name = fields.String(required=True)
     account = fields.Nested(SupplierAccountSchema(), dump_only=True)

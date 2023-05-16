@@ -87,7 +87,7 @@ class Customer(MethodView):
 
         account_id = customer_account.id
 
-        customer = CustomerModel(customer_name=data["customer_name"], account_id=account_id, customer_phone_no=data["customer_phone_no"],customer_email=data["customer_email"], is_active=data["is_active"], payment_type=data["payment_type"])
+        customer = CustomerModel(customer_name=data["customer_name"], account_id=account_id, customer_phone_no=data["customer_phone_no"],customer_email=data["customer_email"], is_active=data["is_active"])
         try:
             db.session.add(customer)
             db.session.commit()
@@ -132,7 +132,6 @@ class CustomerView(MethodView):
             customer.customer_phone_no = data["customer_phone_no"]
             customer.customer_email = data["customer_email"]
             customer.is_active = data["is_active"]
-            customer.payment_type = data["payment_type"]
 
             customer.account_id = customer_account.id
 

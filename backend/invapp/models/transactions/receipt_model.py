@@ -44,3 +44,7 @@ class ReceiptModel(db.Model):
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
+
+    def void_receipt(self):
+        self.voided = True
+        self.update_db()
