@@ -160,6 +160,7 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
     balance = invoice_amount - paid
     invoice = InvoiceModel.query.get_or_404(invoice_id)
     existing_balance = SupplierBalanceModel.query.filter_by(supplier_id=supplier_id, currency=currency, invoice_id=invoice_id).first()
+    existing_balance.balance = invoice_amount
     if existing_balance:
         existing_balance.paid += paid
         existing_balance.invoice_amount = invoice_amount

@@ -23,8 +23,9 @@ class Invoices(MethodView):
     @blp.response(202,InvoiceSchema(many=True))
     def get(self, data):
         name = data.get("supplier_name", "")
+        print(name)
         ids = []
-        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.contains(name)).all()
+        suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.ilike(name)).all()
         print(suppliers)
         if len(suppliers) < 1:
             abort(404, message="No such supplier has an unpaid invoice")

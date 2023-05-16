@@ -188,8 +188,8 @@ class PaymentApproveView(MethodView):
             status = "not_paid"
         else:
             status = "over_paid"
-        if payment.approved:
-            abort(400, message="This payment is already approved!!")
+        if payment.approval_status != "pending approval":
+            abort(400, message="This payment is already approved or rejected!!")
         payment.payment_status = status
         payment.approve_payment()
         payment.update_db()
@@ -212,4 +212,6 @@ class PaymentRejectView(MethodView):
         payment.reason = data.get('reason')
         payment.reject_payment()
         payment.update_db()
+
+        return {"reject": "success"}
 

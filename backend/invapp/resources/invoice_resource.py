@@ -154,10 +154,12 @@ class Invoice(MethodView):
         existing_invoice.supplier_id = supplier.id
         existing_invoice.supplier = supplier
         existing_invoice.update_date = datetime.datetime.utcnow()
-        existing_invoice.update_db()
 
-        if existing_invoice.amount != existing_invoice.purchase_items[0].lines_cost:
+        if existing_invoice.amount != existing_invoice.purchase_items[0].invoice_amount:
             existing_invoice.matched_to_lines = "unmatched"
+            existing_invoice.update_db()
+        else:
+            existing_invoice.matched_to_lines = "matched"
             existing_invoice.update_db()
         try:
             add_supplier_balance(supplier_id=existing_invoice.supplier_id, invoice_id=existing_invoice.id, invoice_amount=existing_invoice.amount,
