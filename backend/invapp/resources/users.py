@@ -30,7 +30,7 @@ class UserRegister(MethodView):
             abort(409, message="Passwords have to match!!")
         try:
             user = UserModel(email=user_data["email"],first_name=user_data["first_name"],last_name=user_data["last_name"],
-                            password=generate_password_hash(user_data["password1"], 'sha256'))
+                            password=generate_password_hash(user_data["password1"], 'scrypt'))
             user.save_to_db()
             confirmation = ConfirmationModel(user.id)
             confirmation.save_to_db()

@@ -26,7 +26,7 @@ def create_app():
     app.config.from_pyfile("config.py")
     db.init_app(app)
     api = Api(app)
-    cors.init_app(app, resources={r"*": {"origins": "*"}})
+    cors.init_app(app, resources={r"/*": {"origins": "*"}})
     migrate.init_app(app, db)
     jwt = JWTManager(app)
     @jwt.token_in_blocklist_loader

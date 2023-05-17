@@ -128,6 +128,8 @@ class ReceiptMethodView(MethodView):
     @jwt_required(fresh=True)
     def delete(self, id):
         receipt = ReceiptModel.query.get_or_404(id)
+        if receipt.status != "not paid":
+            abort(404, message="This receipt has payment already processed, please void it")
         receipt.delete_from_db()
         return {"message":"deleted"}, 204
 
