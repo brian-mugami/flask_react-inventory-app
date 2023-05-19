@@ -138,9 +138,6 @@ class ReceiptMethodView(MethodView):
     def delete(self, id):
         receipt = ReceiptModel.query.get_or_404(id)
         if receipt.status != "not paid":
-<<<<<<< HEAD
-            abort(404, message="This receipt has payment already processed, please void it")
-=======
             abort(400, message="You cannot delete this receipt as payment has began, Please void it")
         items = SalesModel.query.filter_by(receipt_id=receipt.id).all()
         if len(items) > 0:
@@ -150,7 +147,6 @@ class ReceiptMethodView(MethodView):
                 except SignalException as e:
                     traceback.print_exc()
                     abort(400, message=f"{str(e)}")
->>>>>>> origin/main
         receipt.delete_from_db()
         return {"message":"deleted"}, 204
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from invapp.db import db
 
 class SalesModel(db.Model):
