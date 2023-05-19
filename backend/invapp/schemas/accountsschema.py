@@ -5,7 +5,7 @@ class AccountSchema(Schema):
     account_name = fields.String(required=True)
     account_description = fields.String()
     account_number = fields.Integer(required=True)
-    account_type = fields.String(required=True)
+    account_type = fields.String()
     account_category = fields.String(required=True, dump_only=True)
     is_active = fields.Boolean(required=True, dump_only=True)
     date_created = fields.Date()

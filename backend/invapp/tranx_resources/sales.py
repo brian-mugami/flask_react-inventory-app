@@ -147,7 +147,7 @@ class SalesMethodView(MethodView):
             if not item:
                 abort(404, message="Item does not exist")
             if transaction.item_id == item.id and transaction.receipt_id == receipt.id:
-
+                transaction.update_date= datetime.datetime.utcnow()
                 transaction.item_quantity = line.get("quantity")
                 transaction.selling_price = line.get("selling_price")
                 transaction.item_cost = transaction.selling_price * transaction.quantity

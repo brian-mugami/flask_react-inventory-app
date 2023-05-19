@@ -172,6 +172,7 @@ class PaymentApproveView(MethodView):
         customer_id = payment.receipt.customer_id
         receipt_amount = payment.receipt.amount
         receipt_id = payment.receipt_id
+        receipt = ReceiptModel.query.get(receipt_id)
         currency = payment.receipt.currency
         customer_amount = CustomerBalanceModel.query.filter_by(receipt_id=receipt_id, currency=currency).first()
         if not customer_amount:
@@ -193,6 +194,16 @@ class PaymentApproveView(MethodView):
         payment.payment_status = status
         payment.approve_payment()
         payment.update_db()
+        if payment.payment_status == "fully_paid":
+            pay_status = "fully paid"
+        elif payment.payment_status == "partially_paid":
+            pay_status = "partially paid"
+        elif payment.payment_status == "not_paid":
+            pay_status = "not paid"
+        else:
+            pay_status = "over paid"
+        receipt.status = pay_status
+        receipt.update_db()
         try:
             balance = add_customer_balance(customer_id=customer_id, receipt_amount=receipt_amount, paid=payment.amount, receipt_id=receipt_id, currency=currency)
             receive_payment(customer_account_id=customer_account_id,bank_account=payment.receive_account_id,amount=payment.amount,payment_id=payment.id, balance_id=balance)

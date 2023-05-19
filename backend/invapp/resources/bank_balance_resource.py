@@ -6,7 +6,7 @@ from ..db import db
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
-from ..models import AccountModel
+from ..models.masters import AccountModel
 from ..models.transactions.bank_balances_model import BankBalanceModel
 from ..schemas.bank_balance_schema import PlainBankBalanceSchema,BankBalanceSchema
 from flask_jwt_extended import jwt_required
