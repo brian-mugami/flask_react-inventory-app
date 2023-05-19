@@ -4,27 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/inventory_balances.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/inventory_balances.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/purchasing_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/purchasing_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/sales_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/sales_models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/bank_accounts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/bank_accounts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/bank_balance_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/bank_balance_resource.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/customers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/customers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/expense_accounts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/expense_accounts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/inv_adjustment_account.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/inv_adjustment_account.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/inventory_balance_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/inventory_balance_resource.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/items.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/items.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/suppliers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/suppliers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/accountsschema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/accountsschema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/inventory_balance_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/inventory_balance_schema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/signals.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/signals.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/templates/confirmation.html" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/templates/confirmation.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/tranx_resources/customer_payments.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/tranx_resources/customer_payments.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/tranx_resources/sales.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/tranx_resources/sales.py" afterDir="false" />
-    </list>
+    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
