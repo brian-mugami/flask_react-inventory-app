@@ -11,8 +11,9 @@ from ..models.transactions.customer_balances_model import CustomerBalanceModel
 from ..models.transactions.customer_payments_model import CustomerPaymentModel
 from ..models.transactions.receipt_model import ReceiptModel
 from ..models.transactions.sales_accounting_models import SalesAccountingModel
+from ..models.transactions.sales_models import SalesModel
 from ..schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema, ReceiptVoidSchema
-from ..signals import void_receipt, SignalException
+from ..signals import void_receipt, SignalException, returning_balance
 
 
 blp = Blueprint("receipts", __name__, description="Receipt creation")
@@ -25,13 +26,14 @@ class ReceiptVoidView(MethodView):
         receipt = ReceiptModel.query.get_or_404(id)
         if receipt.voided == True:
             abort(400, message="Receipt is already voided")
-        if receipt.status != "not paid":
-            abort(400, message="You cannot void a receipt with payments")
+        if receipt.status == "not paid":
+            abort(400, message="This receipt is not paid. Just delete it")
         receipt.reason = data.get("reason")
         receipt.void_receipt()
         receipt.update_db()
         try:
             void_receipt(receipt_id=receipt.id)
+            return {"receipt voided": "success"}, 202
         except SignalException as e:
             traceback.print_exc()
             abort(500, message=f'{str(e)}')
@@ -42,13 +44,20 @@ class ReceiptPaymentView(MethodView):
     @blp.arguments(ReceiptPaymentSchema)
     @blp.response(201, ReceiptPaymentSchema)
     def post(self, data, id):
-
         account = AccountModel.query.filter_by(account_name=data.get("receipt_account")).first()
         if not account:
             abort(404, message="Account not found")
         receipt = ReceiptModel.query.get(id)
+        customer_balance = CustomerBalanceModel.query.filter_by(receipt_id=receipt.id).order_by(CustomerBalanceModel.balance).first()
+        payment = CustomerPaymentModel.query.filter_by(receipt_id=receipt.id).order_by(CustomerPaymentModel.date.desc()).first()
+        if payment and payment.approval_status == "pending approval":
+            abort(400, message="Please approval the last payment to create this payment")
+        if payment and payment.payment_status == "fully_paid":
+            abort(400, message="Payments are already fully approved")
         if not receipt:
             abort(404, message="Receipt does not exist")
+        if customer_balance.balance <= 0:
+            abort(400, message="This customer has no balance, either payment has been done or payment is pending approval")
         if receipt.status == "fully paid" or receipt.status == "over paid":
             abort(400, message="This receipt is already paid.")
         if receipt.accounted_status == "not_accounted":
@@ -129,7 +138,19 @@ class ReceiptMethodView(MethodView):
     def delete(self, id):
         receipt = ReceiptModel.query.get_or_404(id)
         if receipt.status != "not paid":
+<<<<<<< HEAD
             abort(404, message="This receipt has payment already processed, please void it")
+=======
+            abort(400, message="You cannot delete this receipt as payment has began, Please void it")
+        items = SalesModel.query.filter_by(receipt_id=receipt.id).all()
+        if len(items) > 0:
+            for item in items:
+                try:
+                    returning_balance(item_id=item.item_id,item_quantity=item.quantity, receipt_id=receipt.id)
+                except SignalException as e:
+                    traceback.print_exc()
+                    abort(400, message=f"{str(e)}")
+>>>>>>> origin/main
         receipt.delete_from_db()
         return {"message":"deleted"}, 204
 

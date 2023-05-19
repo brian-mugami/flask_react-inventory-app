@@ -6,6 +6,8 @@ class SalesModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
     selling_price = db.Column(db.Float(precision=4), nullable=False)
+    receipt_date = db.Column(db.DateTime, default=datetime.utcnow())
+    update_date = db.Column(db.DateTime)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False)
     item_cost = db.Column(db.Float(precision=4), nullable=False)

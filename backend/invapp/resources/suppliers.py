@@ -3,8 +3,8 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from ..db import db
-from ..models import AccountModel
-from invapp.models.masters.suppliermodels import SupplierModel
+from ..models.masters import AccountModel
+from ..models.masters.suppliermodels import SupplierModel
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint,abort
@@ -27,7 +27,7 @@ class SupplierAccount(MethodView):
             abort(409, message="Account already exists")
 
         account = AccountModel(account_name=data["account_name"], account_number=data["account_number"],
-                               account_description=data["account_description"], account_category="Supplier Account", account_type= data["account_type"])
+                               account_description=data["account_description"], account_category="Supplier Account")
 
         db.session.add(account)
         db.session.commit()
@@ -69,7 +69,6 @@ class SupplierAccountView(MethodView):
         account.account_name = data["account_name"]
         account.account_description = data["account_description"]
         account.account_number = data["account_number"]
-        account.account_type = data["account_type"]
         db.session.commit()
         return jsonify({"message": "account updated"}), 202
 

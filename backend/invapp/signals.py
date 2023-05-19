@@ -5,7 +5,7 @@ from blinker import signal
 
 from .models.masters import AccountModel
 from .models.transactions.bank_balances_model import BankBalanceModel
-from .models.transactions.inventory_balances import InventoryBalancesModel
+from .models.transactions.inventory_balances import InventoryBalancesModel, InventoryBalanceAccountingModel
 from .models.transactions.invoice_model import InvoiceModel
 from .models.transactions.purchase_accounting_models import PurchaseAccountingModel, SupplierPayAccountingModel
 from .models.transactions.receipt_model import ReceiptModel
@@ -26,10 +26,37 @@ customer_balance = signal("customer_balance")
 customer_payment = signal("customer_payment")
 expense_addition = signal("signal_addition")
 bank_balance = signal("bank_balance")
+return_balance = signal("return_balance")
+inventory_accounting = signal("inventory_accounting")
 
 class SignalException(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+@inventory_accounting.connect
+def inventory_accounting(balance_id:int, item_id:int, credit_id:int, debit_id:int, amount:float):
+    accounting = InventoryBalanceAccountingModel(inventory_balance_id=balance_id, item_id=item_id,debit_account_id=debit_id, credit_account_id=credit_id,debit_amount=amount,credit_amount=-amount)
+    accounting.save_to_db()
+@return_balance.connect
+def returning_balance(item_id: int, item_quantity:int, receipt_id:int):
+    inventory = InventoryBalancesModel.query.filter_by(receipt_id=receipt_id, item_id=item_id).first()
+    if not inventory:
+        misc = InventoryBalancesModel.query.filter_by(item_id=item_id).first()
+        misc.quantity += item_quantity
+        misc.update_date = datetime.datetime.utcnow()
+        try:
+            misc.update_db()
+            return
+        except:
+            raise SignalException("Failed to return to the store")
+    else:
+        inventory.quantity += item_quantity
+        inventory.update_date = datetime.datetime.utcnow()
+        try:
+            inventory.update_db()
+            return
+        except:
+            raise SignalException("Failed to return to the store")
 
 @void_receipt.connect
 def void_receipt(receipt_id:int):
@@ -212,7 +239,6 @@ def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float 
         existing_balance.receipt_amount = receipt_amount
         existing_balance.balance -= paid
         existing_balance.date = datetime.datetime.utcnow()
-        existing_balance.balance = receipt_amount
         existing_balance.update_db()
         return existing_balance.id
     else:
