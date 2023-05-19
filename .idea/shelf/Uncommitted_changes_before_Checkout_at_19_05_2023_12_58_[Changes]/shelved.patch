@@ -1,0 +1,44 @@
+Index: backend/invapp/models/transactions/sales_models.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from datetime import datetime\r\n\r\nfrom invapp.db import db\r\n\r\nclass SalesModel(db.Model):\r\n    __tablename__ = \"sales\"\r\n\r\n    id = db.Column(db.Integer, primary_key=True)\r\n    quantity = db.Column(db.Integer, nullable=False)\r\n    selling_price = db.Column(db.Float(precision=4), nullable=False)\r\n    receipt_date = db.Column(db.DateTime, default=datetime.utcnow())\r\n    update_date = db.Column(db.DateTime)\r\n    item_id = db.Column(db.Integer, db.ForeignKey(\"items.id\"), nullable=False)\r\n    receipt_id = db.Column(db.Integer, db.ForeignKey(\"receipts.id\"), nullable=False)\r\n    item_cost = db.Column(db.Float(precision=4), nullable=False)\r\n\r\n    receipt = db.relationship(\"ReceiptModel\", back_populates=\"sale_items\")\r\n    item = db.relationship(\"ItemModel\", back_populates=\"sales\")\r\n\r\n\r\n    __table_args__ = (\r\n        db.UniqueConstraint('item_id', 'receipt_id', name=\"sales_lines_constraint\"),\r\n    )\r\n\r\n    @classmethod\r\n    def find_by_id(cls,_id: int):\r\n        return cls.query.filter_by(id=_id).first()\r\n\r\n    @classmethod\r\n    def find_by_receipt_number(cls, num):\r\n        return cls.query.filter_by(receipt_number=num).first()\r\n\r\n    @property\r\n    def amount(self):\r\n        return self.quantity * self.selling_price\r\n\r\n    def save_to_db(self):\r\n        db.session.add(self)\r\n        db.session.commit()\r\n\r\n    def update_db(self):\r\n        db.session.commit()\r\n\r\n    def delete_from_db(self):\r\n        db.session.delete(self)\r\n        db.session.commit()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/backend/invapp/models/transactions/sales_models.py b/backend/invapp/models/transactions/sales_models.py
+--- a/backend/invapp/models/transactions/sales_models.py	
++++ b/backend/invapp/models/transactions/sales_models.py	
+@@ -1,6 +1,7 @@
+ from datetime import datetime
+ 
+-from invapp.db import db
++from backend.invapp import db
++
+ 
+ class SalesModel(db.Model):
+     __tablename__ = "sales"
+Index: backend/invapp/models/__init__.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from invapp.models.masters.customermodels import CustomerModel\r\nfrom invapp.models.masters.usermodels import UserModel\r\nfrom invapp.models.masters.suppliermodels import SupplierModel\r\nfrom invapp.models.masters.itemmodels import ItemModel,ItemLotModel,CategoryModel\r\nfrom invapp.models.transactions.purchasing_models import PurchaseModel\r\nfrom invapp.models.masters.accountsmodel import AccountModel
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/backend/invapp/models/__init__.py b/backend/invapp/models/__init__.py
+--- a/backend/invapp/models/__init__.py	
++++ b/backend/invapp/models/__init__.py	
+@@ -1,6 +1,6 @@
+-from invapp.models.masters.customermodels import CustomerModel
+-from invapp.models.masters.usermodels import UserModel
+-from invapp.models.masters.suppliermodels import SupplierModel
+-from invapp.models.masters.itemmodels import ItemModel,ItemLotModel,CategoryModel
+-from invapp.models.transactions.purchasing_models import PurchaseModel
+-from invapp.models.masters.accountsmodel import AccountModel
+\ No newline at end of file
++from .masters.customermodels import CustomerModel
++from .masters.usermodels import UserModel
++from .masters.suppliermodels import SupplierModel
++from .masters.itemmodels import ItemModel,ItemLotModel,CategoryModel
++from .transactions.purchasing_models import PurchaseModel
++from .masters.accountsmodel import AccountModel
+\ No newline at end of file
