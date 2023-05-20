@@ -6,7 +6,6 @@ from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from ..models.masters.usermodels import UserModel,ConfirmationModel
-#from invapp.models.masters.usermodels import UserModel, ConfirmationModel
 from ..db import db
 from ..schemas.userschema import UserSchema,LoginSchema, UserUpdateSchema, PaswordChangeSchema
 from werkzeug.security import check_password_hash,generate_password_hash
@@ -145,7 +144,7 @@ class SetUserAdmin(MethodView):
         else:
             user = UserModel(email=user_data["email"], first_name=user_data["first_name"],
                              last_name=user_data["last_name"],
-                             password=generate_password_hash(user_data["password1"], 'sha256'), is_admin=True)
+                             password=generate_password_hash(user_data["password1"], 'scrypt'), is_admin=True)
             db.session.add(user)
             db.session.commit()
 
