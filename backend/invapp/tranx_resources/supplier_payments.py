@@ -23,16 +23,22 @@ class Invoices(MethodView):
     @blp.response(202,InvoiceSchema(many=True))
     def get(self, data):
         name = data.get("supplier_name", "")
-        print(name)
-        ids = []
         suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.ilike(name)).all()
-        print(suppliers)
-        if len(suppliers) < 1:
+
+        if not suppliers:
             abort(404, message="No such supplier has an unpaid invoice")
-        for supplier in suppliers:
-            ids.append(supplier.id)
-        #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))
-        supplier_invoices = InvoiceModel.query.filter(InvoiceModel.supplier_id.in_(ids),InvoiceModel.status.in_(["partially paid", "not paid"])).order_by(InvoiceModel.date.desc()).all()
+
+        ids = [supplier.id for supplier in suppliers]
+
+        supplier_invoices = (
+            InvoiceModel.query
+            .filter(
+                InvoiceModel.supplier_id.in_(ids),
+                InvoiceModel.status.in_(["partially paid", "not paid"])
+            )
+            .order_by(InvoiceModel.date.desc())
+            .all()
+        )
 
         return supplier_invoices
 

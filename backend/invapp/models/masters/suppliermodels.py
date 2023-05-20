@@ -1,5 +1,3 @@
-import enum
-
 from invapp.db import db
 from datetime import datetime
 
