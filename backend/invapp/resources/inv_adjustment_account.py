@@ -6,7 +6,6 @@ from flask_jwt_extended import jwt_required
 
 blp = Blueprint("Inventory Adjustment Accounts", __name__, description="Actions on inventory adjustment accounts")
 
-
 @blp.route("/inventory-adjustment/account")
 class PurchaseAccount(MethodView):
     @jwt_required(fresh=True)
