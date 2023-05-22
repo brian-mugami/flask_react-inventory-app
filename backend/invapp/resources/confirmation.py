@@ -5,7 +5,7 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from ..libs.send_emails import MailgunException
 from ..schemas.confirmationschema import ConfirmationSchema
-from invapp.models.masters.usermodels import ConfirmationModel, UserModel
+from ..models.masters.usermodels import ConfirmationModel, UserModel
 from flask import render_template, make_response
 
 blp = Blueprint("Confirmation", __name__, description="Confirmation on users")

@@ -2,9 +2,11 @@ import traceback
 from datetime import datetime
 from datetime import timezone
 
-from flask import jsonify
+from flask import jsonify, redirect, render_template, flash
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+
+from ..Forms.admin_registration import AdminRegistrationForm
 from ..models.masters.usermodels import UserModel,ConfirmationModel
 from ..db import db
 from ..schemas.userschema import UserSchema,LoginSchema, UserUpdateSchema, PaswordChangeSchema
@@ -78,7 +80,7 @@ class UserLogin(MethodView):
 
         if user and check_password_hash(user.password, user_data["password"]):
             confirmation = user.most_recent_confirmation
-            if confirmation and confirmation.confirmed:
+            if (confirmation and confirmation.confirmed) or user.is_admin:
                 access_token = create_access_token(identity=user.id, fresh=True)
                 refresh_token = create_refresh_token(identity=user.id)
                 return jsonify({"refresh_token": refresh_token, "access_token":access_token})
@@ -129,26 +131,26 @@ class PasswordChangeView(MethodView):
 
         return jsonify({"message": "Password Changed"})
 
-@blp.route("/register/user/admin")
-class SetUserAdmin(MethodView):
-    @blp.arguments(UserSchema)
-    def post(self, user_data):
-        user = UserModel.query.filter_by(email=user_data["email"]).first()
+@blp.route("/register/user/admin", methods=["GET", "POST"])
+def set_admin():
+    form = AdminRegistrationForm()
+    if form.validate_on_submit():
+        user = UserModel.query.filter_by(email=form.email.data).first()
         if user:
-            abort(409, message="User with set email already exists!!")
-
-        if len(user_data['password1']) < 6:
-            abort(417, message="Password should be longer than 6 characters!!")
-        elif user_data['password1'] != user_data['password2']:
-            abort(409, message="Passwords have to match!!")
+            flash(message="User with set email already exists!!", category="error")
+        if len(form.password1.data) < 6:
+            flash(message="Password should be longer than 6 characters!!", category="error")
+        elif form.password1.data != form.password2.data:
+            flash(message="Passwords have to match!!", category="error")
         else:
-            user = UserModel(email=user_data["email"], first_name=user_data["first_name"],
-                             last_name=user_data["last_name"],
-                             password=generate_password_hash(user_data["password1"], 'scrypt'), is_admin=True)
+            user = UserModel(email=form.email.data, first_name=form.first_name.data,
+                             last_name=form.last_name.data,
+                             password=generate_password_hash(form.password1.data, 'sha256'), is_admin=True)
             db.session.add(user)
             db.session.commit()
+            return redirect("http://localhost:3000/auth?mode=login")
 
-        return {"message": "Admin created successfully"}
+    return render_template('adminregister.html', form=form)
 
 
 
