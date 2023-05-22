@@ -1,6 +1,6 @@
 import datetime
 
-from invapp.db import db
+from backend.invapp.db import db
 
 class SupplierBalanceModel(db.Model):
     __tablename__ = "supplier_balances"

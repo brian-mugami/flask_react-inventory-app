@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
-from invapp.db import db
+from backend.invapp.db import db
 from datetime import datetime
 
 class InvoiceModel(db.Model):

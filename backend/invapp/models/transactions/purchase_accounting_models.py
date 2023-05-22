@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
-from invapp.db import db
+from backend.invapp.db import db
 
 class PurchaseAccountingModel(db.Model):
     __tablename__ = "purchase_accounting"

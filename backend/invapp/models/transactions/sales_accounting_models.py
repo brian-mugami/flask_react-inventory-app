@@ -1,6 +1,6 @@
 import uuid
 
-from invapp.db import db
+from backend.invapp.db import db
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 

@@ -5,14 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/invapp/Forms/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/invapp/Forms/admin_registration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/confirmation.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/confirmation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/users.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/accountsmodel.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/accountsmodel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/customermodels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/customermodels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/itemmodels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/itemmodels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/suppliermodels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/suppliermodels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/usermodels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/usermodels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/bank_balances_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/bank_balances_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/customer_balances_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/customer_balances_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/customer_payments_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/customer_payments_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/expenses_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/expenses_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/inventory_balances.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/inventory_balances.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/invoice_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/invoice_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/purchase_accounting_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/purchase_accounting_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/purchasing_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/purchasing_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/receipt_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/receipt_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/sales_accounting_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/sales_accounting_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/sales_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/sales_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/supplier_balances_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/supplier_balances_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/supplier_payment_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/supplier_payment_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/bank_accounts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/bank_accounts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/purchase_accounts.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/purchase_accounts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/bank_balance_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/bank_balance_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/confirmationschema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/confirmationschema.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

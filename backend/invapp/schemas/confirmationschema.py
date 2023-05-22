@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields
-from invapp.schemas.userschema import UserSchema
-
+from .userschema import UserSchema
 class ConfirmationSchema(Schema):
     user = fields.Nested(UserSchema(), dump_only=True)
     user_id = fields.Integer(required=True)

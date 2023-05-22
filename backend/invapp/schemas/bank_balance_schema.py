@@ -1,8 +1,8 @@
 from marshmallow import fields,Schema
 
-from invapp.schemas.accountsschema import AccountSchema
-from invapp.schemas.invoice_schema import InvoiceSchema
-from invapp.schemas.receiptschema import ReceiptSchema
+from .accountsschema import AccountSchema
+from .invoice_schema import InvoiceSchema
+from .receiptschema import ReceiptSchema
 
 class PlainBankBalanceSchema(Schema):
     id = fields.Integer(dump_only=True, required=True)
