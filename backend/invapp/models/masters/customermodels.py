@@ -1,6 +1,6 @@
 import enum
 
-from invapp.db import db
+from backend.invapp.db import db
 from datetime import datetime
 
 class PaymentType(enum.Enum):

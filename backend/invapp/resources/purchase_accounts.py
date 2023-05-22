@@ -1,6 +1,6 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
-from invapp.models.masters.accountsmodel import AccountModel
+from ..models.masters.accountsmodel import AccountModel
 from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
 from flask_jwt_extended import jwt_required
 

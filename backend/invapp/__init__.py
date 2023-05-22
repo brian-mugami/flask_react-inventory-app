@@ -3,7 +3,7 @@ from .resources import (userblueprint, itemsblueprint, supplierblueprint,
                         paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint,
                         receiptblueprint,bankbalanceblueprint, inventorybalanceblueprint, customerbalanceblueprint, supplierbalanceblueprint, inventoryadjustmentblueprint, transactionblueprint)
 from .tranx_resources import purchasingblueprint, paymentblueprint, salesblueprint, customerpaymentblueprint
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_smorest import Api
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -21,14 +21,28 @@ def create_app():
     app = Flask(__name__)
     load_dotenv(".env", verbose=True)
 
+<<<<<<< HEAD
     app.config.from_object("invapp.default_config")
     #app.config.from_envvar("APPLICATION_SETTINGS")
     app.config.from_pyfile("config.py")
+=======
+    app.config.from_object("backend.invapp.default_config")
+    app.config.from_envvar("APPLICATION_SETTINGS")
+    #app.config.from_pyfile("config.py")
+>>>>>>> origin/main
     db.init_app(app)
     api = Api(app)
     cors.init_app(app, resources={r"*": {"origins": "*"}})
     migrate.init_app(app, db)
     jwt = JWTManager(app)
+
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_react(path):
+        if not path.startswith("api/"):  # Exclude API routes
+            if path == "":
+                return send_from_directory("react/build", "index.html")
+            return send_from_directory("react/build", path)
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
         jti = jwt_payload["jti"]
