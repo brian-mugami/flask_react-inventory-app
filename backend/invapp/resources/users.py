@@ -148,7 +148,7 @@ def set_admin():
                              password=generate_password_hash(form.password1.data, 'sha256'), is_admin=True)
             db.session.add(user)
             db.session.commit()
-            return redirect("http://localhost:3000/auth?mode=login")
+            return redirect("https://kindredinv.onrender.com/auth?mode=login")
 
     return render_template('adminregister.html', form=form)
 
