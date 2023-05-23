@@ -14,7 +14,7 @@ from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
-blp = Blueprint("invoice", __name__, description="Invoice creation")
+blp = Blueprint("Invoice", __name__, description="Invoice creation")
 
 @blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):
@@ -247,6 +247,9 @@ class PaymentView(MethodView):
     @blp.response(201, InvoicePaymentSchema)
     def post(self, data, invoice_id):
         bank_account = AccountModel.query.filter_by(account_name=data["bank_account"], account_category="Bank Account").first()
+        payment = SupplierPaymentModel.query.filter_by(invoice_id=invoice_id).order_by(SupplierPaymentModel.date.desc()).first()
+        if payment and payment.approval_status == "pending approval":
+            abort(400, message="Please approve the recent payments so as to create this payment")
         if not bank_account:
             abort(404, message="Bank account not found")
         invoice = InvoiceModel.query.get(invoice_id)
