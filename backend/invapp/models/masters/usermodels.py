@@ -4,7 +4,7 @@ from invapp.db import db
 from datetime import datetime
 from flask import request, url_for
 
-from backend.invapp.libs.send_emails import Mailgun
+from invapp.libs.send_emails import Mailgun
 
 CONFIRMTIMEDELTA = 3600
 
