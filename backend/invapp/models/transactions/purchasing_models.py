@@ -1,5 +1,5 @@
 import datetime
-from backend.invapp.db import db
+from invapp.db import db
 
 class PurchaseModel(db.Model):
     __tablename__ = "purchases"
