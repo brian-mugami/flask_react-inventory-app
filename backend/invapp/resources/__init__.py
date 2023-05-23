@@ -15,3 +15,4 @@ from .supplier_balance_resource import blp as supplierbalanceblueprint
 from .customer_balance_resource import blp as customerbalanceblueprint
 from .inv_adjustment_account import blp as inventoryadjustmentblueprint
 from .transactions import blp as transactionblueprint
+from .catch_all_blp import blp as catchallblueprint
