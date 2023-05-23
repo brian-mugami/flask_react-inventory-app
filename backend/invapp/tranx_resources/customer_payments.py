@@ -57,7 +57,6 @@ class Invoices(MethodView):
             ids.append(customer.id)
         #invoices = InvoiceModel.query.filter(InvoiceModel.status.in_(["partially paid", "not paid"]))
         customer_receipts = ReceiptModel.query.filter(ReceiptModel.customer_id.in_(ids),ReceiptModel.status.in_(["partially paid", "not paid"])).order_by(ReceiptModel.date.desc()).all()
-        print(customer_receipts)
 
         return customer_receipts
 
