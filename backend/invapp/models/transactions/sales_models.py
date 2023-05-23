@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-=======
-from backend.invapp.db import db
->>>>>>> origin/main
-from datetime import datetime
-
 from invapp.db import db
+from datetime import datetime
 
 class SalesModel(db.Model):
     __tablename__ = "sales"

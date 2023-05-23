@@ -1,4 +1,4 @@
-from backend.invapp.db import db
+from invapp.db import db
 from datetime import datetime
 
 class ExpensesModel(db.Model):

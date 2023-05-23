@@ -1,6 +1,6 @@
 import uuid
 from time import time
-from backend.invapp.db import db
+from invapp.db import db
 from datetime import datetime
 from flask import request, url_for
 
