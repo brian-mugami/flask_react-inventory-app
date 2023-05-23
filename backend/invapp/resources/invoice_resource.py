@@ -14,7 +14,7 @@ from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
-blp = Blueprint("invoice", __name__, description="Invoice creation")
+blp = Blueprint("Invoice", __name__, description="Invoice creation")
 
 @blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):
