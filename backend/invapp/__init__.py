@@ -3,7 +3,7 @@ from .resources import (userblueprint, itemsblueprint, supplierblueprint,
                         paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint,
                         receiptblueprint,bankbalanceblueprint, inventorybalanceblueprint, customerbalanceblueprint, supplierbalanceblueprint, inventoryadjustmentblueprint, transactionblueprint)
 from .tranx_resources import purchasingblueprint, paymentblueprint, salesblueprint, customerpaymentblueprint
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, render_template
 from flask_smorest import Api
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -30,13 +30,11 @@ def create_app():
     migrate.init_app(app, db)
     jwt = JWTManager(app)
 
-    @app.route("/", defaults={"path": ""})
-    @app.route("/<path:path>")
-    def serve_react(path):
-        if not path.startswith("api/"):  # Exclude API routes
-            if path == "":
-                return send_from_directory("react/build", "index.html")
-            return send_from_directory("react/build", path)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def catch_all(path):
+        return render_template("index.html")
+
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
         jti = jwt_payload["jti"]
