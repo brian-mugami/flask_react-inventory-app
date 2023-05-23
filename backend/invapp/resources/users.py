@@ -149,14 +149,9 @@ class UserAdminPage(MethodView):
                             password=generate_password_hash(data.get("password1"), 'sha256'), is_admin=True)
             db.session.add(user)
             db.session.commit()
-<<<<<<< HEAD
-            return redirect("https://kindredinv.onrender.com/auth?mode=login")
-    return make_response(render_template("adminregister.html",form=form), 200, headers)
-=======
         
             return user
 
->>>>>>> origin/main
 
 
 
