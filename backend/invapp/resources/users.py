@@ -132,24 +132,31 @@ class PasswordChangeView(MethodView):
         return jsonify({"message": "Password Changed"})
 
 @blp.route("/register/user/admin", methods=["GET", "POST"])
-def set_admin():
-    form = AdminRegistrationForm()
-    if form.validate_on_submit():
-        user = UserModel.query.filter_by(email=form.email.data).first()
+class UserAdminPage(MethodView):
+    @blp.arguments(UserSchema)
+    @blp.response(201, UserSchema)
+    def post(self, data):
+        user = UserModel.query.filter_by(email=data.get("email")).first()
         if user:
-            flash(message="User with set email already exists!!", category="error")
-        if len(form.password1.data) < 6:
-            flash(message="Password should be longer than 6 characters!!", category="error")
-        elif form.password1.data != form.password2.data:
-            flash(message="Passwords have to match!!", category="error")
+            abort(400, message="User with set email already exists!!")
+        if len(data.get("password1")) < 6:
+            abort(400, message="User with set email already exists!!")
+        elif data.get("password1") != data.get("password2"):
+            abort(400, message="Passwords do not match")
         else:
-            user = UserModel(email=form.email.data, first_name=form.first_name.data,
-                             last_name=form.last_name.data,
-                             password=generate_password_hash(form.password1.data, 'sha256'), is_admin=True)
+            user = UserModel(email=data.get("email"), first_name=data.get("first_name"),
+                            last_name=data.get("last_name"),
+                            password=generate_password_hash(data.get("password1"), 'sha256'), is_admin=True)
             db.session.add(user)
             db.session.commit()
+<<<<<<< HEAD
             return redirect("https://kindredinv.onrender.com/auth?mode=login")
     return make_response(render_template("adminregister.html",form=form), 200, headers)
+=======
+        
+            return user
+
+>>>>>>> origin/main
 
 
 

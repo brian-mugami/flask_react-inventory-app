@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/invapp/resources/suppliers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/suppliers.py" afterDir="false" />
@@ -31,6 +32,11 @@
 >>>>>>> origin/main
 =======
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
+>>>>>>> origin/main
+=======
+    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/customermodels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/customermodels.py" afterDir="false" />
+    </list>
 >>>>>>> origin/main
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,6 +107,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.app" />
         <item itemvalue="Python.app" />
         <item itemvalue="Python.app" />
         <item itemvalue="Python.app" />

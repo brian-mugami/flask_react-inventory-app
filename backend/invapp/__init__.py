@@ -20,9 +20,15 @@ def create_app():
     app = Flask(__name__, template_folder="templates")
     load_dotenv(".env", verbose=True)
 
+<<<<<<< HEAD
     #app.config.from_object("invapp.config")
     #app.config.from_envvar("APPLICATION_SETTINGS")
     app.config.from_pyfile("config.py")
+=======
+    app.config.from_object("invapp.default_config")
+    app.config.from_envvar("APPLICATION_SETTINGS")
+    #app.config.from_pyfile("config.py")
+>>>>>>> origin/main
     db.init_app(app)
     api = Api(app)
     cors.init_app(app, resources={r"*": {"origins": "*"}})
