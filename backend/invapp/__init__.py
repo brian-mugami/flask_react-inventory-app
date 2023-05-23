@@ -17,7 +17,7 @@ cors = CORS()
 
 def create_app():
     #change application settings to config for prod
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="templates")
     load_dotenv(".env", verbose=True)
 
     #app.config.from_object("invapp.config")
