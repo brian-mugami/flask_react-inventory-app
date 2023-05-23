@@ -1,4 +1,4 @@
-from backend.invapp import create_app
+from invapp import create_app
 
 app = create_app()
 
