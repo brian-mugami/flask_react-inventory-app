@@ -1,7 +1,5 @@
 from datetime import datetime
-
-from backend.invapp.db import db
-
+from invapp.db import db
 
 class AccountModel(db.Model):
     __tablename__ = "accounts"
