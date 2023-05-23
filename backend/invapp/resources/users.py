@@ -149,8 +149,7 @@ def set_admin():
             db.session.add(user)
             db.session.commit()
             return redirect("https://kindredinv.onrender.com/auth?mode=login")
-
-    return render_template('adminregister.html', form=form)
+    return make_response(render_template("adminregister.html",form=form), 200, headers)
 
 
 
