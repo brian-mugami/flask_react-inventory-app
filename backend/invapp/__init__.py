@@ -109,7 +109,6 @@ def create_app():
     api.register_blueprint(supplierbalanceblueprint)
     api.register_blueprint(inventoryadjustmentblueprint)
     api.register_blueprint(transactionblueprint)
-    api.register_blueprint(catchallblueprint)
 
     return app
 

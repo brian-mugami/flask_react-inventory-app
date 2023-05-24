@@ -6,6 +6,9 @@ from ..schemas.itemschema import PlainItemSchema
 class CustomerSchema(Schema):
     id = fields.Int(dump_only=True)
     customer_name = fields.Str()
+class ReceiptPaginationSchema(Schema):
+    page = fields.Int(default=1)
+    per_page = fields.Int(default=50)
 
 class BalanceSchema(Schema):
     id = fields.Int()
