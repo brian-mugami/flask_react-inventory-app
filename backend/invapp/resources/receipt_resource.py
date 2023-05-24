@@ -18,12 +18,7 @@ from ..models.transactions.sales_accounting_models import SalesAccountingModel
 from ..models.transactions.sales_models import SalesModel
 from ..schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema, ReceiptVoidSchema, ReceiptPaginationSchema
 from ..signals import void_receipt, SignalException, returning_balance
-<<<<<<< HEAD
-
-
-=======
 import pdfkit
->>>>>>> origin/main
 blp = Blueprint("receipts", __name__, description="Receipt creation")
 
 @blp.route("/receipt/download/test/<int:id>")
