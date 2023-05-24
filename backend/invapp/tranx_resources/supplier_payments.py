@@ -112,8 +112,6 @@ class PaymentMainView(MethodView):
     def delete(self, id):
         transaction = SupplierPaymentModel.query.get_or_404(id)
         balance = SupplierBalanceModel.query.filter_by(payment_id=transaction.id).first()
-        if not balance:
-            transaction.delete_from_db()
         if transaction.approval_status == "approved" and transaction.payment_status != "not paid":
             abort(400, message="Cannot delete a payment that is paid and approved")
         balance.balance += transaction.amount
