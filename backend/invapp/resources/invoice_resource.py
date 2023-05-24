@@ -11,7 +11,8 @@ from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
-from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema
+from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema, \
+    InvoicePaginationSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
 blp = Blueprint("Invoice", __name__, description="Invoice creation")
@@ -64,10 +65,14 @@ class InvoiceAccountingView(MethodView):
 class Invoices(MethodView):
 
     @jwt_required(fresh=True)
+    @blp.arguments(InvoicePaginationSchema)
     @blp.response(200,InvoiceSchema(many=True))
-    def get(self):
+    def get(self, data):
         """Get all invoices"""
-        invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
+        #invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
+        page = data.get('page', 1)
+        per_page = data.get('per_page', 50)
+        invoices = InvoiceModel.query.paginate(page=page, per_page=per_page)
         return invoices
 
     @jwt_required(fresh=True)

@@ -1,10 +1,13 @@
 import datetime
+import io
 import traceback
-
-from flask import jsonify
+from flask import jsonify, make_response
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate
 from sqlalchemy.exc import IntegrityError
 from ..models.masters import CustomerModel, AccountModel
 from ..models.transactions.customer_balances_model import CustomerBalanceModel
@@ -12,12 +15,61 @@ from ..models.transactions.customer_payments_model import CustomerPaymentModel
 from ..models.transactions.receipt_model import ReceiptModel
 from ..models.transactions.sales_accounting_models import SalesAccountingModel
 from ..models.transactions.sales_models import SalesModel
-from ..schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema, ReceiptVoidSchema
+from ..schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema, ReceiptVoidSchema, ReceiptPaginationSchema
 from ..signals import void_receipt, SignalException, returning_balance
 
 
 blp = Blueprint("receipts", __name__, description="Receipt creation")
 
+@blp.route("/receipt/download/<int:id>")
+class ReceiptDownloadView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self, id):
+        receipt = ReceiptModel.query.get_or_404(id)
+        receipt_lines = SalesModel.query.filter_by(receipt_id=receipt.id).all()
+
+        response = make_response()
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename={receipt.receipt_number}.pdf'
+
+        # Create a PDF buffer
+        pdf_buffer = io.BytesIO()
+
+        # Create a PDF document
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+
+        # Define styles
+        styles = getSampleStyleSheet()
+        heading_style = styles['Heading1']
+        line_item_style = ParagraphStyle(
+            'LineItem',
+            parent=styles['Normal'],
+            spaceAfter=6,
+            bulletIndent=0,
+            leftIndent=20,
+            bulletFontSize=8,
+        )
+
+        # Define the content
+        content = []
+
+        # Add the heading
+        heading_text = f"<b>Ole Louisa Receipt: amount -{receipt.amount}</b>"
+        heading = Paragraph(heading_text, heading_style)
+        content.append(heading)
+
+        # Add line items
+        for item in receipt_lines:
+            line_item_text = f"<bullet>&bull;</bullet>  {item.item.item_name}({item.item.item_unit}{item.item.unit_type}):{item.quantity} * {item.selling_price}-{item.item_cost}"
+            line_item = Paragraph(line_item_text, line_item_style)
+            content.append(line_item)
+
+        doc.build(content)
+        pdf_buffer.seek(0)
+
+        response.set_data(pdf_buffer.getvalue())
+
+        return response
 @blp.route("/receipt/void/<int:id>")
 class ReceiptVoidView(MethodView):
     @jwt_required(fresh=True)
@@ -111,9 +163,12 @@ class ReceiptAccountingView(MethodView):
 @blp.route("/receipt")
 class ReceiptView(MethodView):
     @jwt_required(fresh=True)
+    @blp.arguments(ReceiptPaginationSchema)
     @blp.response(200, ReceiptSchema(many=True))
-    def get(self):
-        receipts = ReceiptModel.query.order_by(ReceiptModel.date.desc()).all()
+    def get(self, data):
+        page = data.get('page', 1)
+        per_page = data.get('per_page', 50)
+        receipts = ReceiptModel.query.paginate(page=page, per_page=per_page)
         return receipts
 
     @jwt_required(fresh=True)

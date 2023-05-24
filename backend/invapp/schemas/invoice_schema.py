@@ -49,6 +49,9 @@ class BaseInvoiceSchema(Schema):
     expense_account_name = fields.String()
     expense_account_id = fields.Int(dump_only=True)
     accounting_status = fields.Str(dump_only=True)
+class InvoicePaginationSchema(Schema):
+    page = fields.Int(default=1)
+    per_page = fields.Int(default=50)
 
 class InvoiceSchema(BaseInvoiceSchema):
     message = fields.Str()

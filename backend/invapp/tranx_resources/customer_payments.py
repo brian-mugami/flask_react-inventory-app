@@ -213,7 +213,7 @@ class PaymentApproveView(MethodView):
 
 @blp.route("/customer/payment/reject/<int:id>")
 class PaymentRejectView(MethodView):
-    @jwt_required
+    @jwt_required(fresh=True)
     @blp.arguments(PaymentRejectSchema)
     def post(self, data, id):
         payment = CustomerPaymentModel.query.get_or_404(id)
