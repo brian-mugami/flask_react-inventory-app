@@ -1,7 +1,8 @@
 import datetime
 import io
 import traceback
-from flask import jsonify, make_response
+from xhtml2pdf import pisa
+from flask import jsonify, make_response,render_template
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
@@ -17,9 +18,36 @@ from ..models.transactions.sales_accounting_models import SalesAccountingModel
 from ..models.transactions.sales_models import SalesModel
 from ..schemas.receiptschema import ReceiptSchema, ReceiptPaymentSchema, ReceiptVoidSchema, ReceiptPaginationSchema
 from ..signals import void_receipt, SignalException, returning_balance
+<<<<<<< HEAD
 
 
+=======
+import pdfkit
+>>>>>>> origin/main
 blp = Blueprint("receipts", __name__, description="Receipt creation")
+
+@blp.route("/receipt/download/test/<int:id>")
+class ReceiptDownloadView(MethodView):
+
+    def get(self, id):
+        receipt = ReceiptModel.query.get_or_404(id)
+        receipt_lines = SalesModel.query.filter_by(receipt_id=receipt.id).all()
+
+        html = render_template('receipt.html', receipt=receipt, receipt_lines=receipt_lines)
+
+        # Create a PDF buffer
+        pdf_buffer = io.BytesIO()
+
+        # Convert HTML to PDF
+        pisa.CreatePDF(html, dest=pdf_buffer)
+
+        # Set response headers
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename={receipt.receipt_number}.pdf'
+
+        return response
+
 
 @blp.route("/receipt/download/<int:id>")
 class ReceiptDownloadView(MethodView):
