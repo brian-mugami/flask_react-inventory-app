@@ -37,3 +37,4 @@ class PlainPurchaseUpdateSchema(Schema):
 class PurchaseUpdateSchema(Schema):
  item_list = fields.List(fields.Nested(PlainPurchaseUpdateSchema()))
  invoice_id = fields.Int()
+
