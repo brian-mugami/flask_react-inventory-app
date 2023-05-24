@@ -1,4 +1,4 @@
 inv/
 migrations
-
+templates/
 invapp/.env
