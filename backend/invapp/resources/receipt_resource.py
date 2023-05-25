@@ -23,12 +23,12 @@ blp = Blueprint("receipts", __name__, description="Receipt creation")
 
 @blp.route("/receipt/download/test/<int:id>")
 class ReceiptDownloadView(MethodView):
-
+    @jwt_required(fresh=True)
     def get(self, id):
         receipt = ReceiptModel.query.get_or_404(id)
         receipt_lines = SalesModel.query.filter_by(receipt_id=receipt.id).all()
 
-        html = render_template('receipt.html', receipt=receipt, receipt_lines=receipt_lines)
+        html = render_template('receipt2.html', receipt=receipt, receipt_lines=receipt_lines)
 
         # Create a PDF buffer
         pdf_buffer = io.BytesIO()
