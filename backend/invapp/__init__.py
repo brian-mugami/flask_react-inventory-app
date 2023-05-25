@@ -11,13 +11,20 @@ from .db import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 from .blocklist import TokenBlocklist
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 migrate = Migrate()
 cors = CORS()
 
 def create_app():
     #change application settings to config for prod
+<<<<<<< HEAD
     app = Flask(__name__, template_folder="templates")
+=======
+    app = Flask(__name__, static_folder='static', template_folder='templates')
+>>>>>>> origin/main
     load_dotenv(".env", verbose=True)
 
     #app.config.from_object("invapp.config")

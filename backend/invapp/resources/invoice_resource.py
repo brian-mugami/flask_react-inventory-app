@@ -1,21 +1,38 @@
 import datetime
+import os
 import traceback
-
-from flask import jsonify
+from werkzeug.utils import secure_filename
+from flask import jsonify, current_app
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
-
 from ..models.masters import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
+from ..schemas.fileUploadsSchema import FileUploadSchema
 from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, InvoicePaymentSchema, InvoiceVoidSchema, \
     InvoicePaginationSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
-blp = Blueprint("Invoice", __name__, description="Invoice creation")
+blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static')
+
+
+@blp.route('/invoice/upload/<int:id>')
+class InvoiceUploadView(MethodView):
+    @blp.arguments(FileUploadSchema, location="files")
+    def post(self,data, id):
+        invoice = InvoiceModel.query.get_or_404(id)
+        file = data.get("file")
+        allowed_extensions = {"jpg", "jpeg", "png", "pdf", "doc", "docx"}
+        extension = file.filename.rsplit('.', 1)[-1].lower()
+        if extension not in allowed_extensions:
+            return {'message': 'Invalid file type. Only JPG, JPEG, PNG, PDF, DOC, and DOCX files are allowed.'}, 400
+        file_path = os.path.join(current_app.static_folder, f'Invoices/{invoice.invoice_number}-{file.filename}')
+        file.save(file_path)
+        return {"message":"success"}
+
 
 @blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):

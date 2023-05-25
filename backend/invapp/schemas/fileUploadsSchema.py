@@ -1,5 +1,4 @@
-from marshmallow import Schema, fields
-from flask_smorest import fields as smorest_fields
-
+from marshmallow import Schema
+from flask_smorest.fields import Upload
 class FileUploadSchema(Schema):
-    file = smorest_fields.Upload(required=True)
+    file = Upload(required=True)

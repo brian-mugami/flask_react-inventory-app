@@ -1,4 +1,8 @@
 inv/
 migrations
+<<<<<<< HEAD
 templates/
+=======
+
+>>>>>>> origin/main
 invapp/.env
