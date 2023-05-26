@@ -1,7 +1,6 @@
 from flask.views import MethodView
 from sqlalchemy import func
-
-from .. import db
+from ..db import db
 from ..models.masters import ItemModel
 from ..schemas.invoice_schema import InvoiceSchema
 from ..schemas.purchasingschema import PurchasingSchema,PurchaseUpdateSchema
