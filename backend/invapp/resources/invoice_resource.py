@@ -1,11 +1,11 @@
 import datetime
 import os
 import traceback
-from werkzeug.utils import secure_filename
-from flask import jsonify, current_app
+from flask import jsonify, current_app, request, send_file
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
+
 from ..models.masters import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import PurchaseAccountingModel
@@ -18,6 +18,17 @@ from ..signals import add_supplier_balance, purchase_accounting_transaction, Sig
 
 blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static')
 
+@blp.route("/invoice/download/<int:id>")
+class InvoiceDownloadView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self, id):
+        invoice = InvoiceModel.query.get_or_404(id)
+        file_path = invoice.file_path
+        if file_path is None:
+            abort(400, message="No invoice upload for this invoice")
+        file_name = f"{invoice.invoice_number}.pdf"  # Modify as needed
+
+        return send_file(as_attachment=True,download_name=file_name, last_modified=invoice.date,path_or_file=file_path)
 
 @blp.route('/invoice/upload/<int:id>')
 class InvoiceUploadView(MethodView):
@@ -31,9 +42,9 @@ class InvoiceUploadView(MethodView):
             return {'message': 'Invalid file type. Only JPG, JPEG, PNG, PDF, DOC, and DOCX files are allowed.'}, 400
         file_path = os.path.join(current_app.static_folder, f'Invoices/{invoice.invoice_number}-{file.filename}')
         file.save(file_path)
+        invoice.file_path = file_path
+        invoice.update_db()
         return {"message":"success"}
-
-
 @blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):
     @jwt_required(fresh=True)

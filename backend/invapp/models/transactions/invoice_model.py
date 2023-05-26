@@ -22,6 +22,7 @@ class InvoiceModel(db.Model):
     update_date = db.Column(db.DateTime)
     voided = db.Column(db.Boolean, default=False)
     reason = db.Column(db.String(256))
+    file_path = db.Column(db.String(256), nullable=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey("suppliers.id"), nullable=False)
     expense_account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=True)
 
