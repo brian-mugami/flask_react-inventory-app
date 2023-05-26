@@ -1,5 +1,4 @@
 from invapp.db import db
-
 class CustomerBalanceModel(db.Model):
     __tablename__ = "customer_balances"
 
