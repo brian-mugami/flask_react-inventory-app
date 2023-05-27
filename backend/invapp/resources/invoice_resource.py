@@ -16,7 +16,7 @@ from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, Invoice
     InvoicePaginationSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
-blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static\Invoices')
+blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static\invoices')
 
 
 @blp.route("/invoice/download/<int:id>")
