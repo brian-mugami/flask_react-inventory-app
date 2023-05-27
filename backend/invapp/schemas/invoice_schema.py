@@ -45,6 +45,7 @@ class BaseInvoiceSchema(Schema):
     destination_type = fields.String(validate=validate.OneOf(["expense", "stores"]), required=True)
     purchase_type = fields.String(validate=validate.OneOf(["cash", "credit"]))
     update_date = fields.Date()
+    file_path = fields.Str()
     supplier_name = fields.String(required=True)
     expense_account_name = fields.String()
     expense_account_id = fields.Int(dump_only=True)

@@ -2,8 +2,10 @@ import datetime
 
 from flask import jsonify
 from flask.views import MethodView
-from flask_smorest import Blueprint,abort
+from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required
+from sqlalchemy import func
+
 from ..db import db
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.receipt_model import ReceiptModel
@@ -33,7 +35,6 @@ class SalesTransaction(MethodView):
 
 @blp.route("/transaction/purchase")
 class PurchaseTransaction(MethodView):
-
     def get(self):
         current_date = datetime.datetime.now().date()
         query = db.session.query(
@@ -51,3 +52,51 @@ class PurchaseTransaction(MethodView):
         total_purchase_amount = query.total_purchase_amount
         return jsonify({"Purchases": total_transactions, "Amount": total_purchase_amount}), 200
 
+@blp.route("/transaction/sales/per_day")
+class SalesGraphView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        today = datetime.datetime.now().date()
+        start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
+        end_of_week = start_of_week + datetime.timedelta(days=6)  # Get the end of the current week
+
+        sales_by_weekday = (
+            db.session.query(
+                func.to_char(ReceiptModel.date, 'Day').label('weekday'),
+                func.sum(ReceiptModel.amount)
+            )
+            .filter(ReceiptModel.date.between(start_of_week, end_of_week))
+            .group_by('weekday')
+            .all()
+        )
+
+        sales_data = {
+            weekday: float(total_amount)
+            for weekday, total_amount in sales_by_weekday
+        }
+
+        return sales_data
+
+@blp.route("/transaction/purchases/per_day")
+class PurchaseGraphView(MethodView):
+    def get(self):
+        today = datetime.datetime.now().date()
+        start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
+        end_of_week = start_of_week + datetime.timedelta(days=6)  # Get the end of the current week
+
+        purchase_by_weekday = (
+            db.session.query(
+                func.to_char(InvoiceModel.date, 'Day').label('weekday'),
+                func.sum(InvoiceModel.amount)
+            )
+            .filter(InvoiceModel.date.between(start_of_week, end_of_week))
+            .group_by('weekday')
+            .all()
+        )
+
+        purchase_data = {
+            weekday: float(total_amount)
+            for weekday, total_amount in purchase_by_weekday
+        }
+
+        return purchase_data

@@ -27,16 +27,11 @@ class ReceiptDownloadView(MethodView):
     def get(self, id):
         receipt = ReceiptModel.query.get_or_404(id)
         receipt_lines = SalesModel.query.filter_by(receipt_id=receipt.id).all()
-
         html = render_template('receipt2.html', receipt=receipt, receipt_lines=receipt_lines)
-
-        # Create a PDF buffer
         pdf_buffer = io.BytesIO()
 
-        # Convert HTML to PDF
         pisa.CreatePDF(html, dest=pdf_buffer)
 
-        # Set response headers
         response = make_response(pdf_buffer.getvalue())
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'attachment; filename={receipt.receipt_number}.pdf'
