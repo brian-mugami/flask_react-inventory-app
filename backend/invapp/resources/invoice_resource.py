@@ -1,11 +1,7 @@
 import datetime
 import os
 import traceback
-<<<<<<< HEAD
-from flask import jsonify, current_app, request, send_file
-=======
 from flask import jsonify, current_app, send_file
->>>>>>> origin/main
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
@@ -61,13 +57,9 @@ class InvoiceUploadView(MethodView):
         file.save(file_path)
         invoice.file_path = file_path
         invoice.update_db()
-<<<<<<< HEAD
-        return {"message":"success"}
-=======
         return {"message": "success"}
 
 
->>>>>>> origin/main
 @blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):
     @jwt_required(fresh=True)
