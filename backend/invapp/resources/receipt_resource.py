@@ -27,9 +27,7 @@ class ReceiptDownloadView(MethodView):
     def get(self, id):
         receipt = ReceiptModel.query.get_or_404(id)
         receipt_lines = SalesModel.query.filter_by(receipt_id=receipt.id).all()
-
         html = render_template('receipt2.html', receipt=receipt, receipt_lines=receipt_lines)
-
         pdf_buffer = io.BytesIO()
 
         pisa.CreatePDF(html, dest=pdf_buffer)

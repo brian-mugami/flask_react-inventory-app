@@ -1,7 +1,7 @@
 import datetime
 import os
 import traceback
-from flask import jsonify, current_app, request, send_file
+from flask import jsonify, current_app, send_file
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
@@ -16,46 +16,48 @@ from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, Invoice
     InvoicePaginationSchema
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
-blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static')
+blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static\Invoices')
+
 
 @blp.route("/invoice/download/<int:id>")
 class InvoiceDownloadView(MethodView):
-    @jwt_required(fresh=True)
     def get(self, id):
         invoice = InvoiceModel.query.get_or_404(id)
-        file_path = invoice.file_path
-        if file_path is None:
-            abort(400, message="No invoice upload for this invoice")
-        file_name = f"{invoice.invoice_number}.pdf"  # Modify as needed
+        invoice_path = invoice.file_path
+        if invoice_path is None:
+            abort(400, message="This invoice has no attachment")
+        return send_file(invoice_path, as_attachment=True)
 
-        return send_file(as_attachment=True,download_name=file_name, last_modified=invoice.date,path_or_file=file_path)
 
 @blp.route('/invoice/upload/<int:id>')
 class InvoiceUploadView(MethodView):
     @blp.arguments(FileUploadSchema, location="files")
-    def post(self,data, id):
+    def post(self, data, id):
         invoice = InvoiceModel.query.get_or_404(id)
         file = data.get("file")
-        allowed_extensions = {"jpg", "jpeg", "png", "pdf", "doc", "docx"}
+        allowed_extensions = {"pdf"}
         extension = file.filename.rsplit('.', 1)[-1].lower()
+
         if extension not in allowed_extensions:
-            return {'message': 'Invalid file type. Only JPG, JPEG, PNG, PDF, DOC, and DOCX files are allowed.'}, 400
+            abort(400, message="Only pdf attachments are allowed")
         file_path = os.path.join(current_app.static_folder, f'Invoices/{invoice.invoice_number}-{file.filename}')
         file.save(file_path)
         invoice.file_path = file_path
         invoice.update_db()
-        return {"message":"success"}
+        return {"message": "success"}
+
+
 @blp.route("/invoice/void/<int:id>")
 class InvoiceVoidView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(InvoiceVoidSchema)
     @blp.response(202, InvoiceSchema)
-    def post(self, data,id):
+    def post(self, data, id):
         invoice = InvoiceModel.query.get(id)
         if not invoice:
             abort(404, message="Invoice does not exist")
         if invoice.status == "not paid" and invoice.accounted == "not_accounted":
-            abort(400, message= "Just delete this invoice, it has no accounting and payments")
+            abort(400, message="Just delete this invoice, it has no accounting and payments")
         if invoice.status != 'not paid':
             abort(400, message='Invoice payment has began. You cannot void this invoice if payment is not voided')
         if invoice.accounting_status == "void":
@@ -67,10 +69,11 @@ class InvoiceVoidView(MethodView):
             void_invoice(invoice_id=invoice.id)
             invoice.accounting_status = "void"
             invoice.update_db()
-            return {"invoice voided":"success"}, 202
+            return {"invoice voided": "success"}, 202
         except SignalException as e:
             traceback.print_exc()
             abort(500, message=f'{str(e)}')
+
 
 @blp.route("/invoice/<int:id>/account")
 class InvoiceAccountingView(MethodView):
@@ -86,7 +89,9 @@ class InvoiceAccountingView(MethodView):
         debit_account = AccountModel.query.get(accounted_invoice.debit_account_id)
         credit_account = AccountModel.query.get(accounted_invoice.credit_account_id)
 
-        return jsonify({"debit_account":debit_account.account_name, "credit_account": credit_account.account_name, "debit_amount": accounted_invoice.debit_amount, "credit_amount": accounted_invoice.credit_amount})
+        return jsonify({"debit_account": debit_account.account_name, "credit_account": credit_account.account_name,
+                        "debit_amount": accounted_invoice.debit_amount,
+                        "credit_amount": accounted_invoice.credit_amount})
 
 
 @blp.route("/invoice")
@@ -94,10 +99,10 @@ class Invoices(MethodView):
 
     @jwt_required(fresh=True)
     @blp.arguments(InvoicePaginationSchema)
-    @blp.response(200,InvoiceSchema(many=True))
+    @blp.response(200, InvoiceSchema(many=True))
     def get(self, data):
         """Get all invoices"""
-        #invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
+        # invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
         page = data.get('page', 1)
         per_page = data.get('per_page', 50)
         invoices = InvoiceModel.query.paginate(page=page, per_page=per_page)
@@ -108,20 +113,22 @@ class Invoices(MethodView):
     @blp.response(201, InvoiceSchema)
     def post(self, data):
         """Create a new invoice"""
-        supplier = SupplierModel.query.filter_by(supplier_name = data["supplier_name"]).first()
+        supplier = SupplierModel.query.filter_by(supplier_name=data["supplier_name"]).first()
         if supplier is None:
             abort(404, message="Supplier does not exist")
-        invoice = InvoiceModel.query.filter_by(invoice_number=data["invoice_number"], supplier_id=supplier.id, currency=data["currency"]).first()
+        invoice = InvoiceModel.query.filter_by(invoice_number=data["invoice_number"], supplier_id=supplier.id,
+                                               currency=data["currency"]).first()
         if invoice:
             abort(400, message="This invoice number for this supplier already exists!!")
         if data["destination_type"] == "expense":
-            account = AccountModel.query.filter_by(account_name=data["expense_account_name"], account_category="Expense Account").first()
+            account = AccountModel.query.filter_by(account_name=data["expense_account_name"],
+                                                   account_category="Expense Account").first()
             if not account:
                 abort(404, message="Expense account not found")
             account_id = account.id
             data.pop('supplier_name', None)
             data.pop('expense_account_name', None)
-            new_trx = InvoiceModel(supplier_id=supplier.id,expense_account_id=account_id,**data)
+            new_trx = InvoiceModel(supplier_id=supplier.id, expense_account_id=account_id, **data)
             new_trx.supplier = supplier
             new_trx.expense_account = account
             new_trx.save_to_db()
@@ -146,11 +153,12 @@ class Invoices(MethodView):
             new_trx.delete_from_db()
             abort(500, message="Did not add supplier balance")
 
+
 @blp.route("/invoice/<int:invoice_id>")
 class Invoice(MethodView):
 
     @jwt_required(fresh=True)
-    @blp.response(200,InvoiceSchema)
+    @blp.response(200, InvoiceSchema)
     def get(self, invoice_id):
         """Get an invoice by ID"""
         invoice = InvoiceModel.query.get_or_404(invoice_id)
@@ -158,7 +166,7 @@ class Invoice(MethodView):
 
     @jwt_required(fresh=True)
     @blp.arguments(InvoiceUpdateSchema)
-    @blp.response(201,InvoiceSchema)
+    @blp.response(201, InvoiceSchema)
     def patch(self, invoice, invoice_id):
         """Update an existing invoice"""
         existing_invoice = InvoiceModel.query.get_or_404(invoice_id)
@@ -169,7 +177,7 @@ class Invoice(MethodView):
         supplier = SupplierModel.query.filter_by(supplier_name=invoice["supplier_name"]).first()
         if supplier is None:
             abort(404, message="Supplier does not exist")
-        if invoice.get("destination_type")== "expense":
+        if invoice.get("destination_type") == "expense":
             account = AccountModel.query.filter_by(account_name=invoice.get("expense_account_name"),
                                                    account_category="Expense Account").first()
             if not account:
@@ -195,7 +203,8 @@ class Invoice(MethodView):
             existing_invoice.matched_to_lines = "matched"
             existing_invoice.update_db()
         try:
-            add_supplier_balance(supplier_id=existing_invoice.supplier_id, invoice_id=existing_invoice.id, invoice_amount=existing_invoice.amount,
+            add_supplier_balance(supplier_id=existing_invoice.supplier_id, invoice_id=existing_invoice.id,
+                                 invoice_amount=existing_invoice.amount,
                                  currency=existing_invoice.currency)
             return existing_invoice
         except SignalException as e:
@@ -212,14 +221,14 @@ class Invoice(MethodView):
         if invoice.accounted != "not_accounted":
             abort(400, message="Cannot delete an invoice that is accounted, instead void this invoice")
         invoice.delete_from_db()
-        return ({"message":"deleted"})
+        return ({"message": "deleted"})
 
 
 @blp.route("/invoice/account/<int:invoice_id>")
 class InvoiceAccounting(MethodView):
     @jwt_required(fresh=True)
-    @blp.response(201,InvoiceSchema)
-    def post(self,invoice_id):
+    @blp.response(201, InvoiceSchema)
+    def post(self, invoice_id):
         invoice = InvoiceModel.query.get_or_404(invoice_id)
         if invoice.accounted == "fully_accounted" and invoice.matched_to_lines == "matched":
             abort(400, message="Invoice is already accounted and matched")
@@ -232,8 +241,10 @@ class InvoiceAccounting(MethodView):
             try:
                 supplier_account = invoice.supplier.account_id
                 try:
-                    purchase_accounting_transaction(invoice_id=invoice.id, purchase_account_id=invoice.expense_account_id,
-                                               supplier_account_id=supplier_account, invoice_amount=invoice.amount,)
+                    purchase_accounting_transaction(invoice_id=invoice.id,
+                                                    purchase_account_id=invoice.expense_account_id,
+                                                    supplier_account_id=supplier_account,
+                                                    invoice_amount=invoice.amount, )
                     return invoice
                 except SignalException as e:
                     abort(500, message=f"Failed to add expense please try again: {str(e)}")
@@ -244,12 +255,13 @@ class InvoiceAccounting(MethodView):
         if invoice.purchase_type == "cash" and invoice.destination_type == "stores":
             """cash purchase"""
             try:
-                purchase_account = AccountModel.query.filter_by(account_type="cash", account_category="Purchase Account").first()
+                purchase_account = AccountModel.query.filter_by(account_type="cash",
+                                                                account_category="Purchase Account").first()
                 supplier_account = invoice.supplier.account_id
                 try:
                     purchase_accounting_transaction(invoice_id=invoice.id, purchase_account_id=purchase_account.id,
-                                                   supplier_account_id=supplier_account,
-                                                   invoice_amount=invoice.amount, )
+                                                    supplier_account_id=supplier_account,
+                                                    invoice_amount=invoice.amount, )
                     return invoice
                 except SignalException as e:
                     abort(500, message=f"Failed to add to store, please try again: {str(e)}")
@@ -260,12 +272,13 @@ class InvoiceAccounting(MethodView):
 
         if invoice.purchase_type == "credit" and invoice.destination_type == "stores":
             try:
-                purchase_account = AccountModel.query.filter_by(account_type="credit", account_category="Purchase Account").first()
+                purchase_account = AccountModel.query.filter_by(account_type="credit",
+                                                                account_category="Purchase Account").first()
                 supplier_account = invoice.supplier.account_id
                 try:
                     purchase_accounting_transaction(invoice_id=invoice.id, purchase_account_id=purchase_account.id,
-                                                   supplier_account_id=supplier_account,
-                                                   invoice_amount=invoice.amount, )
+                                                    supplier_account_id=supplier_account,
+                                                    invoice_amount=invoice.amount, )
                     return invoice
                 except:
                     abort(500, message="Failed to add to store, please try again")
@@ -273,14 +286,17 @@ class InvoiceAccounting(MethodView):
                 traceback.print_exc()
                 abort(500, message=f"Did not save to the db")
 
+
 @blp.route("/invoice/payment/<int:invoice_id>")
 class PaymentView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(InvoicePaymentSchema)
     @blp.response(201, InvoicePaymentSchema)
     def post(self, data, invoice_id):
-        bank_account = AccountModel.query.filter_by(account_name=data["bank_account"], account_category="Bank Account").first()
-        payment = SupplierPaymentModel.query.filter_by(invoice_id=invoice_id).order_by(SupplierPaymentModel.date.desc()).first()
+        bank_account = AccountModel.query.filter_by(account_name=data["bank_account"],
+                                                    account_category="Bank Account").first()
+        payment = SupplierPaymentModel.query.filter_by(invoice_id=invoice_id).order_by(
+            SupplierPaymentModel.date.desc()).first()
         if payment and payment.approval_status == "pending approval":
             abort(400, message="Please approve the recent payments so as to create this payment")
         if not bank_account:
@@ -300,11 +316,11 @@ class PaymentView(MethodView):
 
         data.pop("bank_account")
         payment = SupplierPaymentModel(
-        **data,
-        bank_account_id = bank_account.id,
-        invoice_id = invoice.id,
-        approval_status = 'pending approval',
-        payment_status = 'not paid'
+            **data,
+            bank_account_id=bank_account.id,
+            invoice_id=invoice.id,
+            approval_status='pending approval',
+            payment_status='not paid'
         )
         payment.invoice = invoice
         payment.account = bank_account
@@ -312,5 +328,3 @@ class PaymentView(MethodView):
         invoice.status = payment.payment_status
         invoice.update_db()
         return payment
-
-

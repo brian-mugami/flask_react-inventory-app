@@ -5,7 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/invapp/code_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/code_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/transactions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/transactions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/invoice_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/invoice_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/static/Invoices/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/static/invoices/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/static/Invoices/test1-Polmed3 Invoice.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/static/Invoices/test1-Sedibelo Invoice.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/static/Invoices/test4-Polmed3 Invoice.docx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,7 +97,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/backend/code_test.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\Public\Downloads\inventory_app_flask_backend\backend\invapp\code_test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
