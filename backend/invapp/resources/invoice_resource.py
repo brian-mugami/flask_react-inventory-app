@@ -21,16 +21,18 @@ blp = Blueprint("Invoice", __name__, description="Invoice creation", static_fold
 
 @blp.route("/invoice/download/<int:id>")
 class InvoiceDownloadView(MethodView):
+    @jwt_required(fresh=True)
     def get(self, id):
         invoice = InvoiceModel.query.get_or_404(id)
         invoice_path = invoice.file_path
         if invoice_path is None:
-            abort(400, message="This invoice has no attachment")
+            abort(404, message="This invoice has no attachment")
         return send_file(invoice_path, as_attachment=True)
 
 
 @blp.route('/invoice/upload/<int:id>')
 class InvoiceUploadView(MethodView):
+    @jwt_required(fresh=True)
     @blp.arguments(FileUploadSchema, location="files")
     def post(self, data, id):
         invoice = InvoiceModel.query.get_or_404(id)
