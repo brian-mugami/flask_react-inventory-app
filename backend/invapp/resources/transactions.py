@@ -93,10 +93,9 @@ class PurchaseGraphView(MethodView):
             db.session.query(
                 func.to_char(InvoiceModel.date, 'Day').label('weekday'),
                 func.sum(InvoiceModel.amount),
-                InvoiceModel.matched_to_lines == "matched"
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week))
-            .group_by('weekday', InvoiceModel.matched_to_lines)
+            .group_by('weekday')
             .all()
         )
 
@@ -121,9 +120,8 @@ class ExpenseDailyView(MethodView):
                 func.sum(InvoiceModel.amount)
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
-                    InvoiceModel.destination_type=="expense",
-                    InvoiceModel.matched_to_lines == "matched")
-            .group_by('weekday', InvoiceModel.matched_to_lines)
+                    InvoiceModel.destination_type=="expense",)
+            .group_by('weekday')
             .all()
         )
 
