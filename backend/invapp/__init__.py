@@ -1,7 +1,8 @@
 from .resources import (userblueprint, itemsblueprint, supplierblueprint,
-                        customerblueprint, confirmationblueprint , purchaseaccountsblueprint,
+                        customerblueprint, confirmationblueprint, purchaseaccountsblueprint,
                         paymentaccountsblueprint, salesaccountblueprint, expenseaccountingblueprint, invoiceblueprint,
-                        receiptblueprint,bankbalanceblueprint, inventorybalanceblueprint, customerbalanceblueprint, supplierbalanceblueprint, inventoryadjustmentblueprint, transactionblueprint, catchallblueprint)
+                        receiptblueprint, bankbalanceblueprint, inventorybalanceblueprint, customerbalanceblueprint,
+                        supplierbalanceblueprint, inventoryadjustmentblueprint, transactionblueprint, catchallblueprint, reportsblueprint)
 from .tranx_resources import purchasingblueprint, paymentblueprint, salesblueprint, customerpaymentblueprint
 from flask import Flask, jsonify, render_template
 from flask_smorest import Api
@@ -11,17 +12,25 @@ from .db import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 from .blocklist import TokenBlocklist
+
 migrate = Migrate()
 cors = CORS()
 
+
 def create_app():
-    #change application settings to config for prod
+    # change application settings to config for prod
     app = Flask(__name__, static_folder='static', template_folder='templates')
     load_dotenv(".env", verbose=True)
 
+<<<<<<< HEAD
     #app.config.from_object("invapp.config")
     #app.config.from_envvar("APPLICATION_SETTINGS")
     app.config.from_pyfile("config.py")
+=======
+    app.config.from_object("invapp.default_config")
+    app.config.from_envvar("APPLICATION_SETTINGS")
+    # app.config.from_pyfile("config.py")
+>>>>>>> origin/main
     db.init_app(app)
     api = Api(app)
     cors.init_app(app, resources={r"*": {"origins": "*"}})
@@ -44,30 +53,30 @@ def create_app():
     def revoked_token_callback(jwt_header, jwtpayload):
         return (
             jsonify(
-                {"description":"token was revoked", "error":"token revoked"}
+                {"description": "token was revoked", "error": "token revoked"}
             ), 401
         )
 
     @jwt.expired_token_loader
-    def expired_token_callback(jwt_header,jwt_payload):
+    def expired_token_callback(jwt_header, jwt_payload):
         return (
-            jsonify({"message":"Token has expired", "error":"Token_expired"}),
+            jsonify({"message": "Token has expired", "error": "Token_expired"}),
             401
         )
 
     @jwt.needs_fresh_token_loader
-    def needs_fresh_token_loader(jwt_header,jwt_payload):
+    def needs_fresh_token_loader(jwt_header, jwt_payload):
         return (
             jsonify(
                 {"description": "token is not fresh",
-                "error":"fresh_token_required"}
+                 "error": "fresh_token_required"}
             )
         )
 
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
         return (
-            jsonify({"message":"Signature verification failed", "error":"Invalid_token"}),
+            jsonify({"message": "Signature verification failed", "error": "Invalid_token"}),
             401
         )
 
@@ -76,14 +85,12 @@ def create_app():
         return (
             jsonify(
                 {
-                    "description":"Request does not contain an access token",
-                    "error":"authorization required"
+                    "description": "Request does not contain an access token",
+                    "error": "authorization required"
                 }
             ), 401
         )
-
-    @app.before_request
-    def create_tables():
+    with app.app_context():
         db.create_all()
 
     api.register_blueprint(userblueprint)
@@ -107,8 +114,6 @@ def create_app():
     api.register_blueprint(supplierbalanceblueprint)
     api.register_blueprint(inventoryadjustmentblueprint)
     api.register_blueprint(transactionblueprint)
+    api.register_blueprint(reportsblueprint)
 
     return app
-
-
-
