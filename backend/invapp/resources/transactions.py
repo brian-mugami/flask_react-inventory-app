@@ -12,7 +12,8 @@ from ..models.transactions.receipt_model import ReceiptModel
 
 blp = Blueprint("Transactions", __name__, description="Actions on dashboard accounts")
 
-#https://kindredinv.onrender.com/transaction/sales
+
+# https://kindredinv.onrender.com/transaction/sales
 @blp.route("/transaction/sales")
 class SalesTransaction(MethodView):
     @jwt_required(fresh=True)
@@ -33,8 +34,10 @@ class SalesTransaction(MethodView):
         total_sales_amount = query.total_sales_amount
         return jsonify({"Sales": total_transactions, "Amount": total_sales_amount}), 200
 
+
 @blp.route("/transaction/purchase")
 class PurchaseTransaction(MethodView):
+    @jwt_required(fresh=True)
     def get(self):
         current_date = datetime.datetime.now().date()
         query = db.session.query(
@@ -51,6 +54,7 @@ class PurchaseTransaction(MethodView):
         total_transactions = query.total_transactions
         total_purchase_amount = query.total_purchase_amount
         return jsonify({"Purchases": total_transactions, "Amount": total_purchase_amount}), 200
+
 
 @blp.route("/transaction/sales/per_day")
 class SalesGraphView(MethodView):
@@ -77,17 +81,20 @@ class SalesGraphView(MethodView):
 
         return sales_data
 
+
 @blp.route("/transaction/purchases/per_day")
 class PurchaseGraphView(MethodView):
+    @jwt_required(fresh=True)
     def get(self):
         today = datetime.datetime.now().date()
-        start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
-        end_of_week = start_of_week + datetime.timedelta(days=6)  # Get the end of the current week
+        start_of_week = today - datetime.timedelta(days=today.weekday())
+        end_of_week = start_of_week + datetime.timedelta(days=6)
 
         purchase_by_weekday = (
             db.session.query(
                 func.to_char(InvoiceModel.date, 'Day').label('weekday'),
-                func.sum(InvoiceModel.amount)
+                func.sum(InvoiceModel.amount),
+                InvoiceModel.matched_to_lines == "matched"
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week))
             .group_by('weekday')
@@ -100,3 +107,31 @@ class PurchaseGraphView(MethodView):
         }
 
         return purchase_data
+
+@blp.route("/transaction/expenses/per_day")
+class ExpenseDailyView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        today = datetime.datetime.now().date()
+        start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
+        end_of_week = start_of_week + datetime.timedelta(days=6)  # Get the end of the current week
+
+        purchase_by_weekday = (
+            db.session.query(
+                func.to_char(InvoiceModel.date, 'Day').label('weekday'),
+                func.sum(InvoiceModel.amount)
+            )
+            .filter(InvoiceModel.date.between(start_of_week, end_of_week),
+                    InvoiceModel.destination_type=="expense",
+                    InvoiceModel.matched_to_lines == "matched")
+            .group_by('weekday')
+            .all()
+        )
+
+        purchase_data = {
+            weekday: float(total_amount)
+            for weekday, total_amount in purchase_by_weekday
+        }
+
+        return purchase_data
+

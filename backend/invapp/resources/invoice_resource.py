@@ -106,7 +106,7 @@ class Invoices(MethodView):
         """Get all invoices"""
         # invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
         page = data.get('page', 1)
-        per_page = data.get('per_page', 50)
+        per_page = data.get('per_page', 20)
         invoices = InvoiceModel.query.paginate(page=page, per_page=per_page)
         return invoices
 

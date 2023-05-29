@@ -1,7 +1,5 @@
 import uuid
-
 from sqlalchemy.dialects.postgresql import UUID
-
 from invapp.db import db
 from datetime import datetime
 
