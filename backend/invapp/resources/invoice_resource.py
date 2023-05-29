@@ -17,8 +17,6 @@ from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, Invoice
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
 blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static\invoices')
-<<<<<<< HEAD
-=======
 
 
 @blp.route("/invoice/download/<int:id>")
@@ -30,7 +28,6 @@ class InvoiceDownloadView(MethodView):
         if invoice_path is None:
             abort(404, message="This invoice has no attachment")
         return send_file(invoice_path, as_attachment=True)
->>>>>>> origin/main
 
 
 @blp.route("/invoice/download/<int:id>")

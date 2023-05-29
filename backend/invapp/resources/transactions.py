@@ -37,10 +37,7 @@ class SalesTransaction(MethodView):
 
 @blp.route("/transaction/purchase")
 class PurchaseTransaction(MethodView):
-<<<<<<< HEAD
-=======
     @jwt_required(fresh=True)
->>>>>>> origin/main
     def get(self):
         current_date = datetime.datetime.now().date()
         query = db.session.query(
@@ -58,10 +55,6 @@ class PurchaseTransaction(MethodView):
         total_purchase_amount = query.total_purchase_amount
         return jsonify({"Purchases": total_transactions, "Amount": total_purchase_amount}), 200
 
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
 @blp.route("/transaction/sales/per_day")
 class SalesGraphView(MethodView):
     @jwt_required(fresh=True)
@@ -87,14 +80,6 @@ class SalesGraphView(MethodView):
 
         return sales_data
 
-<<<<<<< HEAD
-@blp.route("/transaction/purchases/per_day")
-class PurchaseGraphView(MethodView):
-    def get(self):
-        today = datetime.datetime.now().date()
-        start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
-        end_of_week = start_of_week + datetime.timedelta(days=6)  # Get the end of the current week
-=======
 
 @blp.route("/transaction/purchases/per_day")
 class PurchaseGraphView(MethodView):
@@ -103,17 +88,12 @@ class PurchaseGraphView(MethodView):
         today = datetime.datetime.now().date()
         start_of_week = today - datetime.timedelta(days=today.weekday())
         end_of_week = start_of_week + datetime.timedelta(days=6)
->>>>>>> origin/main
 
         purchase_by_weekday = (
             db.session.query(
                 func.to_char(InvoiceModel.date, 'Day').label('weekday'),
-<<<<<<< HEAD
-                func.sum(InvoiceModel.amount)
-=======
                 func.sum(InvoiceModel.amount),
                 InvoiceModel.matched_to_lines == "matched"
->>>>>>> origin/main
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week))
             .group_by('weekday')
@@ -126,8 +106,6 @@ class PurchaseGraphView(MethodView):
         }
 
         return purchase_data
-<<<<<<< HEAD
-=======
 
 @blp.route("/transaction/expenses/per_day")
 class ExpenseDailyView(MethodView):
@@ -156,4 +134,3 @@ class ExpenseDailyView(MethodView):
 
         return purchase_data
 
->>>>>>> origin/main
