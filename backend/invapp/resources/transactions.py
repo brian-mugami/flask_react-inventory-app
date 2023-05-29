@@ -96,7 +96,7 @@ class PurchaseGraphView(MethodView):
                 InvoiceModel.matched_to_lines == "matched"
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week))
-            .group_by('weekday')
+            .group_by('weekday', InvoiceModel.matched_to_lines)
             .all()
         )
 
@@ -123,7 +123,7 @@ class ExpenseDailyView(MethodView):
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
                     InvoiceModel.destination_type=="expense",
                     InvoiceModel.matched_to_lines == "matched")
-            .group_by('weekday')
+            .group_by('weekday', InvoiceModel.matched_to_lines)
             .all()
         )
 
