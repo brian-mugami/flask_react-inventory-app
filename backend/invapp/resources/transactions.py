@@ -65,7 +65,7 @@ class SalesGraphView(MethodView):
 
         sales_by_weekday = (
             db.session.query(
-                func.to_char(ReceiptModel.date, 'Day').label('weekday'),
+                func.trim(func.to_char(ReceiptModel.date, 'Day')).label('weekday'),
                 func.sum(ReceiptModel.amount)
             )
             .filter(ReceiptModel.date.between(start_of_week, end_of_week))
@@ -91,7 +91,7 @@ class PurchaseGraphView(MethodView):
 
         purchase_by_weekday = (
             db.session.query(
-                func.to_char(InvoiceModel.date, 'Day').label('weekday'),
+                func.trim(func.to_char(InvoiceModel.date, 'Day')).label('weekday'),
                 func.sum(InvoiceModel.amount),
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week))
@@ -116,7 +116,7 @@ class ExpenseDailyView(MethodView):
 
         purchase_by_weekday = (
             db.session.query(
-                func.to_char(InvoiceModel.date, 'Day').label('weekday'),
+                func.trim(func.to_char(InvoiceModel.date, 'Day')).label('weekday'),
                 func.sum(InvoiceModel.amount)
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
