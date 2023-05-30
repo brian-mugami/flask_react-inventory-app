@@ -8,7 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/invapp/resources/reports.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/reports.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/invapp/resources/transactions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/transactions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/stockholding report.xlsx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,8 +144,8 @@
         <item itemvalue="Python.app" />
         <item itemvalue="Python.code_test" />
         <item itemvalue="Python.app" />
-        <item itemvalue="Python.code_test (1)" />
-        <item itemvalue="Python.reports" />
+        <item itemvalue="Python.code_test" />
+        <item itemvalue="Python.app" />
       </list>
     </recent_temporary>
   </component>
