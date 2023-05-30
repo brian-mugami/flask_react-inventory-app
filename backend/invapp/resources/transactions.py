@@ -7,6 +7,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy import func
 
 from ..db import db
+from ..models.transactions.inventory_balances import InventoryBalancesModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.receipt_model import ReceiptModel
 
@@ -124,8 +125,7 @@ class ExpenseDailyView(MethodView):
                 func.sum(InvoiceModel.amount)
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
-                    InvoiceModel.destination_type=="expense",
-                    InvoiceModel.matched_to_lines == "matched")
+                    InvoiceModel.destination_type=="expense")
             .group_by('weekday')
             .all()
         )
@@ -136,4 +136,13 @@ class ExpenseDailyView(MethodView):
         }
 
         return purchase_data
+
+@blp.route("/transaction/inventory-count")
+class InventoryDailyView(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        total_value = db.session.query(
+            db.func.sum(InventoryBalancesModel.unit_cost * InventoryBalancesModel.quantity)).scalar()
+        return {"total_value": total_value}
+
 

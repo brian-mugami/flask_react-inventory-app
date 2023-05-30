@@ -20,7 +20,7 @@ blp = Blueprint("Reports", __name__, description="Report Handling")
 class StockHoldingReport(MethodView):
     blp.response(200, "Download success")
 
-    @jwt_required(fresh=True)
+    #@jwt_required(fresh=True)
     def get(self):
         today = datetime.datetime.now().strftime("%Y-%m-%d")
         wb = Workbook()
@@ -39,7 +39,8 @@ class StockHoldingReport(MethodView):
         lines = []
         for balance in inventory_summary_query:
             item = ItemModel.query.get(balance[0])
-            item_line = [balance[0], item.item_name, balance[1], balance[2], balance[1]]
+            cost = balance[1]*balance[2]
+            item_line = [balance[0], item.item_name, balance[1], balance[2], cost]
             ws.append(item_line)
             lines.append(item_line)
 
