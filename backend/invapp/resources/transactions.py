@@ -58,7 +58,7 @@ class PurchaseTransaction(MethodView):
 
 @blp.route("/transaction/sales/per_day")
 class SalesGraphView(MethodView):
-    @jwt_required(fresh=True)
+
     def get(self):
         today = datetime.datetime.now().date()
         start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
@@ -66,10 +66,12 @@ class SalesGraphView(MethodView):
 
         sales_by_weekday = (
             db.session.query(
-                func.to_char(ReceiptModel.date, 'Day').label('weekday'),
+                func.trim(func.to_char(ReceiptModel.date, 'Day')).label('weekday'),
                 func.sum(ReceiptModel.amount)
             )
-            .filter(ReceiptModel.date.between(start_of_week, end_of_week))
+            .filter(
+                ReceiptModel.date.between(start_of_week, end_of_week),
+            )
             .group_by('weekday')
             .all()
         )
@@ -84,7 +86,7 @@ class SalesGraphView(MethodView):
 
 @blp.route("/transaction/purchases/per_day")
 class PurchaseGraphView(MethodView):
-    @jwt_required(fresh=True)
+
     def get(self):
         today = datetime.datetime.now().date()
         start_of_week = today - datetime.timedelta(days=today.weekday())
@@ -92,9 +94,9 @@ class PurchaseGraphView(MethodView):
 
         purchase_by_weekday = (
             db.session.query(
-                func.to_char(InvoiceModel.date, 'Day').label('weekday'),
+                func.trim(func.to_char(InvoiceModel.date, 'Day')).label('weekday'),
                 func.sum(InvoiceModel.amount),
-                InvoiceModel.matched_to_lines == "matched"
+
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week))
             .group_by('weekday')
@@ -118,7 +120,7 @@ class ExpenseDailyView(MethodView):
 
         purchase_by_weekday = (
             db.session.query(
-                func.to_char(InvoiceModel.date, 'Day').label('weekday'),
+                func.trim(func.to_char(InvoiceModel.date, 'Day')).label('weekday'),
                 func.sum(InvoiceModel.amount)
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
