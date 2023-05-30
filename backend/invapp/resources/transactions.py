@@ -124,11 +124,7 @@ class ExpenseDailyView(MethodView):
                 func.sum(InvoiceModel.amount)
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
-<<<<<<< HEAD
-                    InvoiceModel.destination_type=="expense",)
-=======
                     InvoiceModel.destination_type=="expense")
->>>>>>> origin/main
             .group_by('weekday')
             .all()
         )
