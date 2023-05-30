@@ -42,7 +42,7 @@ class InvoiceUploadView(MethodView):
 
         if extension not in allowed_extensions:
             abort(400, message="Only pdf attachments are allowed")
-        file_path = os.path.join(current_app.static_folder, f'Invoices/{invoice.invoice_number}-{file.filename}')
+        file_path = os.path.join(current_app.static_folder, f'invoices/{invoice.invoice_number}-{file.filename}')
         file.save(file_path)
         invoice.file_path = file_path
         invoice.update_db()
