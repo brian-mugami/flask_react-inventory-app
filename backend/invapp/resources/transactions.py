@@ -58,7 +58,7 @@ class PurchaseTransaction(MethodView):
 
 @blp.route("/transaction/sales/per_day")
 class SalesGraphView(MethodView):
-
+    @jwt_required(fresh=True)
     def get(self):
         today = datetime.datetime.now().date()
         start_of_week = today - datetime.timedelta(days=today.weekday())  # Get the start of the current week
@@ -80,13 +80,15 @@ class SalesGraphView(MethodView):
             weekday: float(total_amount)
             for weekday, total_amount in sales_by_weekday
         }
+        total_sales_week = sum(float(total_amount) for _, total_amount in sales_by_weekday)
+        sales_data['total_sales_week'] = total_sales_week
 
         return sales_data
 
 
 @blp.route("/transaction/purchases/per_day")
 class PurchaseGraphView(MethodView):
-
+    @jwt_required(fresh=True)
     def get(self):
         today = datetime.datetime.now().date()
         start_of_week = today - datetime.timedelta(days=today.weekday())
@@ -107,6 +109,8 @@ class PurchaseGraphView(MethodView):
             for weekday, total_amount in purchase_by_weekday
         }
 
+        total_sales_week = sum(float(total_amount) for _, total_amount in purchase_by_weekday)
+        purchase_data['total_purchases_week'] = total_sales_week
         return purchase_data
 
 @blp.route("/transaction/expenses/per_day")
@@ -132,6 +136,8 @@ class ExpenseDailyView(MethodView):
             weekday: float(total_amount)
             for weekday, total_amount in purchase_by_weekday
         }
+        total_sales_week = sum(float(total_amount) for _, total_amount in purchase_by_weekday)
+        purchase_data['total_expenses_week'] = total_sales_week
 
         return purchase_data
 

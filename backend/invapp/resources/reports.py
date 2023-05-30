@@ -20,7 +20,7 @@ blp = Blueprint("Reports", __name__, description="Report Handling")
 class StockHoldingReport(MethodView):
     blp.response(200, "Download success")
 
-    #@jwt_required(fresh=True)
+    @jwt_required(fresh=True)
     def get(self):
         today = datetime.datetime.now().strftime("%Y-%m-%d")
         wb = Workbook()
