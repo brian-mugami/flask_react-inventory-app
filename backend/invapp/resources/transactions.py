@@ -67,7 +67,6 @@ class SalesGraphView(MethodView):
         sales_by_weekday = (
             db.session.query(
                 func.trim(func.to_char(ReceiptModel.date, 'Day')).label('weekday'),
-                func.trim(func.to_char(ReceiptModel.date, 'Day')).label('weekday'),
                 func.sum(ReceiptModel.amount)
             )
             .filter(
