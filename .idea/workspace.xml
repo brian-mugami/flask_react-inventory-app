@@ -4,86 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/suppliers.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/suppliers.py" afterDir="false" />
-    </list>
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
->>>>>>> origin/main
-=======
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/__init__.py" afterDir="false" />
-    </list>
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/invoice_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/invoice_schema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/receiptschema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/receiptschema.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
-    </list>
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/customer_balances_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/customer_balances_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/transactions/invoice_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/transactions/invoice_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" afterDir="false" />
-    </list>
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" afterDir="false" />
-    </list>
->>>>>>> origin/main
-=======
-    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/reports.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/reports.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/transactions.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/transactions.py" afterDir="false" />
-    </list>
->>>>>>> origin/main
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -100,7 +23,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="mugami" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -113,16 +36,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;mugami&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Public/Downloads/inventory_app_flask_backend&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "mugami",
+    "last_opened_file_path": "C:/Users/Public/Downloads/inventory_app_flask_backend",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Public\Downloads\inventory_app_flask_backend\backend\invapp" />
@@ -217,24 +140,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.app" />
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        <item itemvalue="Python.code_test (1)" />
         <item itemvalue="Python.code_test" />
         <item itemvalue="Python.app" />
-        <item itemvalue="Python.app" />
-=======
         <item itemvalue="Python.code_test" />
         <item itemvalue="Python.app" />
-<<<<<<< HEAD
-        <item itemvalue="Python.code_test (1)" />
-        <item itemvalue="Python.reports" />
->>>>>>> origin/main
-=======
-        <item itemvalue="Python.code_test" />
-        <item itemvalue="Python.app" />
->>>>>>> origin/main
       </list>
     </recent_temporary>
   </component>
