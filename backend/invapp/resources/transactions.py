@@ -15,6 +15,77 @@ blp = Blueprint("Transactions", __name__, description="Actions on dashboard acco
 
 
 # https://kindredinv.onrender.com/transaction/sales
+@blp.route("/transaction/purchase/month")
+class PurchaseTransactionsMonthly(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        # Get the current month and year
+        today = datetime.datetime.now()
+        current_month = today.month
+        current_year = today.year
+
+        # Calculate the first and last day of the current month
+        first_day = datetime.datetime(current_year, current_month, 1)
+        last_day = datetime.datetime(current_year, current_month + 1, 1) - datetime.timedelta(days=1)
+
+        # Generate a list of all dates within the current month
+        date_range = [first_day + datetime.timedelta(days=x) for x in range((last_day - first_day).days + 1)]
+
+        # Query the database to get the total amount per day for the current month
+        daily_totals = db.session.query(func.date(InvoiceModel.date).label('day'),
+                                        func.coalesce(func.sum(InvoiceModel.amount), 0).label('total_amount')).filter(
+            InvoiceModel.matched_to_lines == "matched",
+            func.extract('year', InvoiceModel.date) == current_year,
+            func.extract('month', InvoiceModel.date) == current_month
+        ).group_by(func.date(InvoiceModel.date)).order_by(func.date(InvoiceModel.date)).all()
+
+        # Create a dictionary for each day with the date, name of the day, and total amount
+        daily_totals_data = []
+        for date in date_range:
+            day_str = date.strftime('%Y-%m-%d')
+            day_name = date.strftime('%A')
+            total_amount = next((row.total_amount for row in daily_totals if row.day.strftime('%Y-%m-%d') == day_str),
+                                0)
+            daily_totals_data.append({'day': day_str, 'day_name': day_name, 'total_amount': total_amount})
+
+        return {'daily_totals': daily_totals_data}, 200
+
+
+@blp.route("/transaction/sales/month")
+class SalesTransactionsMonthly(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        # Get the current month and year
+        today = datetime.datetime.now()
+        current_month = today.month
+        current_year = today.year
+
+        # Calculate the first and last day of the current month
+        first_day = datetime.datetime(current_year, current_month, 1)
+        last_day = datetime.datetime(current_year, current_month + 1, 1) - datetime.timedelta(days=1)
+
+        # Generate a list of all dates within the current month
+        date_range = [first_day + datetime.timedelta(days=x) for x in range((last_day - first_day).days + 1)]
+
+        # Query the database to get the total amount per day for the current month
+        daily_totals = db.session.query(func.date(ReceiptModel.date).label('day'),
+                                        func.coalesce(func.sum(ReceiptModel.amount), 0).label('total_amount')).filter(
+            func.extract('year', ReceiptModel.date) == current_year,
+            func.extract('month', ReceiptModel.date) == current_month
+        ).group_by(func.date(ReceiptModel.date)).order_by(func.date(ReceiptModel.date)).all()
+
+        # Create a dictionary for each day with the date, name of the day, and total amount
+        daily_totals_data = []
+        for date in date_range:
+            day_str = date.strftime('%Y-%m-%d')
+            day_name = date.strftime('%A')
+            total_amount = next((row.total_amount for row in daily_totals if row.day.strftime('%Y-%m-%d') == day_str),
+                                0)
+            daily_totals_data.append({'day': day_str, 'day_name': day_name, 'total_amount': total_amount})
+
+        return {'daily_totals': daily_totals_data}, 200
+
+
 @blp.route("/transaction/sales")
 class SalesTransaction(MethodView):
     @jwt_required(fresh=True)
@@ -113,6 +184,7 @@ class PurchaseGraphView(MethodView):
         purchase_data['total_purchases_week'] = total_sales_week
         return purchase_data
 
+
 @blp.route("/transaction/expenses/per_day")
 class ExpenseDailyView(MethodView):
     @jwt_required(fresh=True)
@@ -127,7 +199,7 @@ class ExpenseDailyView(MethodView):
                 func.sum(InvoiceModel.amount)
             )
             .filter(InvoiceModel.date.between(start_of_week, end_of_week),
-                    InvoiceModel.destination_type=="expense")
+                    InvoiceModel.destination_type == "expense")
             .group_by('weekday')
             .all()
         )
@@ -141,6 +213,7 @@ class ExpenseDailyView(MethodView):
 
         return purchase_data
 
+
 @blp.route("/transaction/inventory-count")
 class InventoryDailyView(MethodView):
     @jwt_required(fresh=True)
@@ -148,5 +221,3 @@ class InventoryDailyView(MethodView):
         total_value = db.session.query(
             db.func.sum(InventoryBalancesModel.unit_cost * InventoryBalancesModel.quantity)).scalar()
         return {"total_value": total_value}
-
-
