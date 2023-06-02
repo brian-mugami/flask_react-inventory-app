@@ -5,6 +5,7 @@ from flask import jsonify, current_app, send_file
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import jwt_required
+from sqlalchemy import desc
 
 from ..models.masters import SupplierModel, AccountModel
 from ..models.transactions.invoice_model import InvoiceModel
@@ -107,7 +108,11 @@ class Invoices(MethodView):
         # invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
         page = data.get('page', 1)
         per_page = data.get('per_page', 20)
-        invoices = InvoiceModel.query.paginate(page=page, per_page=per_page)
+        invoices = (
+            InvoiceModel.query
+            .order_by(desc(InvoiceModel.date))
+            .paginate(page=page, per_page=per_page)
+        )
         return invoices
 
     @jwt_required(fresh=True)

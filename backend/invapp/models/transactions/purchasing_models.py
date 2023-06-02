@@ -1,6 +1,7 @@
 import datetime
 from invapp.db import db
 
+
 class PurchaseModel(db.Model):
     __tablename__ = "purchases"
 
@@ -13,7 +14,9 @@ class PurchaseModel(db.Model):
     update_date = db.Column(db.DateTime)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"))
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete="CASCADE"))
+    lot_id = db.Column(db.Integer, db.ForeignKey("lots.id", ondelete="SET NULL"), nullable=True)
 
+    lot = db.relationship("LotModel", back_populates="invoice_item")
     item = db.relationship("ItemModel", back_populates="purchase")
     invoice = db.relationship("InvoiceModel", back_populates="purchase_items")
 
@@ -22,7 +25,7 @@ class PurchaseModel(db.Model):
     )
 
     @classmethod
-    def find_by_id(cls,_id: int):
+    def find_by_id(cls, _id: int):
         return cls.query.filter_by(id=_id).first()
 
     @property
@@ -39,4 +42,3 @@ class PurchaseModel(db.Model):
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
-

@@ -29,16 +29,22 @@ bank_balance = signal("bank_balance")
 return_balance = signal("return_balance")
 inventory_accounting = signal("inventory_accounting")
 
+
 class SignalException(Exception):
     def __init__(self, message: str):
         super().__init__(message)
 
+
 @inventory_accounting.connect
-def inventory_accounting(balance_id:int, item_id:int, credit_id:int, debit_id:int, amount:float):
-    accounting = InventoryBalanceAccountingModel(inventory_balance_id=balance_id, item_id=item_id,debit_account_id=debit_id, credit_account_id=credit_id,debit_amount=amount,credit_amount=-amount)
+def inventory_accounting(balance_id: int, item_id: int, credit_id: int, debit_id: int, amount: float):
+    accounting = InventoryBalanceAccountingModel(inventory_balance_id=balance_id, item_id=item_id,
+                                                 debit_account_id=debit_id, credit_account_id=credit_id,
+                                                 debit_amount=amount, credit_amount=-amount)
     accounting.save_to_db()
+
+
 @return_balance.connect
-def returning_balance(item_id: int, item_quantity:int, receipt_id:int):
+def returning_balance(item_id: int, item_quantity: int, receipt_id: int):
     inventory = InventoryBalancesModel.query.filter_by(receipt_id=receipt_id, item_id=item_id).first()
     if not inventory:
         misc = InventoryBalancesModel.query.filter_by(item_id=item_id).first()
@@ -58,19 +64,24 @@ def returning_balance(item_id: int, item_quantity:int, receipt_id:int):
         except:
             raise SignalException("Failed to return to the store")
 
+
 @void_receipt.connect
-def void_receipt(receipt_id:int):
+def void_receipt(receipt_id: int):
     accounting_receipt = SalesAccountingModel.query.filter_by(receipt_id=receipt_id).first()
     if not accounting_receipt:
         raise SignalException("This receipt has no accounting")
     if accounting_receipt.receipt.voided:
         raise SignalException("This receipt is already voided")
-    voided = SalesAccountingModel(receipt_id=receipt_id, debit_account_id=accounting_receipt.credit_account_id, credit_account_id=accounting_receipt.debit_account_id,accounting_status="void", credit_amount=accounting_receipt.credit_amount, debit_amount=accounting_receipt.debit_amount)
+    voided = SalesAccountingModel(receipt_id=receipt_id, debit_account_id=accounting_receipt.credit_account_id,
+                                  credit_account_id=accounting_receipt.debit_account_id, accounting_status="void",
+                                  credit_amount=accounting_receipt.credit_amount,
+                                  debit_amount=accounting_receipt.debit_amount)
     try:
         voided.save_to_db()
     except:
         traceback.print_exc()
         raise SignalException("Failed to void!! Please try again")
+
 
 @reverse_accounting.connect
 def void_invoice(invoice_id: int):
@@ -79,7 +90,10 @@ def void_invoice(invoice_id: int):
         raise SignalException("This invoice has no accounting")
     if accounting_invoice.accounting_status == "void":
         raise SignalException("You have already voided this invoice!!")
-    voided = PurchaseAccountingModel(invoice_id=invoice_id, debit_account_id=accounting_invoice.credit_account_id, credit_account_id=accounting_invoice.debit_account_id, accounting_status="void", credit_amount=accounting_invoice.credit_amount, debit_amount=accounting_invoice.debit_amount)
+    voided = PurchaseAccountingModel(invoice_id=invoice_id, debit_account_id=accounting_invoice.credit_account_id,
+                                     credit_account_id=accounting_invoice.debit_account_id, accounting_status="void",
+                                     credit_amount=accounting_invoice.credit_amount,
+                                     debit_amount=accounting_invoice.debit_amount)
     try:
         voided.save_to_db()
     except:
@@ -88,48 +102,58 @@ def void_invoice(invoice_id: int):
 
 
 @bank_balance.connect
-def manipulate_bank_balance(bank_account_id: int, invoice_id: int = None, receipt_id: int = None, amount: float = 0.00, currency: str ="KES", date = None):
+def manipulate_bank_balance(bank_account_id: int, invoice_id: int = None, receipt_id: int = None, amount: float = 0.00,
+                            currency: str = "KES", date=None):
     bank = AccountModel.query.get(bank_account_id)
     if bank is None or bank_account_id is None:
         raise SignalException("You have not set a bank account")
-    existing_balance = BankBalanceModel.query.filter_by(invoice_id=invoice_id, receipt_id=receipt_id, bank_account_id=bank_account_id).first()
+    existing_balance = BankBalanceModel.query.filter_by(invoice_id=invoice_id, receipt_id=receipt_id,
+                                                        bank_account_id=bank_account_id).first()
     if existing_balance:
         existing_balance.invoice_amount = amount
         existing_balance.update_date = datetime.datetime.utcnow()
         existing_balance.currency = currency
         existing_balance.update_db()
-    balance = BankBalanceModel(invoice_id=invoice_id, receipt_id=receipt_id, bank_account_id=bank_account_id, currency=currency,amount=amount)
+    balance = BankBalanceModel(invoice_id=invoice_id, receipt_id=receipt_id, bank_account_id=bank_account_id,
+                               currency=currency, amount=amount)
     try:
         balance.save_to_db()
-    except :
+    except:
         raise SignalException("Failed to add to bank balance")
 
+
 @expense_addition.connect
-def expense_addition(item_id,invoice_id:int, quantity: int, unit_cost: int,date: str=None):
+def expense_addition(item_id, invoice_id: int, quantity: int, unit_cost: int, lot_id: int = None, date: str = None):
     item = ExpensesModel.query.filter_by(invoice_id=invoice_id, item_id=item_id).first()
     if item:
         item.unit_cost = unit_cost
         item.quantity = quantity
+        item.lot_id = lot_id
         item.update_date = datetime.datetime.utcnow()
         item.update_db()
         return item.id
-    onhand_item = ExpensesModel(item_id=item_id, invoice_id=invoice_id,unit_cost=unit_cost, quantity=quantity, date=date)
+    onhand_item = ExpensesModel(item_id=item_id, lot_id=lot_id, invoice_id=invoice_id, unit_cost=unit_cost,
+                                quantity=quantity, date=date)
     try:
         onhand_item.save_to_db()
         return onhand_item.id
     except:
         raise SignalException("Failed to add to expense")
 
+
 @send_data.connect
-def increase_stock_addition(item_id,invoice_id:int,quantity: int, unit_cost: int, date: str=None):
+def increase_stock_addition(item_id, invoice_id: int, quantity: int, unit_cost: int, lot_id: int = None,
+                            date: str = None):
     item = InventoryBalancesModel.query.filter_by(invoice_id=invoice_id, item_id=item_id).first()
     if item:
         item.unit_cost = unit_cost
         item.quantity = quantity
         item.update_date = datetime.datetime.utcnow()
+        item.lot_id = lot_id
         item.update_db()
         return item.id
-    onhand_item = InventoryBalancesModel(item_id=item_id, invoice_id=invoice_id,unit_cost=unit_cost, quantity=quantity, date=date)
+    onhand_item = InventoryBalancesModel(item_id=item_id, lot_id=lot_id, invoice_id=invoice_id, unit_cost=unit_cost,
+                                         quantity=quantity, date=date)
     try:
         onhand_item.save_to_db()
         return onhand_item.id
@@ -138,7 +162,8 @@ def increase_stock_addition(item_id,invoice_id:int,quantity: int, unit_cost: int
 
 
 @purchase_account.connect
-def purchase_accounting_transaction(purchase_account_id: int, invoice_id: int,supplier_account_id: int,invoice_amount: float):
+def purchase_accounting_transaction(purchase_account_id: int, invoice_id: int, supplier_account_id: int,
+                                    invoice_amount: float):
     if purchase_account_id is None or supplier_account_id is None:
         raise SignalException("You have to set up a purchase account or supplier account")
     existing_accounting = PurchaseAccountingModel.query.filter_by(invoice_id=invoice_id).first()
@@ -148,13 +173,16 @@ def purchase_accounting_transaction(purchase_account_id: int, invoice_id: int,su
         existing_accounting.debit_amount = invoice_amount
         existing_accounting.credit_amount = -invoice_amount
         existing_accounting.update_db()
-    purchase_account = PurchaseAccountingModel(credit_account_id=supplier_account_id,debit_account_id=purchase_account_id,
-                                          debit_amount=invoice_amount, credit_amount=-invoice_amount, invoice_id=invoice_id, accounting_status='account')
+    purchase_account = PurchaseAccountingModel(credit_account_id=supplier_account_id,
+                                               debit_account_id=purchase_account_id,
+                                               debit_amount=invoice_amount, credit_amount=-invoice_amount,
+                                               invoice_id=invoice_id, accounting_status='account')
     try:
         purchase_account.save_to_db()
         return jsonify({"added": "success"})
     except:
         raise SignalException("Failed to add to accounts")
+
 
 @pay_supplier.connect
 def make_payement(supplier_account_id: int, credit_account: int, amount: float, payment_id: int, balance_id: int):
@@ -163,11 +191,14 @@ def make_payement(supplier_account_id: int, credit_account: int, amount: float, 
     balance = SupplierBalanceModel.query.get(balance_id)
     if balance.balance < 0:
         raise SignalException("This balance is already fully sorted")
-    new_payment = SupplierPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= credit_account, debit_account_id=supplier_account_id, payment_id=payment_id, balance_id=balance_id)
+    new_payment = SupplierPayAccountingModel(credit_amount=-amount, debit_amount=amount,
+                                             credit_account_id=credit_account, debit_account_id=supplier_account_id,
+                                             payment_id=payment_id, balance_id=balance_id)
     try:
         new_payment.save_to_db()
     except:
         raise SignalException("Payment failed")
+
 
 @customer_payment.connect
 def receive_payment(customer_account_id: int, bank_account: int, amount: float, payment_id: int, balance_id: int):
@@ -176,7 +207,9 @@ def receive_payment(customer_account_id: int, bank_account: int, amount: float, 
     balance = CustomerBalanceModel.query.get(balance_id)
     if balance.balance < 0:
         raise SignalException("This balance is already fully sorted")
-    new_payment = CustomerPayAccountingModel(credit_amount = -amount, debit_amount= amount, credit_account_id= customer_account_id, debit_account_id=bank_account, payment_id=payment_id, balance_id=balance_id)
+    new_payment = CustomerPayAccountingModel(credit_amount=-amount, debit_amount=amount,
+                                             credit_account_id=customer_account_id, debit_account_id=bank_account,
+                                             payment_id=payment_id, balance_id=balance_id)
     try:
         new_payment.save_to_db()
     except:
@@ -184,10 +217,12 @@ def receive_payment(customer_account_id: int, bank_account: int, amount: float, 
 
 
 @supplier_balance.connect
-def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float , currency: str = "KES",payment_id: int = None, paid: float = 0.00):
+def add_supplier_balance(supplier_id: int, invoice_id: int, invoice_amount: float, currency: str = "KES",
+                         payment_id: int = None, paid: float = 0.00):
     balance = invoice_amount - paid
     invoice = InvoiceModel.query.get_or_404(invoice_id)
-    existing_balance = SupplierBalanceModel.query.filter_by(supplier_id=supplier_id, currency=currency, invoice_id=invoice_id).first()
+    existing_balance = SupplierBalanceModel.query.filter_by(supplier_id=supplier_id, currency=currency,
+                                                            invoice_id=invoice_id).first()
     if existing_balance:
         existing_balance.balance = invoice_amount
         existing_balance.paid += paid
@@ -197,7 +232,9 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
         existing_balance.update_db()
         return existing_balance.id
     else:
-        sup_balance = SupplierBalanceModel(supplier_id=supplier_id, invoice_id=invoice_id, invoice_amount=invoice_amount, paid=paid, balance=balance, currency=currency, date=datetime.datetime.utcnow(), payment_id=payment_id)
+        sup_balance = SupplierBalanceModel(supplier_id=supplier_id, invoice_id=invoice_id,
+                                           invoice_amount=invoice_amount, paid=paid, balance=balance, currency=currency,
+                                           date=datetime.datetime.utcnow(), payment_id=payment_id)
         try:
             sup_balance.save_to_db()
             sup_balance.invoice = invoice
@@ -207,8 +244,9 @@ def add_supplier_balance(supplier_id: int,invoice_id: int,invoice_amount: float 
             invoice.delete_from_db()
             raise SignalException("supplier balance update failed")
 
+
 @sales_account.connect
-def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer_account_id: int,amount:float):
+def sales_accounting_transaction(sales_account_id: int, receipt_id: int, customer_account_id: int, amount: float):
     if sales_account_id is None or customer_account_id is None:
         raise SignalException("Please create a sales account and a customer account")
     existing_sale_accounting = SalesAccountingModel.query.filter_by(receipt_id=receipt_id).first()
@@ -219,8 +257,8 @@ def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer
         existing_sale_accounting.credit_amount = -amount
         existing_sale_accounting.update_date = datetime.datetime.utcnow()
         existing_sale_accounting.update_db()
-    sales_account = SalesAccountingModel(credit_account_id=sales_account_id,debit_account_id=customer_account_id,
-                                          debit_amount=amount, credit_amount=-amount, receipt_id=receipt_id)
+    sales_account = SalesAccountingModel(credit_account_id=sales_account_id, debit_account_id=customer_account_id,
+                                         debit_amount=amount, credit_amount=-amount, receipt_id=receipt_id)
     try:
         sales_account.save_to_db()
         return jsonify({"added": "success"})
@@ -229,7 +267,8 @@ def sales_accounting_transaction(sales_account_id: int, receipt_id: int,customer
 
 
 @customer_balance.connect
-def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float , currency: str = "KES", paid: float = 0.00):
+def add_customer_balance(customer_id: int, receipt_id: int, receipt_amount: float, currency: str = "KES",
+                         paid: float = 0.00):
     balance = receipt_amount - paid
     receipt = ReceiptModel.query.get_or_404(receipt_id)
     existing_balance = CustomerBalanceModel.query.filter_by(customer_id=customer_id, currency=currency,
@@ -252,6 +291,3 @@ def add_customer_balance(customer_id: int,receipt_id: int,receipt_amount: float 
         except:
             receipt.delete_from_db()
             raise SignalException("customer balance update failed")
-
-
-
