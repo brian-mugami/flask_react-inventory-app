@@ -5,11 +5,23 @@
   </component>
   <component name="ChangeListManager">
 <<<<<<< HEAD
+<<<<<<< HEAD
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
 =======
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="" />
+>>>>>>> origin/main
+=======
+    <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/invapp/resources/sorting_uploads.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/data.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/code_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/code_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/tranx_resources/purchasing.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/tranx_resources/purchasing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/backend/requirements.txt" afterDir="false" />
+    </list>
 >>>>>>> origin/main
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -144,10 +156,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.app" />
+        <item itemvalue="Python.code_test (1)" />
         <item itemvalue="Python.code_test" />
         <item itemvalue="Python.app" />
         <item itemvalue="Python.code_test" />
-        <item itemvalue="Python.app" />
       </list>
     </recent_temporary>
   </component>

@@ -14,7 +14,9 @@ class InventoryBalancesModel(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     invoice_id = db.Column(db.Integer, db.ForeignKey("invoices.id", ondelete='SET NULL'), nullable=True)
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id", ondelete='SET NULL'), nullable=True)
+    lot_id = db.Column(db.Integer, db.ForeignKey("lots.id", ondelete="SET NULL"), nullable=True)
 
+    lot = db.relationship("LotModel", back_populates="inventory_item")
     item = db.relationship("ItemModel", back_populates="inventory_item")
     invoice = db.relationship("InvoiceModel", back_populates="inventory_item")
     receipt = db.relationship("ReceiptModel", back_populates="inventory_item")

@@ -16,6 +16,7 @@ class PlainInventoryBalanceSchema(Schema):
     date = fields.Date(dump_only=True, required=True)
     item_id = fields.Int(required=True, dump_only=True)
     item_name = fields.String(required=True)
+    lot = fields.String()
     account_name = fields.String(required=True)
     receipt_id = fields.Int()
     invoice_id = fields.Int()
