@@ -3,11 +3,8 @@ import traceback
 
 from flask.views import MethodView
 from sqlalchemy import func
-<<<<<<< HEAD
-=======
 from sqlalchemy.exc import IntegrityError
 
->>>>>>> origin/main
 from ..db import db
 from ..models.masters import ItemModel
 from ..models.masters.itemmodels import LotModel
