@@ -1,7 +1,11 @@
+import datetime
+import traceback
+
 from flask.views import MethodView
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
-from .. import db
+from ..db import db
 from ..models.masters import ItemModel
 from ..models.masters.itemmodels import LotModel
 from ..schemas.invoice_schema import InvoiceSchema
@@ -123,30 +127,59 @@ class PurchaseManipulateView(MethodView):
             if not item:
                 abort(404, message="Item does not exist")
             if transaction.item_id == item.id and transaction.invoice_id == invoice.id:
+                transaction.item_name = line.get("item_name")  # Update item_name
                 transaction.item_quantity = line.get("quantity")
                 transaction.lot_id = lot_id
+                transaction.update_date = datetime.datetime.utcnow()
                 transaction.buying_price = line.get("buying_price")
                 transaction.invoice_amount = invoice.amount
                 cost = transaction.buying_price * transaction.item_quantity
                 transaction.item_cost = cost
                 transaction.update_db()
+            if not transaction:
+                try:
+                    cost = line.get("buying_price") * line.get("quantity")
+                    new_line = PurchaseModel(
+                        lot_id=lot_id,
+                        item_quantity=line.get("quantity"),
+                        buying_price=line.get("buying_price"),
+                        item_id=item.id,
+                        invoice_id=invoice.id,
+                        invoice_amount=invoice.amount,
+                        update_date=datetime.datetime.utcnow(),
+                        item_cost=cost,
+                    )
+                    new_line.save_to_db()
+                except IntegrityError as e:
+                    traceback.print_exc()
+                    abort(400, message="Item duplicated in the invoice")
+            if invoice.destination_type == "stores":
+                increase_stock_addition(
+                    item_id=transaction.item_id,
+                    invoice_id=invoice.id,
+                    date=invoice.date,
+                    quantity=transaction.item_quantity,
+                    unit_cost=transaction.buying_price,
+                    lot_id=lot_id,
+                )
 
-        result = db.session.query(func.sum(PurchaseModel.item_cost)).filter_by(invoice_id=invoice.id).scalar()
+            if invoice.destination_type == "expense":
+                expense_addition(
+                    item_id=transaction.item_id,
+                    invoice_id=invoice.id,
+                    date=invoice.date,
+                    quantity=transaction.item_quantity,
+                    unit_cost=transaction.buying_price,
+                    lot_id=lot_id,
+                )
+        result = db.session.query(func.sum(PurchaseModel.item_cost)).filter_by(
+            invoice_id=invoice.id
+        ).scalar()
         if invoice.amount != result:
             invoice.matched_to_lines = "unmatched"
             invoice.update_db()
         else:
             invoice.matched_to_lines = "matched"
             invoice.update_db()
-
-        if invoice.destination_type == "stores":
-            increase_stock_addition(item_id=transaction.item_id, invoice_id=invoice.id,
-                                    date=invoice.date, quantity=transaction.item_quantity,
-                                    unit_cost=transaction.buying_price, lot_id=lot_id)
-
-        if invoice.destination_type == "expense":
-            expense_addition(item_id=transaction.item_id, invoice_id=invoice.id, date=invoice.date,
-                             quantity=transaction.item_quantity, unit_cost=transaction.buying_price, lot_id=lot_id)
-
         invoice = InvoiceModel.query.get(data["invoice_id"])
         return invoice

@@ -38,7 +38,7 @@ class InvoiceUploadView(MethodView):
     def post(self, data, id):
         invoice = InvoiceModel.query.get_or_404(id)
         file = data.get("file")
-        allowed_extensions = {"pdf"}
+        allowed_extensions = ["pdf"]
         extension = file.filename.rsplit('.', 1)[-1].lower()
 
         if extension not in allowed_extensions:
