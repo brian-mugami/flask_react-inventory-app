@@ -17,3 +17,4 @@ from .inv_adjustment_account import blp as inventoryadjustmentblueprint
 from .transactions import blp as transactionblueprint
 from .catch_all_blp import blp as catchallblueprint
 from .reports import blp as reportsblueprint
+from .sorting_uploads import blp as uploadsblueprint

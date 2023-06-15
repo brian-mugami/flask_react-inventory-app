@@ -1,12 +1,13 @@
-from openpyxl.utils import get_column_letter
-from openpyxl.workbook import Workbook
-from openpyxl import load_workbook
-from openpyxl.styles import Font
+import pandas as pd
+import openpyxl
+
+from backend.invapp.models.masters.accountsmodel import AccountModel
 
 def upload_data():
-    data = pd.read_excel("stock_holding_report_06_02_2023.xlsx")
-    print(len(data)-1)
+    data = pd.read_excel("hardware_items.xlsx", sheet_name="CATEGORY_ACCOUNT")
     for index, row in data.iterrows():
-        print(index)
+        account = AccountModel(account_name=row["ACCOUNT_NAME"], account_number=row["ACCOUNT_NUMBER"], account_description=row["ACCOUNT_DESCRIPTION"])
+        account.save_to_db()
+    print(f"{len(data)} added successfully")
 
 upload_data()

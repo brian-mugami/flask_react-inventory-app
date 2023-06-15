@@ -1,6 +1,8 @@
 import datetime
 import io
 import traceback
+
+from sqlalchemy import desc
 from xhtml2pdf import pisa
 from flask import jsonify, make_response,render_template
 from flask.views import MethodView
@@ -185,8 +187,10 @@ class ReceiptView(MethodView):
     @blp.response(200, ReceiptSchema(many=True))
     def get(self, data):
         page = data.get('page', 1)
-        per_page = data.get('per_page', 50)
-        receipts = ReceiptModel.query.paginate(page=page, per_page=per_page)
+        per_page = data.get('per_page', 20)
+        receipts = (ReceiptModel.query
+            .order_by(desc(ReceiptModel.date))
+            .paginate(page=page, per_page=per_page))
         return receipts
 
     @jwt_required(fresh=True)

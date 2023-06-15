@@ -1,14 +1,17 @@
 from flask import jsonify
+from sqlalchemy import desc
+
 from ..db import db
 from ..models.masters import AccountModel
 from ..models.masters.itemmodels import CategoryModel, ItemModel, LotModel
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema,  PlainCategorySchema
-from ..schemas.accountsschema import AccountSchema,AccountUpdateSchema
+from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema, PlainCategorySchema, ItemPaginationSchema
+from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
 
 blp = Blueprint("Items", __name__, description="Actions on items")
+
 
 @blp.route("/category/account")
 class Categoryaccount(MethodView):
@@ -23,17 +26,19 @@ class Categoryaccount(MethodView):
         if account:
             abort(409, message="Account already exists")
 
-        account = AccountModel(account_name= data["account_name"],account_number=data["account_number"],
-                                   account_description= data["account_description"], account_category="Item Account")
+        account = AccountModel(account_name=data["account_name"], account_number=data["account_number"],
+                               account_description=data["account_description"], account_category="Item Account")
 
         db.session.add(account)
         db.session.commit()
         return account
+
     @jwt_required(fresh=False)
     @blp.response(200, AccountSchema(many=True))
     def get(self):
         accounts = AccountModel.query.filter_by(account_category="Item Account").all()
         return accounts
+
 
 @blp.route("/category/account/<int:id>")
 class CategoryaccountView(MethodView):
@@ -70,6 +75,7 @@ class CategoryaccountView(MethodView):
 
         return account
 
+
 @blp.route("/item/lot")
 class Itemlot(MethodView):
     @jwt_required(fresh=True)
@@ -80,7 +86,7 @@ class Itemlot(MethodView):
         if lot:
             abort(409, message="Lot already exists")
 
-        lot = LotModel(lot= data["lot"],batch=data["batch"], expiry_date=data["expiry_date"])
+        lot = LotModel(lot=data["lot"], batch=data["batch"], expiry_date=data["expiry_date"])
 
         db.session.add(lot)
         db.session.commit()
@@ -92,6 +98,7 @@ class Itemlot(MethodView):
     def get(self):
         lots = LotModel.query.all()
         return lots
+
 
 @blp.route("/item/lot/<int:id>")
 class ItemLotView(MethodView):
@@ -106,7 +113,7 @@ class ItemLotView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(LotSchema)
     @blp.response(202, LotSchema)
-    def patch(self,data, id):
+    def patch(self, data, id):
         lot = LotModel.query.get_or_404(id)
         lot.lot = data["lot"]
         lot.batch = data["batch"]
@@ -121,6 +128,7 @@ class ItemLotView(MethodView):
     def get(self, id):
         lot = LotModel.query.get_or_404(id)
         return lot
+
 
 @blp.route("/item/category")
 class ItemCategory(MethodView):
@@ -139,7 +147,7 @@ class ItemCategory(MethodView):
             abort(404, message="Category Account does not exist")
 
         account_id = account.id
-        category = CategoryModel(name= data["name"],account_id=account_id)
+        category = CategoryModel(name=data["name"], account_id=account_id)
 
         db.session.add(category)
         db.session.commit()
@@ -151,6 +159,7 @@ class ItemCategory(MethodView):
     def get(self):
         categories = CategoryModel.query.all()
         return categories
+
 
 @blp.route("/item/category/<int:id>")
 class CategoryView(MethodView):
@@ -173,7 +182,6 @@ class CategoryView(MethodView):
     @blp.arguments(CategorySchema)
     @blp.response(202, PlainCategorySchema)
     def patch(self, data, id):
-
         category = CategoryModel.query.get_or_404(id)
         category.name = data["name"]
         account = AccountModel.query.filter_by(
@@ -188,6 +196,7 @@ class CategoryView(MethodView):
 
         db.session.commit()
 
+
 @blp.route("/item")
 class Item(MethodView):
     @jwt_required(fresh=True)
@@ -201,19 +210,25 @@ class Item(MethodView):
         if category is None:
             abort(404, message="Category does not exist")
         category_id = category.id
-        item = ItemModel(item_name= data["item_name"],price=data["price"], category_id=category_id, unit_type=data["unit_type"], item_unit=data["item_unit"], is_active=data["is_active"])
+        item = ItemModel(item_name=data["item_name"], price=data["price"], category_id=category_id,
+                         unit_type=data["unit_type"], item_unit=data["item_unit"], is_active=data["is_active"])
         db.session.add(item)
         db.session.commit()
-
 
         return item
 
     @jwt_required(fresh=False)
+    @blp.arguments(ItemPaginationSchema)
     @blp.response(200, ItemSchema(many=True))
-    def get(self):
-        items = ItemModel.query.all()
-
+    def get(self, data):
+        page = data.get('page', 1)
+        per_page = data.get('per_page', 50)
+        items = (ItemModel.query
+            .order_by(ItemModel.item_name)
+            .paginate(page=page, per_page=per_page))
+        #items = ItemModel.query.all()
         return items
+
 
 @blp.route("/item/<int:id>")
 class ItemView(MethodView):
