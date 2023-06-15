@@ -1,6 +1,10 @@
 from marshmallow import Schema, fields
 from datetime import datetime, timedelta
 
+class ItemPaginationSchema(Schema):
+    page = fields.Int(default=1)
+    per_page = fields.Int(default=50)
+
 class BaseItemSchema(Schema):
     id = fields.Integer(required=True, dump_only=True)
     item_name = fields.String(required=True)

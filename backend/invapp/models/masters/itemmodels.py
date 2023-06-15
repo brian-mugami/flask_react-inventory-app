@@ -56,6 +56,17 @@ class ItemModel(db.Model):
         self.date_unarchived = datetime.utcnow()
         db.session.commit(self)
 
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def update_db(self):
+        db.session.commit()
+
 
 class LotModel(db.Model):
     __tablename__ = "lots"
@@ -87,6 +98,17 @@ class LotModel(db.Model):
         self.date_unarchived = datetime.utcnow()
         db.session.commit(self)
 
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def update_db(self):
+        db.session.commit()
+
 
 class CategoryModel(db.Model):
     __tablename__ = "categories"
@@ -116,3 +138,14 @@ class CategoryModel(db.Model):
         self.date_archived = None
         self.date_unarchived = datetime.utcnow()
         db.session.commit(self)
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def update_db(self):
+        db.session.commit()

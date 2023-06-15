@@ -105,7 +105,6 @@ class Invoices(MethodView):
     @blp.response(200, InvoiceSchema(many=True))
     def get(self, data):
         """Get all invoices"""
-        # invoices = InvoiceModel.query.order_by(InvoiceModel.date.desc()).all()
         page = data.get('page', 1)
         per_page = data.get('per_page', 20)
         invoices = (
