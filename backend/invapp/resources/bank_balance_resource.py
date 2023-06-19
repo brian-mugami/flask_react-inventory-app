@@ -8,11 +8,12 @@ from flask_smorest import Blueprint, abort
 
 from ..models.masters import AccountModel
 from ..models.transactions.bank_balances_model import BankBalanceModel
-from ..schemas.bank_balance_schema import PlainBankBalanceSchema,BankBalanceSchema
+from ..schemas.bank_balance_schema import PlainBankBalanceSchema, BankBalanceSchema, BankBalanceSearchSchema
 from flask_jwt_extended import jwt_required
 
 blp = Blueprint("bank_balances", __name__, description="Bank balance actions")
 
+ 
 @blp.route("/bank/balance")
 class BankBalanceView(MethodView):
     @jwt_required(fresh=True)
@@ -32,23 +33,23 @@ class BankBalanceView(MethodView):
             currency = row.currency
             total_amount = row.Total_Bank_Balance
             number += 1
-            item = {"number": number, "account_name": account_name, "currency": currency, "total_amount":total_amount}
+            item = {"number": number, "account_name": account_name, "currency": currency, "total_amount": total_amount}
             all_bank_balances.append(item)
 
-
         return {"balances": all_bank_balances}
-
 
     @jwt_required(fresh=True)
     @blp.arguments(PlainBankBalanceSchema)
     @blp.response(201, BankBalanceSchema)
     def post(self, data):
-        balance = BankBalanceModel.query.filter_by(invoice_id=data["invoice_id"], receipt_id=data["receipt_id"], bank_account_id=data["bank_account_id"]).first()
+        balance = BankBalanceModel.query.filter_by(invoice_id=data["invoice_id"], receipt_id=data["receipt_id"],
+                                                   bank_account_id=data["bank_account_id"]).first()
         if balance:
             abort(400, message="This already exists")
         new_balance = BankBalanceModel(**data)
         new_balance.save_to_db()
         return new_balance
+
 
 @blp.route("/bank/balance/<int:id>")
 class BankMethodView(MethodView):
@@ -67,7 +68,7 @@ class BankMethodView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(PlainBankBalanceSchema)
     @blp.response(201, BankBalanceSchema)
-    def patch(self,data, id):
+    def patch(self, data, id):
         balance = BankBalanceModel.query.get_or_404(id)
         balance.amount = data["amount"]
         balance.update_date = datetime.datetime.utcnow()
@@ -78,7 +79,3 @@ class BankMethodView(MethodView):
         balance.update_db()
 
         return balance
-
-
-
-

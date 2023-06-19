@@ -15,15 +15,10 @@
 =======
     <list default="true" id="ebd37bca-1ee7-41af-a310-3af16b2bb1f3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/code_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/code_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/accountsmodel.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/accountsmodel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/models/masters/itemmodels.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/models/masters/itemmodels.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/invoice_resource.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/bank_balance_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/bank_balance_resource.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/inventory_balance_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/inventory_balance_resource.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/invapp/resources/items.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/items.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/receipt_resource.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/invapp/resources/sorting_uploads.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/resources/sorting_uploads.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/bank_balance_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/bank_balance_schema.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/invapp/schemas/itemschema.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/invapp/schemas/itemschema.py" afterDir="false" />
     </list>
 >>>>>>> origin/main
@@ -61,8 +56,13 @@
     "DefaultHtmlFileTemplate": "HTML File",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+<<<<<<< HEAD
     "git-widget-placeholder": "mugami",
     "last_opened_file_path": "C:/Users/Public/Downloads/inventory_app_flask_backend",
+=======
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/CHC18/Desktop/projects/extraction_script",
+>>>>>>> origin/main
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>

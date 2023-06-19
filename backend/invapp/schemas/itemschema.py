@@ -73,3 +73,6 @@ class CategoryAccountUpdateSchema(Schema):
     account_name = fields.String(required=True)
     account_description = fields.String()
     account_number = fields.Integer(required=True)
+
+class ItemSearchSchema(Schema):
+    item_name = fields.String(required=True)

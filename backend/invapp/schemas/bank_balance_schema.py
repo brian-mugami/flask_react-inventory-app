@@ -4,6 +4,9 @@ from .accountsschema import AccountSchema
 from .invoice_schema import InvoiceSchema
 from .receiptschema import ReceiptSchema
 
+class BankBalanceSearchSchema(Schema):
+    name = fields.String(required=True)
+
 class PlainBankBalanceSchema(Schema):
     id = fields.Integer(dump_only=True, required=True)
     date = fields.Date(dump_only=True)
