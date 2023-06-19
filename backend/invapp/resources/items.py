@@ -7,7 +7,7 @@ from ..models.masters.itemmodels import CategoryModel, ItemModel, LotModel
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema, PlainCategorySchema, ItemPaginationSchema
+from ..schemas.itemschema import LotSchema, CategorySchema, ItemSchema, PlainCategorySchema, ItemPaginationSchema, ItemSearchSchema
 from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
 
 blp = Blueprint("Items", __name__, description="Actions on items")
@@ -266,3 +266,18 @@ class ItemView(MethodView):
             item.category_id = category_id
 
             db.session.commit()
+
+@blp.route("/item/search/")
+class ItemSearch(MethodView):
+    @blp.arguments(ItemSearchSchema, location="query")
+    def get(self, data):
+        name = data["item_name"]
+        items = ItemModel.query.filter(ItemModel.item_name.ilike(name)).all()
+        available_items = []
+        if len(items) == 0:
+            abort(404, message="No such item")
+        for item in items:
+            item_created = {"item_name": item.item_name, "price": item.price}
+            available_items.append(item_created)
+
+        return {"items": available_items}

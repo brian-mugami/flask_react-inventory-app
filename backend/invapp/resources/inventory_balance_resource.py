@@ -12,6 +12,7 @@ from ..signals import inventory_accounting
 
 blp = Blueprint("Inventory Balances", __name__, description="Inventory Balances Actions")
 
+
 @blp.route("/balance/search/")
 class Invoices(MethodView):
 
@@ -42,6 +43,7 @@ class Invoices(MethodView):
 
         return {"balances": balances}
 
+
 @blp.route("/inventory-balances")
 class InventoryBalanceView(MethodView):
     @jwt_required(fresh=True)
@@ -49,7 +51,8 @@ class InventoryBalanceView(MethodView):
     @blp.response(201, InventoryBalanceSchema)
     def post(self, data):
         inv_item = ItemModel.query.filter_by(item_name=data.get("item_name")).first()
-        account = AccountModel.query.filter_by(account_name=data.get("account_name"), account_category="Inventory Adjustment Account").first()
+        account = AccountModel.query.filter_by(account_name=data.get("account_name"),
+                                               account_category="Inventory Adjustment Account").first()
         item = ItemModel.query.get(inv_item.id)
         if not item:
             abort(404, message="Item does not exist")
@@ -61,7 +64,8 @@ class InventoryBalanceView(MethodView):
         balance = InventoryBalancesModel(**data, item_id=inv_item.id)
         balance.save_to_db()
         try:
-            inventory_accounting(balance_id=balance.id, item_id=balance.item_id,debit_id=item.category.account_id, credit_id=account.id,amount=amount)
+            inventory_accounting(balance_id=balance.id, item_id=balance.item_id, debit_id=item.category.account_id,
+                                 credit_id=account.id, amount=amount)
         except:
             balance.delete_from_db()
             abort(500, message="Did not create accounting")
@@ -83,10 +87,11 @@ class InventoryBalanceView(MethodView):
             total_quantity = row.total_quantity
             total_value = row.total_value
             number += 1
-            item = {"number":number ,"item_name": item_name,"quantity": total_quantity, "value":total_value}
+            item = {"number": number, "item_name": item_name, "quantity": total_quantity, "value": total_value}
             items.append(item)
         g.items = items
         return ({"balances": items})
+
 
 @blp.route("/inventory-issue")
 class InventoryBalanceView(MethodView):
@@ -120,7 +125,8 @@ class InventoryBalanceView(MethodView):
                         amount = data["quantity"] * item.unit_cost
                         try:
                             inventory_accounting(balance_id=item.id, item_id=inv_item.id,
-                                                 debit_id=account.id, credit_id=inv_item.category.account_id, amount=amount)
+                                                 debit_id=account.id, credit_id=inv_item.category.account_id,
+                                                 amount=amount)
                         except:
                             item.delete_from_db()
                             abort(500, message="Did not create accounting")
@@ -132,7 +138,8 @@ class InventoryBalanceView(MethodView):
                         amount = data["quantity"] * item.unit_cost
                         try:
                             inventory_accounting(balance_id=item.id, item_id=inv_item.id,
-                                                 debit_id=account.id, credit_id=inv_item.category.account_id, amount=amount)
+                                                 debit_id=account.id, credit_id=inv_item.category.account_id,
+                                                 amount=amount)
                         except:
                             item.delete_from_db()
                             abort(500, message="Did not create accounting")
@@ -140,5 +147,3 @@ class InventoryBalanceView(MethodView):
                     break
 
         return ({"balances": "reduced"})
-
-
