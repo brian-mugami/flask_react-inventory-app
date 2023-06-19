@@ -221,12 +221,12 @@ class Item(MethodView):
     @blp.arguments(ItemPaginationSchema)
     @blp.response(200, ItemSchema(many=True))
     def get(self, data):
-        page = data.get('page', 1)
-        per_page = data.get('per_page', 50)
-        items = (ItemModel.query
-            .order_by(ItemModel.item_name)
-            .paginate(page=page, per_page=per_page))
-        #items = ItemModel.query.all()
+        #page = data.get('page', 1)
+        #per_page = data.get('per_page', 50)
+        #items = (ItemModel.query
+         #   .order_by(ItemModel.item_name)
+          #  .paginate(page=page, per_page=per_page))
+        items = ItemModel.query.all()
         return items
 
 
