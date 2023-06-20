@@ -6,8 +6,6 @@ from ..schemas.accountsschema import AccountSchema, AccountUpdateSchema
 from flask_jwt_extended import jwt_required
 
 blp = Blueprint("Expense Accounts", __name__, description="Actions on expense accounts")
-
-
 @blp.route("/expense/account")
 class PaymentAccount(MethodView):
     @jwt_required(fresh=True)

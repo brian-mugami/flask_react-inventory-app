@@ -15,7 +15,6 @@ blp = Blueprint("Inventory Balances", __name__, description="Inventory Balances 
 
 @blp.route("/balance/search/")
 class Invoices(MethodView):
-
     @jwt_required(fresh=True)
     @blp.arguments(BalanceSearchSchema, location="query")
     def get(self, data):

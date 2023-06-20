@@ -14,6 +14,7 @@ import pandas as pd
 
 from ..models import CategoryModel, ItemModel
 from ..models import AccountModel
+from ..models.transactions.inventory_balances import InventoryBalancesModel
 from ..schemas.fileUploadsSchema import FileUploadSchema
 
 blp = Blueprint("Uploading", __name__, description="Uploads")
@@ -108,3 +109,47 @@ class ItemUpload(MethodView):
             return jsonify ({"Saved":" successfully"}), 200
         except Exception as e:
             return f"Error occurred: {str(e)}"
+
+@blp.route("/inventory/upload")
+class UploadInventoryBalances(MethodView):
+    @jwt_required(fresh=True)
+    @blp.arguments(FileUploadSchema, location="files")
+    def post(self, data):
+        file = data.get("file")
+        allowed_extensions = ["xlsx"]
+        extension = file.filename.rsplit('.', 1)[-1].lower()
+        if extension not in allowed_extensions:
+            abort(400, message="Only excel files are allowed")
+
+        excel_data = pd.read_excel(file, sheet_name="ItemUploadForm")
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        save_items_coroutine = partial(self.save_items, excel_data)
+        result = loop.run_until_complete(save_items_coroutine())
+
+        loop.close()
+
+        return {"message": result}, 200
+
+    async def save_items(self, excel_data):
+        executor = ThreadPoolExecutor()
+        tasks = []
+        for index, row in excel_data.iterrows():
+            category = CategoryModel.query.filter_by(name=row['item_category']).first()
+            if not category:
+                abort(400, message=f"{row['item_category']} does not exist")
+            item = ItemModel.query.filter_by(item_name =row["item_name"]).first()
+            if not item:
+                abort(400, message=f"{row['item_name']} does not exist")
+            balance = InventoryBalancesModel(item_id=item.id,quantity=row['Quantity'],unit_cost=row['price'])
+            task = asyncio.get_event_loop().run_in_executor(executor, balance.save_to_db())
+            tasks.append(task)
+
+        try:
+            await asyncio.gather(*tasks)
+            return jsonify({"Saved": " successfully"}), 200
+        except Exception as e:
+            return f"Error occurred: {str(e)}"
+

@@ -91,6 +91,7 @@ class SalesTransaction(MethodView):
     @jwt_required(fresh=True)
     def get(self):
         current_date = datetime.datetime.now().date()
+        yesterday = current_date - datetime.timedelta(days=1)
         query = db.session.query(
             db.func.count().label('total_transactions'),
             db.func.sum(ReceiptModel.amount).label('total_sales_amount')
@@ -102,9 +103,26 @@ class SalesTransaction(MethodView):
             db.func.date(ReceiptModel.date) == current_date
         ).first()
 
+        yesterday_transactions = db.session.query(
+            db.func.count().label('total_transactions'),
+            db.func.sum(ReceiptModel.amount).label('total_sales_amount')
+        ).filter(
+            db.or_(
+                ReceiptModel.status == 'fully paid',
+                ReceiptModel.status == 'partially paid'
+            ),
+            db.func.date(ReceiptModel.date) == yesterday
+        ).first()
+
+        last_transactions = yesterday_transactions.total_transactions
+        last_sales = yesterday_transactions.total_sales_amount
+
         total_transactions = query.total_transactions
         total_sales_amount = query.total_sales_amount
-        return jsonify({"Sales": total_transactions, "Amount": total_sales_amount}), 200
+
+        percentage = (total_sales_amount - last_sales) / last_sales * 100
+        return jsonify({"Sales": total_transactions, "Yesterday_Sales": last_sales, "Amount": total_sales_amount,
+                        "Percentage_sales": percentage}), 200
 
 
 @blp.route("/transaction/purchase")
@@ -112,6 +130,7 @@ class PurchaseTransaction(MethodView):
     @jwt_required(fresh=True)
     def get(self):
         current_date = datetime.datetime.now().date()
+        yesterday = current_date - datetime.timedelta(days=1)
         query = db.session.query(
             db.func.count().label('total_transactions'),
             db.func.sum(InvoiceModel.amount).label('total_purchase_amount')
@@ -123,9 +142,26 @@ class PurchaseTransaction(MethodView):
             db.func.date(InvoiceModel.date) == current_date
         ).first()
 
+        query_yesterday = db.session.query(
+            db.func.count().label('total_transactions'),
+            db.func.sum(InvoiceModel.amount).label('total_purchase_amount')
+        ).filter(
+            db.or_(
+                InvoiceModel.matched_to_lines == 'matched',
+                InvoiceModel.matched_to_lines == 'partially matched'
+            ),
+            db.func.date(InvoiceModel.date) == yesterday
+        ).first()
+
+        query_yesterday_transactions = query_yesterday.total_transactions
+        query_yesterday_purchases = query_yesterday.total_purchase_amount
+
         total_transactions = query.total_transactions
         total_purchase_amount = query.total_purchase_amount
-        return jsonify({"Purchases": total_transactions, "Amount": total_purchase_amount}), 200
+
+        percentage = (total_purchase_amount - query_yesterday_transactions) / query_yesterday_transactions * 100
+        return jsonify({"Purchases": total_transactions, "Yesterday_purchase": query_yesterday_transactions,
+                        "Amount": total_purchase_amount, "Percentage_Purchase": percentage}), 200
 
 
 @blp.route("/transaction/sales/per_day")

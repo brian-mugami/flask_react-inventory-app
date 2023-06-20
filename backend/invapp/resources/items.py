@@ -269,15 +269,16 @@ class ItemView(MethodView):
 
 @blp.route("/item/search/")
 class ItemSearch(MethodView):
+    #@jwt_required(fresh=True)
     @blp.arguments(ItemSearchSchema, location="query")
     def get(self, data):
         name = data["item_name"]
-        items = ItemModel.query.filter(ItemModel.item_name.ilike(name)).all()
+        items = ItemModel.query.filter(ItemModel.item_name.contains(name)).all()
         available_items = []
         if len(items) == 0:
             abort(404, message="No such item")
         for item in items:
-            item_created = {"item_name": item.item_name, "price": item.price}
+            item_created = {"item_name": item.item_name, "price": item.price, "category":item.category.name}
             available_items.append(item_created)
 
         return {"items": available_items}
