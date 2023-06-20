@@ -18,8 +18,6 @@ from ..schemas.invoice_schema import InvoiceSchema, InvoiceUpdateSchema, Invoice
 from ..signals import add_supplier_balance, purchase_accounting_transaction, SignalException, void_invoice
 
 blp = Blueprint("Invoice", __name__, description="Invoice creation", static_folder='static\invoices')
-
-
 @blp.route("/invoice/download/<int:id>")
 class InvoiceDownloadView(MethodView):
     @jwt_required(fresh=True)
@@ -29,29 +27,6 @@ class InvoiceDownloadView(MethodView):
         if invoice_path is None:
             abort(404, message="This invoice has no attachment")
         return send_file(invoice_path, as_attachment=True)
-
-
-@blp.route("/invoice/download/<int:id>")
-class InvoiceDownloadView(MethodView):
-    @jwt_required(fresh=True)
-    def get(self, id):
-        invoice = InvoiceModel.query.get_or_404(id)
-        invoice_path = invoice.file_path
-        if invoice_path is None:
-            abort(404, message="This invoice has no attachment")
-        return send_file(invoice_path, as_attachment=True)
-
-@blp.route("/invoice/download/<int:id>")
-class InvoiceDownloadView(MethodView):
-    @jwt_required(fresh=True)
-    def get(self, id):
-        invoice = InvoiceModel.query.get_or_404(id)
-        file_path = invoice.file_path
-        if file_path is None:
-            abort(400, message="No invoice upload for this invoice")
-        file_name = f"{invoice.invoice_number}.pdf"  # Modify as needed
-
-        return send_file(as_attachment=True,download_name=file_name, last_modified=invoice.date,path_or_file=file_path)
 
 @blp.route('/invoice/upload/<int:id>')
 class InvoiceUploadView(MethodView):
