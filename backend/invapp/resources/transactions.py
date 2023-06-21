@@ -120,12 +120,10 @@ class SalesTransaction(MethodView):
         total_transactions = query.total_transactions
         total_sales_amount = query.total_sales_amount
 
-        if last_sales != 0:
+        if last_transactions != 0 and total_transactions != 0:
             percentage = (total_sales_amount - last_sales) / last_sales * 100
         else:
             percentage = 0
-
-
         return jsonify({"Sales": total_transactions, "Yesterday_Sales": last_sales, "Amount": total_sales_amount,
                         "Percentage_sales": percentage}), 200
 
@@ -164,8 +162,8 @@ class PurchaseTransaction(MethodView):
         total_transactions = query.total_transactions
         total_purchase_amount = query.total_purchase_amount
 
-        if query_yesterday_transactions != 0:
-            percentage = ((total_purchase_amount - query_yesterday_transactions) / query_yesterday_transactions) * 100
+        if query_yesterday_transactions != 0 and total_transactions != 0:
+            percentage = ((total_purchase_amount - query_yesterday_purchases) / query_yesterday_purchases) * 100
         else:
             percentage = 0
         return jsonify({"Purchases": total_transactions, "Yesterday_purchase": query_yesterday_transactions,
