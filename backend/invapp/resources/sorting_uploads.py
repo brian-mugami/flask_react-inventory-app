@@ -143,7 +143,8 @@ class UploadInventoryBalances(MethodView):
             item = ItemModel.query.filter_by(item_name =row["item_name"]).first()
             if not item:
                 abort(400, message=f"{row['item_name']} does not exist")
-            balance = InventoryBalancesModel(item_id=item.id,quantity=row['Quantity'],unit_cost=row['price'])
+            if row['Quantity'] > 0:
+                balance = InventoryBalancesModel(item_id=item.id,quantity=row['Quantity'],unit_cost=row['price'])
             task = asyncio.get_event_loop().run_in_executor(executor, balance.save_to_db())
             tasks.append(task)
 
