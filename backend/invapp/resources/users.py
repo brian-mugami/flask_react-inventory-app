@@ -131,7 +131,7 @@ class PasswordChangeView(MethodView):
 
         return jsonify({"message": "Password Changed"})
 
-@blp.route("/register/user/admin", methods=["GET", "POST"])
+@blp.route("/register/user/admin")
 class UserAdminPage(MethodView):
     @blp.arguments(UserSchema)
     @blp.response(201, UserSchema)
