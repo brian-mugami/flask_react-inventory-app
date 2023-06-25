@@ -106,9 +106,10 @@ class ItemUpload(MethodView):
 
         try:
             await asyncio.gather(*tasks)
-            return jsonify ({"Saved":" successfully"}), 200
+            return jsonify({"Saved": " successfully"}), 200
         except Exception as e:
             return f"Error occurred: {str(e)}"
+
 
 @blp.route("/inventory/upload")
 class UploadInventoryBalances(MethodView):
@@ -139,17 +140,16 @@ class UploadInventoryBalances(MethodView):
             category = CategoryModel.query.filter_by(name=row['item_category']).first()
             if not category:
                 abort(400, message=f"{row['item_category']} does not exist")
-            item = ItemModel.query.filter_by(item_name =row["item_name"]).first()
+            item = ItemModel.query.filter_by(item_name=row["item_name"]).first()
             if not item:
                 abort(400, message=f"{row['item_name']} does not exist")
             if row['Quantity'] > 0:
-                balance = InventoryBalancesModel(item_id=item.id,quantity=row['Quantity'],unit_cost=row['price'])
-            task = asyncio.get_event_loop().run_in_executor(executor, balance.save_to_db())
-            tasks.append(task)
+                balance = InventoryBalancesModel(item_id=item.id, quantity=row['Quantity'], unit_cost=row['price'])
+                task = asyncio.get_event_loop().run_in_executor(executor, balance.save_to_db())
+                tasks.append(task)
 
         try:
             await asyncio.gather(*tasks)
             return jsonify({"Saved": " successfully"}), 200
         except Exception as e:
             return f"Error occurred: {str(e)}"
-
