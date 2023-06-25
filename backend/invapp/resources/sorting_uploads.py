@@ -112,7 +112,6 @@ class ItemUpload(MethodView):
 
 @blp.route("/inventory/upload")
 class UploadInventoryBalances(MethodView):
-    @jwt_required(fresh=True)
     @blp.arguments(FileUploadSchema, location="files")
     def post(self, data):
         file = data.get("file")

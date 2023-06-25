@@ -207,6 +207,7 @@ class ReceiptView(MethodView):
             receipt.save_to_db()
             return receipt
         except IntegrityError as e:
+            receipt.delete_from_db()
             abort(500, message="Ensure details are unique")
 
 @blp.route("/receipt/<int:id>")
