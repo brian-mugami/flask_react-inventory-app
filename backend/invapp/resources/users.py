@@ -51,9 +51,13 @@ class User(MethodView):
     def get(self, id):
         user = UserModel.query.get_or_404(id)
         return user
-
+    @jwt_required(fresh=True)
     @blp.response(200, UserSchema)
     def delete(self, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         user = UserModel.query.get_or_404(id)
         db.session.delete(user)
         db.session.commit()
@@ -109,8 +113,13 @@ class UserLogout(MethodView):
 
 @blp.route("/users")
 class UserView(MethodView):
+    @jwt_required(fresh=True)
     @blp.response(200, UserSchema(many=True))
     def get(self):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         users = UserModel.query.all()
         return users
 
