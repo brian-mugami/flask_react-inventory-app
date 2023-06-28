@@ -12,6 +12,7 @@ class UserSchema(Schema):
     is_archived = fields.Boolean(required=False)
     date_registered = fields.Date(required=False)
     date_archived = fields.Date(required=False)
+    last_login = fields.DateTime(required=False)
 
 class LoginSchema(Schema):
     email = fields.Email(required=True)

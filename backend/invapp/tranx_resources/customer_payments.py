@@ -5,6 +5,7 @@ from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint,abort
 
+from ..models import UserModel
 from ..models.masters import AccountModel, CustomerModel
 from ..models.transactions.receipt_model import ReceiptModel
 from ..models.transactions.sales_accounting_models import CustomerPayAccountingModel
@@ -12,7 +13,7 @@ from ..schemas.customerpaymentschema import PlainCustomerPaymentSchema, PaymentU
     PaymentRejectSchema
 from ..models.transactions.customer_payments_model import CustomerPaymentModel
 from ..models.transactions.customer_balances_model import CustomerBalanceModel
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from ..schemas.receiptschema import ReceiptSchema
 from ..signals import add_customer_balance, receive_payment, manipulate_bank_balance, SignalException
@@ -129,6 +130,10 @@ class PaymentMainView(MethodView):
 
     @jwt_required(fresh=True)
     def delete(self, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         transaction = CustomerPaymentModel.query.get_or_404(id)
         transaction.delete_from_db()
         return {"message": "deleted"}, 204
@@ -165,6 +170,10 @@ class PaymentApproveView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202,PlainCustomerPaymentSchema)
     def post(self, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         status = ""
         payment = CustomerPaymentModel.query.get_or_404(id)
         customer_account_id = payment.receipt.customer.account_id
@@ -216,6 +225,10 @@ class PaymentRejectView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(PaymentRejectSchema)
     def post(self, data, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         payment = CustomerPaymentModel.query.get_or_404(id)
         if payment.approval_status == "approved" or payment.approval_status == "rejected":
             abort(400, message="This payment is already approved or rejected!!")

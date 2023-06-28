@@ -49,11 +49,19 @@ class UserRegister(MethodView):
 class User(MethodView):
     @blp.response(200, UserSchema)
     def get(self, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         user = UserModel.query.get_or_404(id)
         return user
-
+    @jwt_required(fresh=True)
     @blp.response(200, UserSchema)
     def delete(self, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         user = UserModel.query.get_or_404(id)
         db.session.delete(user)
         db.session.commit()
@@ -64,11 +72,16 @@ class User(MethodView):
     @blp.arguments(UserUpdateSchema)
     @blp.response(200, UserSchema)
     def patch(self,user_data, id):
-        logged_in_user = get_jwt_identity()
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         user = UserModel.query.get_or_404(id)
         user.first_name = user_data["first_name"]
         user.last_name = user_data["last_name"]
         user.email = user_data["email"]
+        user.password = generate_password_hash(user_data.get("password"), 'sha256')
+        user.is_active = user_data.get("is_active")
         db.session.commit()
         return jsonify({"message": "User updated"})
 
@@ -77,15 +90,17 @@ class UserLogin(MethodView):
     @blp.arguments(LoginSchema)
     def post(self, user_data):
         user = UserModel.query.filter_by(email=user_data["email"]).first()
-
+        if not user.is_active:
+            abort(400, message='You are not allowed to login')
         if user and check_password_hash(user.password, user_data["password"]):
             confirmation = user.most_recent_confirmation
             if (confirmation and confirmation.confirmed) or user.is_admin:
                 access_token = create_access_token(identity=user.id, fresh=True)
                 refresh_token = create_refresh_token(identity=user.id)
+                user.last_login = datetime.utcnow()
+                db.session.commit()
                 return jsonify({"refresh_token": refresh_token, "access_token":access_token})
             abort(500, message=f"{user.email} not confirmed , please confirm in your mail")
-
         abort(401, message="Invalid credentials")
 
 @blp.route("/refresh")
@@ -109,8 +124,13 @@ class UserLogout(MethodView):
 
 @blp.route("/users")
 class UserView(MethodView):
+    @jwt_required(fresh=True)
     @blp.response(200, UserSchema(many=True))
     def get(self):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         users = UserModel.query.all()
         return users
 

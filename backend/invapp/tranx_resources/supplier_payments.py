@@ -2,7 +2,9 @@ import datetime
 
 from flask import jsonify
 from flask.views import MethodView
-from flask_smorest import Blueprint,abort
+from flask_smorest import Blueprint, abort
+
+from ..models import UserModel
 from ..models.masters import AccountModel, SupplierModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.purchase_accounting_models import SupplierPayAccountingModel
@@ -10,17 +12,18 @@ from ..schemas.invoice_schema import SearchInvoiceToPaySchema, InvoiceSchema
 from ..schemas.paymentsschema import PlainPaymentSchema, PaymentUpdateSchema, PaymentRejectSchema
 from ..models.transactions.supplier_payment_models import SupplierPaymentModel
 from ..models.transactions.supplier_balances_model import SupplierBalanceModel
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..signals import add_supplier_balance, make_payement, manipulate_bank_balance, SignalException
 
 blp = Blueprint("payments", __name__, description="Supplier payments")
+
 
 @blp.route("/payment/search/")
 class Invoices(MethodView):
 
     @jwt_required(fresh=True)
     @blp.arguments(SearchInvoiceToPaySchema, location="query")
-    @blp.response(202,InvoiceSchema(many=True))
+    @blp.response(202, InvoiceSchema(many=True))
     def get(self, data):
         name = data.get("supplier_name", "")
         suppliers = SupplierModel.query.filter(SupplierModel.supplier_name.contains(name)).all()
@@ -42,6 +45,7 @@ class Invoices(MethodView):
 
         return supplier_invoices
 
+
 @blp.route("/payment/<int:id>/account")
 class PaymentAccountingView(MethodView):
     @jwt_required(fresh=True)
@@ -54,15 +58,16 @@ class PaymentAccountingView(MethodView):
         if not payment_accounting:
             abort(404, message="Accounting has not been done")
         for accounting in payment_accounting:
-            debit_account= AccountModel.query.get(accounting.debit_account_id)
+            debit_account = AccountModel.query.get(accounting.debit_account_id)
             credit_account = AccountModel.query.get(accounting.credit_account_id)
             account = {"debit_account": debit_account.account_name,
                        "credit_account": credit_account.account_name,
                        "credit_amount": accounting.credit_amount,
-                       "debit_amount":accounting.debit_amount}
+                       "debit_amount": accounting.debit_amount}
             accounts.append(account)
 
         return jsonify({"accounting": accounts})
+
 
 @blp.route("/payment")
 class PaymentView(MethodView):
@@ -78,15 +83,16 @@ class PaymentView(MethodView):
             abort(404, message="Account can not be found")
         if account.account_category != "Bank Account":
             abort(400, message="This is not a bank account")
-        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=data["invoice_id"], currency=data['currency']).first()
+        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=data["invoice_id"],
+                                                               currency=data['currency']).first()
 
         if purchase_amount.balance < data['amount']:
             abort(400, message="Amount is higher than the balance")
 
         payment = SupplierPaymentModel(**data,
-        approval_status = 'pending approval',
-        payment_status = 'not paid'
-        )
+                                       approval_status='pending approval',
+                                       payment_status='not paid'
+                                       )
         payment.invoice = invoice
         payment.account = account
         payment.save_to_db()
@@ -99,6 +105,7 @@ class PaymentView(MethodView):
     def get(self):
         payments = SupplierPaymentModel.query.order_by(SupplierPaymentModel.date.desc()).all()
         return payments
+
 
 @blp.route("/payment/<int:id>")
 class PaymentMainView(MethodView):
@@ -127,7 +134,8 @@ class PaymentMainView(MethodView):
     @blp.response(202, PlainPaymentSchema)
     def patch(self, data, id):
         payment = SupplierPaymentModel.query.get_or_404(id)
-        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=data["invoice_id"], currency=data["currency"]).first()
+        purchase_amount = SupplierBalanceModel.query.filter_by(invoice_id=data["invoice_id"],
+                                                               currency=data["currency"]).first()
         invoice = InvoiceModel.query.get(data["invoice_id"])
         if not invoice:
             abort(404, message="Could not find invoice")
@@ -160,11 +168,16 @@ class PaymentMainView(MethodView):
 
         return payment
 
+
 @blp.route("/payment/approve/<int:id>")
 class PaymentApproveView(MethodView):
     @jwt_required(fresh=True)
     @blp.response(202, PlainPaymentSchema)
     def post(self, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         payment = SupplierPaymentModel.query.get_or_404(id)
         supplier_account_id = payment.invoice.supplier.account_id
         supplier_id = payment.invoice.supplier_id
@@ -190,25 +203,31 @@ class PaymentApproveView(MethodView):
         payment.update_db()
 
         try:
-            balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount, invoice_id=invoice_id, currency=currency, payment_id=payment.id)
-            make_payement(supplier_account_id=supplier_account_id,credit_account=payment.bank_account_id,amount=payment.amount,payment_id=payment.id,balance_id=balance)
-            manipulate_bank_balance(bank_account_id=payment.bank_account_id,invoice_id=invoice_id,amount=-payment.amount, currency=currency)
+            balance = add_supplier_balance(supplier_id=supplier_id, invoice_amount=invoice_amount, paid=payment.amount,
+                                           invoice_id=invoice_id, currency=currency, payment_id=payment.id)
+            make_payement(supplier_account_id=supplier_account_id, credit_account=payment.bank_account_id,
+                          amount=payment.amount, payment_id=payment.id, balance_id=balance)
+            manipulate_bank_balance(bank_account_id=payment.bank_account_id, invoice_id=invoice_id,
+                                    amount=-payment.amount, currency=currency)
             return payment
         except SignalException as e:
             payment.approved = 'pending approval'
             payment.update_db()
             abort(400, message=f"{str(e)}")
 
+
 @blp.route("/payment/reject/<int:id>")
 class PaymentRejectView(MethodView):
     @jwt_required(fresh=True)
     @blp.arguments(PaymentRejectSchema)
-    def post(self,data, id):
+    def post(self, data, id):
+        user_id = get_jwt_identity()
+        user = UserModel.query.get(user_id)
+        if not user.is_admin:
+            abort(400, message="Only the admin is allowed to perform this action")
         payment = SupplierPaymentModel.query.get_or_404(id)
         if payment.approval_status == "approved" or payment.approval_status == "rejected":
             abort(400, message="This payment is already approved or rejected!!")
         payment.reason = data.get('reason')
         payment.reject_payment()
         payment.update_db()
-
-
