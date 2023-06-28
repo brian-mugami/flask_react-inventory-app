@@ -300,7 +300,7 @@ class PurchaseCreditViews(MethodView):
                     'supplier_name': row.supplier_name,
                     'total_balance': row.total_balance
                 })
-            return {'invoices': response}
+        return {'invoices': response}
 
 @blp.route("/transaction/sales/credit")
 class SalesCreditViews(MethodView):
@@ -328,4 +328,4 @@ class SalesCreditViews(MethodView):
                     'total_balance': row.total_balance
                 })
 
-            return {'receipts': response}
+        return {'receipts': response}
