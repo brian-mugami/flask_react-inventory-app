@@ -291,15 +291,12 @@ class PurchaseCreditViews(MethodView):
             LIMIT 10
         ''')
         result = db.session.execute(query)
-        if len(result) < 1:
-            response = {'supplier_name': "None",'total_balance': 0}
-        else:
-            response = []
-            for row in result:
-                response.append({
-                    'supplier_name': row.supplier_name,
-                    'total_balance': row.total_balance
-                })
+        response = []
+        for row in result:
+            response.append({
+                'supplier_name': row.supplier_name,
+                'total_balance': row.total_balance
+            })
         return {'invoices': response}
 
 @blp.route("/transaction/sales/credit")
@@ -318,14 +315,11 @@ class SalesCreditViews(MethodView):
             LIMIT 10
         ''')
         result = db.session.execute(query)
-        if len(result) < 1:
-            response = {'customer_name': "None",'total_balance': 0}
-        else:
-            response = []
-            for row in result:
-                response.append({
-                    'customer_name': row.customer_name,
-                    'total_balance': row.total_balance
-                })
+        response = []
+        for row in result:
+            response.append({
+                'customer_name': row.customer_name,
+                'total_balance': row.total_balance
+            })
 
         return {'receipts': response}
