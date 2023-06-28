@@ -287,7 +287,7 @@ class PurchaseCreditViews(MethodView):
                 AND invoices.status != 'fully paid'
                 AND invoices.purchase_type = 'credit'
             GROUP BY suppliers.supplier_name, invoices.date
-            ORDER BY total_balance ASC, invoices.date ASC
+            ORDER BY total_balance, invoices.date ASC
             LIMIT 10
         ''')
         result = db.session.execute(query)
@@ -311,7 +311,7 @@ class SalesCreditViews(MethodView):
                 AND receipts.status != 'fully paid'
                 AND receipts.sale_type = 'credit'
             GROUP BY customers.customer_name, receipts.date
-            ORDER BY total_balance ASC, receipts.date ASC
+            ORDER BY total_balance, receipts.date ASC
             LIMIT 10
         ''')
         result = db.session.execute(query)
