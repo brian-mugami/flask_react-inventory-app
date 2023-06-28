@@ -288,17 +288,19 @@ class PurchaseCreditViews(MethodView):
                 AND invoices.purchase_type = 'credit'
             GROUP BY suppliers.supplier_name, invoices.date
             ORDER BY total_balance ASC, invoices.date ASC
+            LIMIT 10
         ''')
-
         result = db.session.execute(query)
-        response = []
-        for row in result:
-            response.append({
-                'supplier_name': row.supplier_name,
-                'total_balance': row.total_balance
-            })
-
-        return {'invoices': response}
+        if len(result) < 1:
+            response = {'supplier_name': "None",'total_balance': 0}
+        else:
+            response = []
+            for row in result:
+                response.append({
+                    'supplier_name': row.supplier_name,
+                    'total_balance': row.total_balance
+                })
+            return {'invoices': response}
 
 @blp.route("/transaction/sales/credit")
 class SalesCreditViews(MethodView):
@@ -313,14 +315,17 @@ class SalesCreditViews(MethodView):
                 AND receipts.sale_type = 'credit'
             GROUP BY customers.customer_name, receipts.date
             ORDER BY total_balance ASC, receipts.date ASC
+            LIMIT 10
         ''')
-
         result = db.session.execute(query)
-        response = []
-        for row in result:
-            response.append({
-                'customer_name': row.customer_name,
-                'total_balance': row.total_balance
-            })
+        if len(result) < 1:
+            response = {'customer_name': "None",'total_balance': 0}
+        else:
+            response = []
+            for row in result:
+                response.append({
+                    'customer_name': row.customer_name,
+                    'total_balance': row.total_balance
+                })
 
-        return {'receipts': response}
+            return {'receipts': response}
