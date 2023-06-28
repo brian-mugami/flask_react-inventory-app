@@ -19,6 +19,7 @@ class UserModel (db.Model):
     is_active = db.Column(db.Boolean, default=True)
     is_archived = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
+    last_login = db.Column(db.DateTime)
     date_registered = db.Column(db.DateTime, default=datetime.utcnow())
     date_archived = db.Column(db.DateTime)
     date_unarchived = db.Column(db.DateTime)

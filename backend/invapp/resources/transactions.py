@@ -4,7 +4,7 @@ from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from ..db import db
 from ..models.transactions.inventory_balances import InventoryBalancesModel
@@ -12,6 +12,7 @@ from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.receipt_model import ReceiptModel
 
 blp = Blueprint("Transactions", __name__, description="Actions on dashboard accounts")
+
 
 # https://kindredinv.onrender.com/transaction/sales
 @blp.route("/transaction/purchase/month")
@@ -272,3 +273,55 @@ class InventoryDailyView(MethodView):
         total_value = db.session.query(
             db.func.sum(InventoryBalancesModel.unit_cost * InventoryBalancesModel.quantity)).scalar()
         return {"total_value": total_value}
+
+
+@blp.route("/transaction/purchase/credit")
+class PurchaseCreditViews(MethodView):
+    @jwt_required(fresh=True)
+    def get(self):
+        query = text('''
+            SELECT suppliers.supplier_name, SUM(supplier_balances.balance) AS total_balance
+            FROM invoices
+            JOIN suppliers ON invoices.supplier_id = suppliers.id
+            JOIN supplier_balances ON invoices.supplier_id = supplier_balances.supplier_id
+            WHERE invoices.accounted = 'fully_accounted'
+                AND invoices.status != 'fully paid'
+                AND invoices.purchase_type = 'credit'
+            GROUP BY suppliers.supplier_name, invoices.date
+            ORDER BY total_balance ASC, invoices.date ASC
+        ''')
+
+        result = db.session.execute(query)
+        response = []
+        for row in result:
+            response.append({
+                'supplier_name': row.supplier_name,
+                'total_balance': row.total_balance
+            })
+
+        return {'invoices': response}
+
+@blp.route("/transaction/sales/credit")
+class SalesCreditViews(MethodView):
+    def get(self):
+        query = text('''
+            SELECT customers.customer_name, SUM(customer_balances.balance) AS total_balance
+            FROM receipts
+            JOIN customers ON receipts.customer_id = customers.id
+            JOIN customer_balances ON receipts.customer_id = customer_balances.customer_id
+            WHERE receipts.accounted_status = 'fully_accounted'
+                AND receipts.status != 'fully paid'
+                AND receipts.sale_type = 'credit'
+            GROUP BY customers.customer_name, receipts.date
+            ORDER BY total_balance ASC, receipts.date ASC
+        ''')
+
+        result = db.session.execute(query)
+        response = []
+        for row in result:
+            response.append({
+                'customer_name': row.customer_name,
+                'total_balance': row.total_balance
+            })
+
+        return {'receipts': response}
