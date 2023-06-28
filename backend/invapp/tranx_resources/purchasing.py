@@ -69,8 +69,8 @@ class PurchasingView(MethodView):
                                  quantity=item["item_quantity"], unit_cost=item["buying_price"], lot_id=lot_id)
 
         if invoice.amount != cost:
-            invoice.matched_to_lines = "unmatched"
-            invoice.update_db()
+            invoice.delete_from_db()
+            abort(400, message="Invoice and line amounts do not match, please re-check")
         else:
             invoice.matched_to_lines = "matched"
             invoice.update_db()
