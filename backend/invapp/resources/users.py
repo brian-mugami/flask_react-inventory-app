@@ -47,6 +47,7 @@ class UserRegister(MethodView):
 
 @blp.route("/user/<int:id>")
 class User(MethodView):
+    @jwt_required(fresh=True)
     @blp.response(200, UserSchema)
     def get(self, id):
         user_id = get_jwt_identity()
