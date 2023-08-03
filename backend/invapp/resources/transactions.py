@@ -3,13 +3,15 @@ import datetime
 from flask import jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func, text
 
 from ..db import db
+from ..models import UserModel
 from ..models.transactions.inventory_balances import InventoryBalancesModel
 from ..models.transactions.invoice_model import InvoiceModel
 from ..models.transactions.receipt_model import ReceiptModel
+from ..schemas.userschema import UserSchema
 
 blp = Blueprint("Transactions", __name__, description="Actions on dashboard accounts")
 
@@ -299,6 +301,7 @@ class PurchaseCreditViews(MethodView):
             })
         return {'invoices': response}
 
+
 @blp.route("/transaction/sales/credit")
 class SalesCreditViews(MethodView):
     def get(self):
@@ -323,3 +326,12 @@ class SalesCreditViews(MethodView):
             })
 
         return {'receipts': response}
+
+
+@blp.route("/current-user", methods=["GET"])
+@jwt_required(fresh=True)
+@blp.response(200, UserSchema)
+def get_current_user():
+    user_id = get_jwt_identity()
+    user = UserModel.query.get_or_404(user_id)
+    return user
