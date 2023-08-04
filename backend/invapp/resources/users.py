@@ -71,7 +71,7 @@ class User(MethodView):
         db.session.delete(user)
         db.session.commit()
 
-        return {"message", "deleted"}, 204
+        return {"message": "deleted"}, 204
 
     @jwt_required(fresh=True)
     @blp.arguments(UserUpdateSchema)
